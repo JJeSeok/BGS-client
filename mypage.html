@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>baegopa</title>
+  <link rel="icon" href="/assets/paypal.svg">
+  <link href="css/styles.css" rel="stylesheet">
+  <link href="/assets/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/css/mypage.css" rel="stylesheet">
+</head>
+<body>
+  <header>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+      <div class="container px-4 px-lg-5">
+        <a class="navbar-brand fw-bolder" href="/index.html">배고파</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                <li class="nav-item"><a class="nav-link active" aria-current="page" href="/index.html">홈</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#!">좋아요</a></li>
+                <li class="nav-item">
+                  <a class="nav-link active" href="/mypage.html">마이페이지</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <a style="font-size: 17px" class="navbar-brand" href='/login.html'>로그인</a>
+                <a style="font-size: 17px" class="navbar-brand" href='http://google.com/maps'>map</a>
+            </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <div id="container">
+    <div id="myInfo">
+      <div id="inner">
+        <div class="profile">
+          <div class="profile_name">
+            <div class="honor_level"></div>
+            <div class="user_name">
+              <strong class="user_nameStyle">조재석</strong>
+            </div>
+            <div class="user_photo">
+              <img class="user_photoStyle" src="/images/흠.png" alt="userphoto">
+            </div>
+          </div>
+          <div class="profile_center_wrap"></div>
+          <div class="profile_action_button_wrap">
+            <button class="profile_action_button">전체등급 보기</button>
+            <button class="profile_action_button">개인 정보 수정</button>
+          </div>
+        </div>
+        <div class="side_wrap">
+          <div class="inside_wrap">
+            <button class="inside_action_button1">
+              <div class="inside_button_div1">
+                좋아요<span class="compact_right only_desktop"></span>
+              </div>
+              <div class="inside_button_div2">
+                213<span class="inside_button_div_font">개</span>
+              </div>
+              <span class="compact_right only_mobile"></span>
+            </button>
+          </div>
+          <div class="inside_wrap">
+            <button class="inside_action_button1">
+              <div class="inside_button_div1">
+                싫어요<span class="compact_right only_desktop"></span>
+              </div>
+              <div class="inside_button_div2">
+                13<span class="inside_button_div_font">개</span>
+              </div>
+              <span class="compact_right only_mobile"></span>
+            </button>
+          </div>
+          <div class="inside_wrap">
+            <button class="inside_action_button1">
+              <div class="inside_button_div1">
+                찜목록<span class="compact_right only_desktop"></span>
+              </div>
+              <div class="inside_button_div2">
+                15<span class="inside_button_div_font">개</span>
+              </div>
+              <span class="compact_right only_mobile"></span>
+            </button>
+          </div>
+        </div>
+        <div class="side_wrap">
+          <div class="inside_wrap">
+            <button class="inside_action_button2">
+              <div class="inside_button_div1">
+                방문식당<span class="compact_right only_desktop"></span>
+              </div>
+              <div class="inside_button_div3">알아보기</div>
+              <span class="compact_right only_mobile"></span>
+            </button>
+          </div>
+          <div class="inside_wrap">
+            <button class="inside_action_button2">
+              <div class="inside_button_div1">
+                블라인드한 목록<span class="compact_right only_desktop"></span>
+              </div>
+              <div class="inside_button_div3">알아보기</div>
+              <span class="compact_right only_mobile"></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="content">
+      <div id="lside_wrap">
+        <div class="mypage_ep only_desktop">마이배고파</div>
+        <ul class="side_list">
+          <li class="side_listItem">
+            <a class="side_listName">
+              맛집리뷰<span class="compact_right only_desktop"></span>
+            </a>
+          </li>
+          <li class="side_listItem">
+            <a class="side_listName">
+              찜목록<span class="compact_right only_desktop"></span>
+            </a>
+          </li>
+          <li class="side_listItem">
+            <a class="side_listName">
+              방문식당<span class="compact_right only_desktop"></span>
+            </a>
+          </li class="side_listItem">
+          <li>
+            <a class="side_listName">
+              블라인드 목록<span class="compact_right only_desktop"></span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">맛집 리뷰</he>
+          </div>
+        </div>
+        <div class="list_center_wrap only_desktop">
+        </div>
+        <ul id="review_content" class="restaurant_reviewList_content">
+          <li class="restaurant_reviewList_reviewItem">
+            <a class="restaurant_reviewItem_link">
+              <div class="restaurant_reviewItem_user">
+                <div class="restaurant_reviewItem_userPicturewrap">
+                  <img class="restaurant_reviewItem_userPicture" src="/images/흠.png" alt="user profile picture">
+                </div>
+                <span class="restaurant_reviewItem_userNickname">김서하바보다</span>
+                <ul class="restaurant_reviewItem_userStat">
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_like">1261</li>
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_hate">711</li>
+                </ul>
+                <button class="restaurant_reviewItem_userBlind only_desktop">블라인드</button>
+              </div>
+              <div class="restaurant_reviewItem_content">
+                <div class="restaurant_reviewItem_textWrap">
+                  <p class="restaurant_reviewItem_text">대한민국 수도 서울의 나름 번화한 망원동 한 골목 귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지 잠시</p>
+                  <span class="restaurant_reviewItem_Date">2023-05-16</span>
+                </div>
+                <ul class="restaurant_reviewItem_PictureList">
+                  <li class="restaurant_reviewItem_PictureItem">
+                    <button class="restaurant_reviewItem_PictureButton">
+                      <img class="restaurant_reviewItem_Picture" src="/images/천원국수/천원국수3.png">
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_Rating Rating_Recommend">
+                <span class="restaurant_reviewItem_RatingText">맛있다</span>
+                <button class="restaurant_reviewItem_userBlind only_mobile">블라인드</button>
+                <div class="restaurant_reviewItem_managementWrap">
+                  <button class="restaurant_reviewItem_management" type="button">
+                    <span class="managementButton"></span>
+                  </button>
+                  <div class="managementWrap" style="display: none;">
+                    <div class="managementList">
+                      <div class="modify">
+                        <button class="modifyButton" type="button">
+                          수정하기
+                        </button>
+                      </div>
+                      <span class="modifyIcon"></span>
+                    </div>
+                    <button
+                      class="managementList deleteButton"
+                      type="button"
+                    >
+                      삭제하기
+                      <span class="deleteIcon"></span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </a>
+          </li>
+          <li class="restaurant_reviewList_reviewItem">
+            <a class="restaurant_reviewItem_link">
+              <div class="restaurant_reviewItem_user">
+                <div class="restaurant_reviewItem_userPicturewrap">
+                  <img class="restaurant_reviewItem_userPicture" src="/images/흠.png" alt="user profile picture">
+                </div>
+                <span class="restaurant_reviewItem_userNickname">김서하멍청</span>
+                <ul class="restaurant_reviewItem_userStat">
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_like">1261</li>
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_hate">711</li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_content">
+                <div class="restaurant_reviewItem_textWrap">
+                  <p class="restaurant_reviewItem_text">대한민국 수도 서울의 나름 번화한 망원동 한 골목 귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지 잠시</p>
+                  <span class="restaurant_reviewItem_Date">2023-05-15</span>
+                </div>
+                <ul class="restaurant_reviewItem_PictureList">
+                  <li class="restaurant_reviewItem_PictureItem">
+                    <button class="restaurant_reviewItem_PictureButton">
+                      <img class="restaurant_reviewItem_Picture" src="/images/천원국수/천원국수3.png">
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_Rating Rating_Recommend">
+                <span class="restaurant_reviewItem_RatingText">괜찮다</span>
+                <div class="restaurant_reviewItem_managementWrap">
+                  <button class="restaurant_reviewItem_management" type="button">
+                    <span class="managementButton"></span>
+                  </button>
+                  <!-- 수정, 삭제 버튼-->
+                  <div class="managementWrap" style="display: none;">
+                    <div class="managementList">
+                      <div class="modify">
+                        <button class="modifyButton" type="button">
+                          수정하기
+                        </button>
+                      </div>
+                      <span class="modifyIcon"></span>
+                    </div>
+                    <button
+                      class="managementList deleteButton"
+                      type="button"
+                    >
+                      삭제하기
+                      <span class="deleteIcon"></span>
+                    </button>
+                  </div>
+                  <!-- 수정, 삭제 버튼-->
+                </div>
+              </div>
+            </a>
+          </li>
+          <li class="restaurant_reviewList_reviewItem">
+            <a class="restaurant_reviewItem_link">
+              <div class="restaurant_reviewItem_user">
+                <div class="restaurant_reviewItem_userPicturewrap">
+                  <img class="restaurant_reviewItem_userPicture" src="/images/흠.png" alt="user profile picture">
+                </div>
+                <span class="restaurant_reviewItem_userNickname">김서하개멍청</span>
+                <ul class="restaurant_reviewItem_userStat">
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_like">1261</li>
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_hate">711</li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_content">
+                <div class="restaurant_reviewItem_textWrap">
+                  <p class="restaurant_reviewItem_text">대한민국 수도 서울의 나름 번화한 망원동 한 골목 귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지 잠시</p>
+                  <span class="restaurant_reviewItem_Date">2023-05-14</span>
+                </div>
+                <ul class="restaurant_reviewItem_PictureList">
+                  <li class="restaurant_reviewItem_PictureItem">
+                    <button class="restaurant_reviewItem_PictureButton">
+                      <img class="restaurant_reviewItem_Picture" src="/images/천원국수/천원국수3.png">
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_Rating Rating_Recommend">
+                <span class="restaurant_reviewItem_RatingText">별로</span>
+              </div>
+            </a>
+          </li>
+          <li class="restaurant_reviewList_reviewItem">
+            <a class="restaurant_reviewItem_link">
+              <div class="restaurant_reviewItem_user">
+                <div class="restaurant_reviewItem_userPicturewrap">
+                  <img class="restaurant_reviewItem_userPicture" src="/images/흠.png" alt="user profile picture">
+                </div>
+                <span class="restaurant_reviewItem_userNickname">김성하인가</span>
+                <ul class="restaurant_reviewItem_userStat">
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_like">1261</li>
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_hate">711</li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_content">
+                <div class="restaurant_reviewItem_textWrap">
+                  <p class="restaurant_reviewItem_text">대한민국 수도 서울의 나름 번화한 망원동 한 골목 귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지 잠시</p>
+                  <span class="restaurant_reviewItem_Date">2023-05-10</span>
+                </div>
+                <ul class="restaurant_reviewItem_PictureList">
+                  <li class="restaurant_reviewItem_PictureItem">
+                    <button class="restaurant_reviewItem_PictureButton">
+                      <img class="restaurant_reviewItem_Picture" src="/images/천원국수/천원국수3.png">
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_Rating Rating_Recommend">
+                <span class="restaurant_reviewItem_RatingText">맛있다</span>
+              </div>
+            </a>
+          </li>
+          <li class="restaurant_reviewList_reviewItem">
+            <a class="restaurant_reviewItem_link">
+              <div class="restaurant_reviewItem_user">
+                <div class="restaurant_reviewItem_userPicturewrap">
+                  <img class="restaurant_reviewItem_userPicture" src="/images/흠.png" alt="user profile picture">
+                </div>
+                <span class="restaurant_reviewItem_userNickname">조혜진분조장</span>
+                <ul class="restaurant_reviewItem_userStat">
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_like">1261</li>
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_hate">711</li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_content">
+                <div class="restaurant_reviewItem_textWrap">
+                  <p class="restaurant_reviewItem_text">대한민국 수도 서울의 나름 번화한 망원동 한 골목 귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지 잠시</p>
+                  <span class="restaurant_reviewItem_Date">2023-05-05</span>
+                </div>
+                <ul class="restaurant_reviewItem_PictureList">
+                  <li class="restaurant_reviewItem_PictureItem">
+                    <button class="restaurant_reviewItem_PictureButton">
+                      <img class="restaurant_reviewItem_Picture" src="/images/천원국수/천원국수3.png">
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_Rating Rating_Recommend">
+                <span class="restaurant_reviewItem_RatingText">별로</span>
+              </div>
+            </a>
+          </li>
+          <li class="restaurant_reviewList_reviewItem">
+            <a class="restaurant_reviewItem_link">
+              <div class="restaurant_reviewItem_user">
+                <div class="restaurant_reviewItem_userPicturewrap">
+                  <img class="restaurant_reviewItem_userPicture" src="/images/흠.png" alt="user profile picture">
+                </div>
+                <span class="restaurant_reviewItem_userNickname">분조장치료중</span>
+                <ul class="restaurant_reviewItem_userStat">
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_like">1261</li>
+                  <li class="restaurant_reviewItem_userStatItem userStatItem_hate">711</li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_content">
+                <div class="restaurant_reviewItem_textWrap">
+                  <p class="restaurant_reviewItem_text">대한민국 수도 서울의 나름 번화한 망원동 한 골목 귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지 잠시</p>
+                  <span class="restaurant_reviewItem_Date">2023-05-06</span>
+                </div>
+                <ul class="restaurant_reviewItem_PictureList">
+                  <li class="restaurant_reviewItem_PictureItem">
+                    <button class="restaurant_reviewItem_PictureButton">
+                      <img class="restaurant_reviewItem_Picture" src="/images/천원국수/천원국수3.png">
+                    </button>
+                  </li>
+                </ul>
+              </div>
+              <div class="restaurant_reviewItem_Rating Rating_Recommend">
+                <span class="restaurant_reviewItem_RatingText">괜찮다</span>
+              </div>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">찜 목록</he>
+          </div>
+        </div>
+        <div class="likeList_content">
+          <span class="likeList_count">총 15개</span>
+          <div class="likeList_wrap">
+            <a href="천원국수.html">
+              <img src="/images/천원국수.jpg" alt="천원국수" class="restaurant_img">
+            </a>
+            <p class="likeList_restaurant">
+              <a href="/images/천원국수.jpg">
+                <span class="restaurant_name">천원국수</span>
+              </a>
+              <span>충남 아산시 신창면 순천향로 16-3</span>
+            </p>
+            <button class="star_button">
+              <i class="star_button_icon-check"></i>
+            </button>
+          </div>
+          <div class="likeList_wrap">
+            <a href="천원국수.html">
+              <img src="/images/천원국수.jpg" alt="천원국수" class="restaurant_img">
+            </a>
+            <p class="likeList_restaurant">
+              <a href="/images/천원국수.jpg">
+                <span class="restaurant_name">천원국수</span>
+              </a>
+              <span>충남 아산시 신창면 순천향로 16-3</span>
+            </p>
+            <button class="star_button">
+              <i class="star_button_icon-check"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">방문식당</he>
+          </div>
+        </div>
+        <div class="visitList_content">
+          <span class="visitList_count">총 15개</span>
+          <div class="visitList_wrap">
+            <a href="천원국수.html">
+              <img src="/images/천원국수.jpg" alt="천원국수" class="restaurant_img">
+            </a>
+            <p class="visitList_restaurant">
+              <a href="천원국수.html">
+                <span class="restaurant_name">천원국수</span>
+              </a>
+              <span>충남 아산시 신창면 순천향로 16-3</span>
+            </p>
+          </div>
+          <div class="visitList_wrap">
+            <a href="천원국수.html">
+              <img src="/images/천원국수.jpg" alt="천원국수" class="restaurant_img">
+            </a>
+            <p class="visitList_restaurant">
+              <a href="천원국수.html">
+                <span class="restaurant_name">천원국수</span>
+              </a>
+              <span>충남 아산시 신창면 순천향로 16-3</span>
+            </p>
+          </div>
+        </div>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">블라인드 목록</he>
+          </div>
+        </div>
+        <div class="blindList_content">
+          <span class="blindList_count">총 15개</span>
+          <div class="blindList_wrap">
+            <a>
+              <img src="/images/흠.png" alt="김서하바보다" class="blind_userPicture">
+            </a>
+            <p class="blindList_user">
+              <a>
+                <span class="blind_userName">김서하바보다</span>
+              </a>
+            </p>
+            <button class="blind_button">블라인드</button>
+          </div>
+        </div>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">개인 정보 수정</h2>
+          </div>
+        </div>
+        <div class="pwCheck_content">
+          <h4 class="pwCheck_text">비밀번호 재확인</h4>
+          <p class="pwCheck_subtext">회원님의 정보를 안전하게 보호하기 위해 비밀번호를 다시 한번 확인해주세요.</p>
+        </div>
+        <form action="#">
+          <div class="pwCheck_wrap">
+            <!-- 아이디 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="userId" class="userId">아이디</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="userId" name="userId" type="text" readonly class="userId_input" value="din">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 비밀번호 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="password" class="userId">비밀번호<span class="userId_text6">*</span></label>
+              </div>
+              <div class="userId_text2 passwordInput">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="password" name="password" placeholder="현재 비밀번호를 입력해 주세요" type="password" autocomplete="off" class="userId_input" value ="">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+          </div>
+          <!-- 버튼 -->
+          <div class="pwCheckButton_wrap">
+            <button class="pwCheck_button" type="button">
+              <span class="pwCheckButton_text">확인</span>
+            </button>
+          </div>
+        </form>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">개인 정보 수정</h2>
+          </div>
+        </div>
+        <div class="infoModify_wrap">
+          <form action="#">
+            <!-- 아이디 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="userId1" class="userId">아이디</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="userId1" name="userId1" type="text" readonly class="userId_input" value="din">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 현재 비밀번호 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="originalPassword" class="userId">현재 비밀번호</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="originalPassword" name="originalPassword" placeholder="비밀번호를 입력해 주세요" type="password" autocomplete="off" class="userId_input" value ="">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 새 비밀번호 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="newPassword" class="userId">새 비밀번호</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="newPassword" name="newPassword" placeholder="새 비밀번호를 입력해 주세요" type="password" autocomplete="off" class="userId_input" value ="">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 새 비밀번호 확인 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="newPasswordConfirm" class="userId">새 비밀번호 확인</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="newPasswordConfirm" name="newPasswordConfirm" placeholder="새 비밀번호를 다시 입력해 주세요" type="password" autocomplete="off" class="userId_input" value ="">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 이름 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="name" class="userId">이름</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="name" name="name" placeholder="이름을 입력해 주세요" type="text" class="userId_input" value ="딘성준">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 이메일 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="email" class="userId">이메일</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="email" name="email" placeholder="이메일을 입력해 주세요" type="text" class="userId_input" value ="딘성준@naver.com">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 휴대폰 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="mobileNumber" class="userId">휴대폰</label>
+              </div>
+              <div class="userId_text2 ">
+                <div class="userId_text3">
+                  <div class="userId_text4">
+                    <input data-testid="input-box" id="mobileNumber" name="mobileNumber" placeholder="숫자만 입력해 주세요" type="text" class="userId_input" value ="01020263043">
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 성별 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label class="userId">성별</label>
+              </div>
+              <div class="userId_text2">
+                <div class="userGender_wrap">
+                  <label class="userGender_label" for="gender-man">
+                    <input data-testid="radio-MALE" id="gender-man" name="gender" type="radio" class="userGender_radio" value="MALE"> 
+                    <span class="userGender_radio2">
+                      <div class="userGender_radio3"></div>
+                    </span>
+                    <span aria-labelledby="gender-man" class="userGender_text">남자</span>
+                  </label>
+                  <label class="userGender_label" for="gender-woman">
+                    <input data-testid="radio-FEMALE" id="gender-woman" name="gender" type="radio" class="userGender_radio" value="FEMALE"> 
+                    <span class="userGender_radio2">
+                      <div class="userGender_radio3"></div>
+                    </span>
+                    <span aria-labelledby="gender-woman" class="userGender_text">여자</span>
+                  </label>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 생년월일 -->
+            <div class="userId_wrap">
+              <div class="userId_text">
+                <label for="birthYear" class="userId">생년월일</label>
+              </div>
+              <div class="userId_text2 ">
+                <div class="userBirth_wrap">
+                  <div class="userBirth_date">
+                    <div class="userBirth_date2">
+                      <input data-testid="input-box" name="birthYear" placeholder="YYYY" type="text" class="userBirth_date3" value="1998">
+                    </div>
+                  </div>
+                  <span class="userBirth_date4"></span>
+                  <div class="userBirth_date">
+                    <div class="userBirth_date2">
+                      <input data-testid="input-box" name="birthMonth" placeholder="MM" type="text" class="userBirth_date3" value="09">
+                    </div>
+                  </div>
+                  <span class="userBirth_date4"></span>
+                  <div class="userBirth_date">
+                    <div class="userBirth_date2">
+                      <input data-testid="input-box" name="birthDay" placeholder="DD" type="text" class="userBirth_date3" value="15">
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="userId_text5"></div>
+            </div>
+            <!-- 버튼 -->
+            <div class="infoButton_wrap">
+              <button class="infoDelete_button" type="button">
+                <span class="infoButton_text">탈퇴하기</span>
+              </button>
+              <button class="infoModify_button" type="submit">
+                <span class="infoButton_text">회원정보수정</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="rside_wrap">
+        <div class="list_header">
+          <div class="listName_wrap">
+            <h2 class="list_name">전체등급</he>
+          </div>
+        </div>
+        <div class="userRating_wrap">
+          <div class="userRating"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  
+
+  <!-- Bootstrap core JS-->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Core theme JS-->
+  <script src="js/scripts.js"></script>
+  <!-- 마이페이지 JS -->
+  <script src="js/mypage.js"></script>
+</body>
+</html>

@@ -1,0 +1,96 @@
+/*.restaurant-photos {
+  position: relative;
+  width: 100%;
+}*/
+
+@media screen and (min-width: 320px) and (max-width: 768px) {
+  aside {
+  display: block;
+  }
+
+  figure {
+    display: block;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 40px;
+    margin-inline-end: 40px;
+  }
+
+  .restaurant-photos {
+    height: 180px;
+  }
+
+  .restaurant-photos .list-photo-wrap {
+    height: 170px;
+    white-space: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch;
+    font-size: 0;
+  }
+
+  .restaurant-photos .list-photo-wrap .list-photo {
+    width: 170px;
+    height: 170px;
+    display: inline-block;
+    margin-right: 4px;
+  }
+
+  .restaurant-photos .list-photo-wrap .list-photo:last-child {
+    margin-right: 0;
+  }
+  .restaurant-photos .restaurant-photos-item {
+  display: block;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  -webkit-background-size: cover;
+  background-size: cover;
+  background-position: 50% 50%;
+  cursor: pointer;
+  }
+  .center-croping {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  }
+  img {
+  border: none;
+  vertical-align: top;
+  overflow-clip-margin: content-box;
+  overflow: clip;
+  }
+}
+
+/*.restaurant-photos .restaurant-photos-item {
+  display: block;
+  position: relative;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  -webkit-background-size: cover;
+  background-size: cover;
+  background-position: 50% 50%;
+  cursor: pointer;
+}
+
+.center-croping {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}*/
+
+img {
+  border: none;
+  vertical-align: top;
+  overflow-clip-margin: content-box;
+  overflow: clip;
+}
