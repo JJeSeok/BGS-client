@@ -93,7 +93,7 @@ document
         localStorage.setItem('token', data.token);
         setTimeout(() => {
           msg.style.display = 'none';
-          window.location.href = './index.html';
+          window.location.href = '/index.html';
         }, 2000);
       } else {
         showError(data.field, data.message);
