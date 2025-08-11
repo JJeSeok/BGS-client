@@ -4,7 +4,14 @@ body {
   background-color: #f5f5f5;
 }
 
-body, div, h1, h4, form, fieldset, button, input {
+body,
+div,
+h1,
+h4,
+form,
+fieldset,
+button,
+input {
   margin: 0;
   padding: 0;
 }
@@ -43,7 +50,7 @@ body, div, h1, h4, form, fieldset, button, input {
   height: 48px;
 }
 
-#tabMenu input[type="radio"] {
+#tabMenu input[type='radio'] {
   display: none;
 }
 
@@ -90,7 +97,8 @@ body, div, h1, h4, form, fieldset, button, input {
   outline: 0;
 }
 
-label, input {
+label,
+input {
   cursor: pointer;
 }
 
@@ -128,6 +136,21 @@ label, input {
   border: 0;
   border-radius: 4px;
   font-size: 15px;
+}
+
+.custom-alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 300px;
+  max-width: 90%;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 15px 20px;
+  animation: fadein 0.5s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 @media screen and (max-width: 768px) {

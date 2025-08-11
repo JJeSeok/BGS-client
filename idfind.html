@@ -10,7 +10,6 @@
     <link href="/assets/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="/css/idfind.css" rel="stylesheet" />
   </head>
-  <body>
     <header>
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container px-4 px-lg-5">
@@ -89,18 +88,17 @@
           <!-- 이름 입력 -->
           <div class="find_row">
             <strong class="find_title">
-              <label for="name">이름</label>
+              <label for="name_phone">이름</label>
             </strong>
             <span class="ps_box">
               <input
                 type="text"
-                id="name"
-                name="name"
+                id="name_phone"
+                name="name_phone"
                 title="이름"
                 class="int"
                 placeholder="이름 입력"
                 maxlength="40"
-                required
               />
             </span>
           </div>
@@ -108,18 +106,17 @@
           <!-- 전화번호 입력 -->
           <div class="find_row">
             <strong class="find_title">
-              <label for="phoneNo">전화번호</label>
+              <label for="phone">전화번호</label>
             </strong>
             <span class="ps_box">
               <input
                 type="text"
-                id="phoneNo"
-                name="phoneNo"
+                id="phone"
+                name="phone"
                 title="전화번호"
                 class="int"
                 placeholder="전화번호"
                 maxlength="16"
-                required
               />
             </span>
           </div>
@@ -127,7 +124,7 @@
           <div class="btn_area">
             <button
               type="submit"
-              id="btnFind"
+              id="btnFindPhone"
               class="btn_type bg-warning text-black"
             >
               배고파계정 찾기
@@ -138,18 +135,17 @@
           <!-- 이름 입력 -->
           <div class="find_row">
             <strong class="find_title">
-              <label for="name">이름</label>
+              <label for="name_email">이름</label>
             </strong>
             <span class="ps_box">
               <input
                 type="text"
-                id="name"
-                name="name"
+                id="name_email"
+                name="name_email"
                 title="이름"
                 class="int"
                 placeholder="이름 입력"
                 maxlength="40"
-                required
               />
             </span>
           </div>
@@ -167,8 +163,7 @@
                 title="전화번호"
                 class="int"
                 placeholder="이메일 입력"
-                maxlength="16"
-                required
+                maxlength="100"
               />
             </span>
           </div>
@@ -176,7 +171,7 @@
           <div class="btn_area">
             <button
               type="submit"
-              id="btnFind"
+              id="btnFindEmail"
               class="btn_type bg-warning text-black"
             >
               배고파계정 찾기
@@ -186,6 +181,8 @@
       </div>
       <!-- content -->
     </div>
+
+    <div id="idfind_result"></div>
 
     <script>
       var form1 = document.querySelector('#idfind_form_phone');
@@ -204,7 +201,6 @@
 
     <!-- Bootstrap core JS-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Core theme JS-->
-    <script src="js/scripts.js"></script>
+    <script src="/js/findId.js"></script>
   </body>
 </html>
