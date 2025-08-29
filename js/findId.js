@@ -1,6 +1,18 @@
 const phoneForm = document.getElementById('idfind_form_phone');
 const emailForm = document.getElementById('idfind_form_email');
 const resultBox = document.getElementById('idfind_result');
+const form1 = document.querySelector('#idfind_form_phone');
+const form2 = document.querySelector('#idfind_form_email');
+
+function show_phone() {
+  form1.style.display = 'block';
+  form2.style.display = 'none';
+}
+
+function show_email() {
+  form1.style.display = 'none';
+  form2.style.display = 'block';
+}
 
 function showAlert(msg, type = 'success') {
   if (!resultBox) return alert(msg);

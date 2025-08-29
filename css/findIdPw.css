@@ -80,6 +80,10 @@ input {
   display: none;
 }
 
+#code_form {
+  display: none;
+}
+
 .find_title {
   display: block;
   font-size: 12px;
@@ -128,6 +132,19 @@ input {
   left: 69px;
 }
 
+#code_form .btn_area {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 12px;
+  margin-top: 40px;
+}
+
+#code_form .btn_area .btn_type {
+  min-width: 120px;
+  padding: 10px 16px;
+}
+
 .btn_type {
   display: block;
   width: 100%;
@@ -160,5 +177,9 @@ input {
     margin: 40px 0 0;
     padding: 0 40px 139px;
     border: 0;
+  }
+
+  #code_form .btn_area {
+    gap: 8px;
   }
 }
