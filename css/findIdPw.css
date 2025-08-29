@@ -84,6 +84,10 @@ input {
   display: none;
 }
 
+#reset_form {
+  display: none;
+}
+
 .find_title {
   display: block;
   font-size: 12px;

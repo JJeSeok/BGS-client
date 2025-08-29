@@ -11,6 +11,7 @@ const context = {
 };
 const reqForm = document.getElementById('pwfind_form');
 const codeForm = document.getElementById('code_form');
+const resetForm = document.getElementById('reset_form');
 const resendBtn = document.getElementById('btnResend');
 const resultBox = document.getElementById('pwfind_result');
 
@@ -18,7 +19,7 @@ function showAlert(msg, type = 'success') {
   if (!resultBox) return alert(msg);
   resultBox.innerHTML = `<div class="custom-alert alert ${
     type === 'error' ? 'alert-danger' : 'alert-success'
-  }" role="alert"> ${type === 'error' ? msg : '아이디: ' + msg}</div>`;
+  }" role="alert"> ${msg}</div>`;
 }
 
 async function postJSON(url, body) {
@@ -77,6 +78,7 @@ reqForm.addEventListener('submit', async (e) => {
   showAlert(data.message);
   context.username = username;
   context.email = email;
+  btn.disabled = false;
   reqForm.style.display = 'none';
   codeForm.style.display = 'block';
 });
@@ -110,10 +112,62 @@ codeForm.addEventListener('submit', async (e) => {
 
   context.token = data.resetToken;
   showAlert('인증 완료! 새 비밀번호를 설정해 주세요.');
-  /** TODO
-   * 비밀번호 재설정 form 보여주기
-   */
+  verifyBtn.disabled = false;
+  resendBtn.disabled = false;
+  codeForm.style.display = 'none';
+  resetForm.style.display = 'block';
 });
-/** TODO
- * 재전송 버튼 누르면 코드 재전송
- */
+
+resendBtn.addEventListener('click', async () => {
+  resendBtn.disabled = true;
+
+  const data = await postJSON(ENDPOINTS.request, {
+    username: context.username,
+    email: context.email,
+  });
+  if (!data) {
+    resendBtn.disabled = false;
+    return;
+  }
+
+  showAlert('인증코드를 다시 보냈습니다.');
+  resendBtn.disabled = false;
+});
+
+resetForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const newPassword = document.getElementById('newPassword').value.trim();
+  const confirm = document.getElementById('confirmPassword').value.trim();
+
+  if (!newPassword) {
+    showAlert('비밀번호를 입력하세요.', 'error');
+    return;
+  } else if (newPassword.length < 8) {
+    showAlert('비밀번호는 최소 8자 이상이어야 합니다.', 'error');
+    return;
+  }
+
+  if (newPassword !== confirm) {
+    showAlert('비밀번호가 일치하지 않습니다.', 'error');
+    return;
+  }
+
+  const resetBtn = resetForm.querySelector('#btnReset');
+  resetBtn.disabled = true;
+
+  const data = await postJSON(ENDPOINTS.reset, {
+    resetToken: context.token,
+    newPassword,
+  });
+  if (!data) {
+    resetBtn.disabled = false;
+    return;
+  }
+
+  showAlert('비밀번호가 변경되었습니다.');
+  setTimeout(() => {
+    window.location.href = './login.html';
+    resetBtn.disabled = false;
+  }, 2000);
+});

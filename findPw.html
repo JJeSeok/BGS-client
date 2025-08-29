@@ -170,7 +170,55 @@
         </form>
         <!-- 코드 확인 + 재전송 -->
 
-        
+        <!-- 새 비밀번호 설정 -->
+         <form id="reset_form">
+          <!-- 새 비밀번호 입력 -->
+          <div class="find_row">
+            <strong class="find_title">
+              <label for="newPassword">새 비밀번호</label>
+            </strong>
+            <span class="ps_box">
+              <input
+                type="password"
+                id="newPassword"
+                name="newPassword"
+                title="새 비밀번호"
+                class="int"
+                placeholder="새 비밀번호 입력"
+                maxlength="20"
+              />
+            </span>
+          </div>
+          <!-- 새 비밀번호 입력 -->
+          <!-- 새 비밀번호 확인 입력 -->
+          <div class="find_row">
+            <strong class="find_title">
+              <label for="confirmPassword">새 비밀번호 확인</label>
+            </strong>
+            <span class="ps_box">
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                title="새 비밀번호 확인"
+                class="int"
+                placeholder="새 비밀번호 확인 입력"
+                maxlength="20"
+              />
+            </span>
+          </div>
+          <!-- 새 비밀번호 확인 입력 -->
+          <div class="btn_area">
+            <button
+              type="submit"
+              id="btnReset"
+              class="btn_type bg-warning text-black"
+            >
+              비밀번호 변경
+            </button>
+          </div>
+        </form>
+        <!-- 새 비밀번호 설정 -->
       </div>
       <!-- content -->
     </div>
