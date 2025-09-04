@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
   <head>
     <meta charset="utf-8" />
     <meta
@@ -49,9 +49,41 @@
             </li>
           </ul>
           <ul class="navbar-nav">
-            <a style="font-size: 17px" class="navbar-brand" href="./login.html">
+            <!-- 비로그인 상태 -->
+            <a
+              id="login-link"
+              style="font-size: 17px"
+              class="navbar-brand"
+              href="./login.html"
+            >
               로그인
             </a>
+
+            <!-- 로그인 상태: username 님 ▼ -->
+            <div
+              id="user-menu"
+              style="padding-top: 0.4rem; display: none"
+              class="dropdown"
+            >
+              <a
+                id="userDropdown"
+                style="font-size: 15px"
+                class="navbar-brand dropdown-toggle"
+                href="#"
+                role="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                <span id="user-name">***</span> 님
+              </a>
+              <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                <li>
+                  <button id="logout-btn" class="dropdown-item" type="button">
+                    로그아웃
+                  </button>
+                </li>
+              </ul>
+            </div>
 
             <a
               style="font-size: 17px"
@@ -556,9 +588,7 @@
     </section>
     <!-- Bootstrap core JS-->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Core theme JS-->
-    <script src="js/scripts.js"></script>
     <!-- 메인화면 JS-->
-    <script src="js/index.js"></script>
+    <script src="./js/index.js"></script>
   </body>
 </html>

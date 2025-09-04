@@ -307,6 +307,13 @@ ul {
   background-size: cover;
 }
 
+@media (hover: hover) {
+  #user-menu:hover > .dropdown-menu {
+    display: block;
+    margin-top: 0.3rem;
+  }
+}
+
 @media screen and (min-width: 769px) {
   .main-search {
     margin: 0 auto;

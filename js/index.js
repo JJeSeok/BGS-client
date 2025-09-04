@@ -1,6 +1,57 @@
+const API_BASE = 'http://localhost:8080';
+
 let layer_wrap = document.querySelector('.layer_wrap');
 let Modal = document.querySelector('.Modal');
 let closeButton = document.querySelector('.btn_layer_close');
+
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function fetchMe() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function logout() {
+  try {
+    await fetch(`${API_BASE}/users/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+  } catch {}
+  localStorage.removeItem('token');
+  location.reload();
+}
+
+async function initAuthMenu() {
+  const loginBtn = document.getElementById('login-link');
+  const userMenu = document.getElementById('user-menu');
+  const userNameEl = document.getElementById('user-name');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  const me = await fetchMe();
+
+  if (me && me.username) {
+    loginBtn.style.display = 'none';
+    userMenu.style.display = 'block';
+    userNameEl.textContent = me.username;
+  } else {
+    loginBtn.style.display = 'block';
+    userMenu.style.display = 'none';
+  }
+
+  logoutBtn?.addEventListener('click', logout);
+}
 
 document.querySelector('.btn_fillter').addEventListener('click', function () {
   layer_wrap.style.display = 'block';
@@ -49,6 +100,7 @@ for (let i = 0; i < filter_list.length; i++) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+  initAuthMenu();
   // URL에서 쿼리 스트링을 파싱하는 함수
   function getQueryStringParams(query = window.location.search) {
     return new URLSearchParams(query);
