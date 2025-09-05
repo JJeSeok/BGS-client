@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>baegopa</title>
+    <script
+      type="text/javascript"
+      src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=mwakhg8f98"
+    ></script>
+    <link rel="icon" href="/assets/paypal.svg" />
+    <link href="./css/map.css" rel="stylesheet" />
+  </head>
+  <body>
+    <div class="map-wrap">
+      <div class="toolbar">
+        <input id="q" type="text" placeholder="장소/주소 검색" />
+        <button id="btnSearch">검색</button>
+        <button id="btnHere">내 위치</button>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <script src="./js/map.js"></script>
+  </body>
+</html>
