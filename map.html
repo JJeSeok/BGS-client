@@ -7,7 +7,7 @@
     <title>baegopa</title>
     <script
       type="text/javascript"
-      src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=mwakhg8f98"
+      src="https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=mwakhg8f98&submodules=geocoder"
     ></script>
     <link rel="icon" href="/assets/paypal.svg" />
     <link href="./css/map.css" rel="stylesheet" />
@@ -20,6 +20,18 @@
         <button id="btnHere">내 위치</button>
       </div>
       <div id="map"></div>
+      <div id="confirm-panel" class="confirm-panel hidden" aria-live="polite">
+        <div class="cp-body">
+          <div class="cp-title">이 위치를 현재 위치로 지정할까요?</div>
+          <div id="cp-address" class="cp-sub">좌표 불러오는 중...</div>
+          <div class="cp-actions">
+            <button id="cp-cancel" class="btn btn-outline">취소</button>
+            <button id="cp-confirm" class="btn btn-primary">
+              현재 위치로 지정
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <script src="./js/map.js"></script>
