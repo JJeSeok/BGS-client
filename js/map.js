@@ -29,15 +29,25 @@ function placeMarker(latlng) {
       position: latlng,
       map,
       icon: {
-        content: '<div class="my-pin"></div>',
-        size: new naver.maps.Size(24, 24),
-        anchor: new naver.maps.Point(12, 24),
+        content: '<div class="icon-dot"></div>',
+        anchor: new naver.maps.Point(10, 20),
       },
-      clickable: true,
     });
   } else {
     marker.setPosition(latlng);
   }
+}
+
+function iconPinNeo() {
+  const content = '<div class="icon-pin-neo"></div>';
+  const anchor = new naver.maps.Point(12, 24);
+  return { content, anchor };
+}
+
+function iconDotPulse() {
+  const content = '<div class="icon-dot"></div>';
+  const anchor = new naver.maps.Point(10, 20);
+  return { content, anchor };
 }
 
 function showPanel(text) {
@@ -177,7 +187,7 @@ async function initMap() {
   const center = my || SEOUL;
   map = new naver.maps.Map('map', {
     center,
-    zoom: 16,
+    zoom: 17,
   });
 
   placeMarker(center);
@@ -186,6 +196,7 @@ async function initMap() {
     const latlng = toLatLng(e.coord || e.latlng);
     if (!latlng) return;
     setCandidate(latlng);
+    marker.setIcon(iconPinNeo());
   });
 
   btnConfirm.addEventListener('click', confirmCurrentLocation);
@@ -221,7 +232,8 @@ function goMyLocation() {
       const { latitude, longitude } = pos.coords;
       const latlng = new naver.maps.LatLng(latitude, longitude);
       setCandidate(latlng);
-      map.setZoom(16);
+      marker.setIcon(iconDotPulse());
+      map.setZoom(17);
     },
     () => alert('위치 접근이 거부되었어요.')
   );
