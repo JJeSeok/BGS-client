@@ -172,22 +172,15 @@ function confirmCurrentLocation() {
   window.location.href = '/index.html';
 }
 
-function initMap() {
+async function initMap() {
+  const my = await getMyLocation();
+  const center = my || SEOUL;
   map = new naver.maps.Map('map', {
-    center: SEOUL,
+    center,
     zoom: 16,
   });
 
-  marker = new naver.maps.Marker({
-    position: SEOUL,
-    map,
-    icon: {
-      content: '<div class="my-pin"></div>',
-      size: new naver.maps.Size(24, 24),
-      anchor: new naver.maps.Point(12, 24),
-    },
-    clickable: true,
-  });
+  placeMarker(center);
 
   naver.maps.Event.addListener(map, 'click', (e) => {
     const latlng = toLatLng(e.coord || e.latlng);
@@ -197,6 +190,26 @@ function initMap() {
 
   btnConfirm.addEventListener('click', confirmCurrentLocation);
   btnCancel.addEventListener('click', hidePanel);
+}
+
+function getMyLocation({
+  timeout = 5000,
+  enableHighAccuracy = true,
+  maximumAge = 30000,
+} = {}) {
+  if (!navigator.geolocation) {
+    return Promise.resolve(null);
+  }
+  return new Promise((resolve) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) =>
+        resolve(
+          new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
+        ),
+      () => resolve(null),
+      { enableHighAccuracy, timeout, maximumAge }
+    );
+  });
 }
 
 function goMyLocation() {
