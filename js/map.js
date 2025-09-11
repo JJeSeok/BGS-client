@@ -161,6 +161,17 @@ async function setCandidate(latlng) {
   showPanel(text);
 }
 
+function confirmCurrentLocation() {
+  if (!candidate) return;
+  currnetLocation = candidate;
+
+  const { lat, lng } = fmtLatLng(currnetLocation);
+  localStorage.setItem('currentLocation', JSON.stringify({ lat, lng }));
+
+  hidePanel();
+  window.location.href = '/index.html';
+}
+
 function initMap() {
   map = new naver.maps.Map('map', {
     center: SEOUL,
@@ -178,20 +189,14 @@ function initMap() {
     clickable: true,
   });
 
-  info = new naver.maps.InfoWindow({
-    content: '<div style="padding:8px;">서울 시청</div>',
-  });
-
-  naver.maps.Event.addListener(marker, 'click', () => {
-    if (info.getMap()) info.close();
-    else info.open(map, marker);
-  });
-
   naver.maps.Event.addListener(map, 'click', (e) => {
     const latlng = toLatLng(e.coord || e.latlng);
     if (!latlng) return;
     setCandidate(latlng);
   });
+
+  btnConfirm.addEventListener('click', confirmCurrentLocation);
+  btnCancel.addEventListener('click', hidePanel);
 }
 
 function goMyLocation() {
@@ -204,7 +209,6 @@ function goMyLocation() {
       const latlng = new naver.maps.LatLng(latitude, longitude);
       setCandidate(latlng);
       map.setZoom(16);
-      info.setContent('<div style="padding:8px;">내 위치</div>');
     },
     () => alert('위치 접근이 거부되었어요.')
   );
