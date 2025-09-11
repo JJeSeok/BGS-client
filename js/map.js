@@ -49,6 +49,81 @@ function hidePanel() {
   panel.classList.add('hidden');
 }
 
+function makeAddress(addr) {
+  if (!addr) {
+    return;
+  }
+
+  const { name, region, land } = addr;
+  const isRoadAddress = name === 'roadaddr';
+  let sido = '';
+  let sigugun = '';
+  let dongmyun = '';
+  let ri = '';
+  let rest = '';
+
+  if (hasArea(region.area1)) {
+    sido = region.area1.name;
+  }
+
+  if (hasArea(region.area2)) {
+    sigugun = region.area2.name;
+  }
+
+  if (hasArea(region.area3)) {
+    dongmyun = region.area3.name;
+  }
+
+  if (hasArea(region.area4)) {
+    ri = region.area4.name;
+  }
+
+  if (land) {
+    if (hasData(land.number1)) {
+      if (hasData(land.type) && land.type === '2') {
+        rest += '산';
+      }
+
+      rest += land.number1;
+
+      if (hasData(land.number2)) {
+        rest += '-' + land.number2;
+      }
+    }
+
+    if (isRoadAddress === true) {
+      if (!dongmyun.endsWith('동')) {
+        ri = land.name;
+      } else {
+        dongmyun = land.name;
+        ri = '';
+      }
+
+      if (hasAddition(land.addition0)) {
+        rest += ' ' + land.addition0.value;
+      }
+    }
+  }
+
+  if (ri === '') {
+    return [sido, sigugun, dongmyun, rest].join(' ');
+  } else {
+    return [sido, sigugun, dongmyun, ri, rest].join(' ');
+  }
+}
+
+function hasArea(area) {
+  return !!(area && area.name && area.name !== '');
+}
+
+function hasData(data) {
+  return !!(data && data !== '');
+}
+
+function hasAddition(addition) {
+  return !!(addition && addition.value && addition.value !== '');
+}
+
 function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
   if (!naver.maps.Service || !naver.maps.Service.reverseGeocode) {
     console.log('reverseGeocode 함수 실행 안됨!');
@@ -59,10 +134,8 @@ function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
       {
         coords: latlng,
         orders: [
-          naver.maps.Service.OrderType.LEGAL_CODE,
           naver.maps.Service.OrderType.ADDR,
           naver.maps.Service.OrderType.ROAD_ADDR,
-          naver.maps.Service.OrderType.ADM_CODE,
         ].join(','),
       },
       (status, res) => {
@@ -70,15 +143,14 @@ function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
           console.log('geocode 서버 이상!');
           return resolve(fallbackText);
         }
-        const r = res.results && res.results[0];
-        /** TODO
-         * 도로명, 지번 주소 보내기
-         * 그냥 roadAddress, jibunAddress로 보내면 안됨
-         * addr과 roadaddr 값을 이용해서 문자열 조합하기
-         * 주소 보내는 우선 순위는 도로명.
-         */
-        console.log(res);
-        const text = r?.roadAddress || r?.jibunAddress || fallbackText;
+        const r = new Object();
+
+        res.v2.results.forEach((v) => {
+          const address = makeAddress(v);
+          v.name === 'roadaddr' ? (r.roadaddr = address) : (r.addr = address);
+        });
+
+        const text = r?.roadaddr || r?.addr || fallbackText;
         resolve(text);
       }
     );
