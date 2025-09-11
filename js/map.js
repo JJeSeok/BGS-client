@@ -98,10 +98,6 @@ function makeAddress(addr) {
         dongmyun = land.name;
         ri = '';
       }
-
-      if (hasAddition(land.addition0)) {
-        rest += ' ' + land.addition0.value;
-      }
     }
   }
 
@@ -118,10 +114,6 @@ function hasArea(area) {
 
 function hasData(data) {
   return !!(data && data !== '');
-}
-
-function hasAddition(addition) {
-  return !!(addition && addition.value && addition.value !== '');
 }
 
 function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
