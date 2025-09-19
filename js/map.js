@@ -1,9 +1,9 @@
-const SEOUL = new naver.maps.LatLng(37.5666102, 126.9783811);
+import { LocationStore } from './locationStore.js';
 
-let map, info;
+let map;
 let marker = null;
 let candidate = null;
-let currnetLocation = null;
+let candidateSource = 'manual';
 
 const panel = document.getElementById('confirm-panel');
 const address = document.getElementById('cp-address');
@@ -159,10 +159,12 @@ function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
   });
 }
 
-async function setCandidate(latlng) {
+async function setCandidate(latlng, source = 'manual') {
   candidate = latlng;
+  candidateSource = source;
   placeMarker(latlng);
   map.setCenter(latlng);
+
   const { lat, lng } = fmtLatLng(latlng);
   const text = await reverseGeocode(
     latlng,
@@ -173,24 +175,28 @@ async function setCandidate(latlng) {
 
 function confirmCurrentLocation() {
   if (!candidate) return;
-  currnetLocation = candidate;
 
-  const { lat, lng } = fmtLatLng(currnetLocation);
-  localStorage.setItem('currentLocation', JSON.stringify({ lat, lng }));
+  const { lat, lng } = fmtLatLng(candidate);
+  const source = candidateSource === 'geo' ? 'geo' : 'user';
+  LocationStore.saveLocation({ lat, lng, source });
 
   hidePanel();
   window.location.href = '/index.html';
 }
 
 async function initMap() {
-  const my = await getMyLocation();
-  const center = my || SEOUL;
+  const { loc, reason } = await LocationStore.getPreferredLocation();
+  const center = new naver.maps.LatLng(loc.lat, loc.lng);
   map = new naver.maps.Map('map', {
     center,
-    zoom: 17,
+    zoom: reason === 'fallback' ? 14 : 17,
   });
 
   placeMarker(center);
+
+  if (loc.source !== 'geo') {
+    marker.setIcon(iconPinNeo());
+  }
 
   naver.maps.Event.addListener(map, 'click', (e) => {
     const latlng = toLatLng(e.coord || e.latlng);
@@ -203,26 +209,6 @@ async function initMap() {
   btnCancel.addEventListener('click', hidePanel);
 }
 
-function getMyLocation({
-  timeout = 5000,
-  enableHighAccuracy = true,
-  maximumAge = 30000,
-} = {}) {
-  if (!navigator.geolocation) {
-    return Promise.resolve(null);
-  }
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition(
-      (pos) =>
-        resolve(
-          new naver.maps.LatLng(pos.coords.latitude, pos.coords.longitude)
-        ),
-      () => resolve(null),
-      { enableHighAccuracy, timeout, maximumAge }
-    );
-  });
-}
-
 function goMyLocation() {
   if (!navigator.geolocation) {
     return alert('브라우저가 위치정보를 지원하지 않아요.');
@@ -231,7 +217,7 @@ function goMyLocation() {
     (pos) => {
       const { latitude, longitude } = pos.coords;
       const latlng = new naver.maps.LatLng(latitude, longitude);
-      setCandidate(latlng);
+      setCandidate(latlng, 'geo');
       marker.setIcon(iconDotPulse());
       map.setZoom(17);
     },
