@@ -307,6 +307,72 @@ ul {
   background-size: cover;
 }
 
+.card-rest {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  position: relative;
+}
+
+.card-rest:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.08);
+  cursor: pointer;
+}
+
+.card-rest .card-img-top {
+  aspect-ratio: 4/3;
+  object-fit: cover;
+}
+
+.card-rest .name {
+  margin-bottom: 0.25rem;
+  font-weight: 800;
+}
+
+.card-rest .addrest {
+  color: #374151;
+  font-size: 0.95rem;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.meta .chip {
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.meta .dot {
+  opacity: 0.35;
+}
+
+.meta .stars {
+  color: #f59e0b;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.meta .count {
+  color: #6c757d;
+}
+
+.card-rest .stretched-link {
+  position: static;
+}
+
 @media (hover: hover) {
   #user-menu:hover > .dropdown-menu {
     display: block;
