@@ -85,39 +85,92 @@ function renderCards(grid, items) {
       it.address.sido.endsWith('도') ? it.address.sigugun : it.address.sido,
       it.address.dongmyun,
     ].join(' ');
-    const img = it?.mainImageUrl || '/images/흠.png';
     const category = it.category;
     const name = it.name;
 
-    const col = document.createElement('div');
-    col.className = 'col mb-5';
-    col.innerHTML = `
-      <div class="card card-rest h-100" data-id"${it.id}">
-        <img class="card-img-top" src="${img}" alt="${name}"/>
-        <div class="card-body p-3 text-center">
-          <h5 class="name">${name}</h5>
-          <div class="meta">
-            <span class="chip">${category}</span>
-            <span class="dot">•</span>
-            <span class="stars">★ ${avg}</span>
-            <span class="dot">•</span>
-            <span class="count">리뷰 ${cnt}</span>
-          </div>
-          <div class="address">${addr}</div>
-        </div>
-        <a class="stretched-link" href="./천원국수.html" aria-label="천원국수 상세로 이동"></a>
-      </div>
-    `;
+    // col
+    const col = div('col mb-5');
 
-    frag.appendChild(col);
+    // card
+    const card = div('card card-rest h-100');
+    card.dataset.id = it.id;
+
+    //img
+    const img = document.createElement('img');
+    img.className = 'card-img-top';
+    img.src = it?.mainImageUrl || '/images/흠.png';
+    img.alt = name;
+    img.addEventListener('error', () => {
+      img.src = '/images/흠.png';
+    });
+
+    //body
+    const body = div('card-body p-3 text-center');
+
+    // name
+    const h5 = document.createElement('h5');
+    h5.className = 'name';
+    h5.textContent = name;
+
+    // meta
+    const meta = div('meta');
+    meta.append(
+      chip(category),
+      dot(),
+      textSpan('stars', `★ ${avg.toFixed(1)}`),
+      dot(),
+      textSpan('count', `리뷰 ${cnt}`)
+    );
+
+    // address
+    const addrEl = div('address', addr);
+
+    // stretched Link
+    const a = document.createElement('a');
+    a.className = 'stretched-link';
+    a.href = './천원국수.html';
+    a.setAttribute('aria-label', '천원국수 상세로 이동');
+
+    body.append(h5, meta, addrEl);
+    card.append(img, body, a);
+    col.append(card);
+    frag.append(col);
   }
-  grid.appendChild(frag);
+  grid.append(frag);
+
+  function div(cls, text) {
+    const d = document.createElement('div');
+    d.className = cls;
+    if (text !== null) {
+      d.textContent = text;
+    }
+    return d;
+  }
+
+  function span(cls, text) {
+    const s = document.createElement('span');
+    s.className = cls;
+    s.textContent = text;
+    return s;
+  }
+
+  function chip(text) {
+    return span('chip', text);
+  }
+
+  function dot() {
+    return span('dot', '•');
+  }
+
+  function textSpan(cls, text) {
+    return span(cls, text);
+  }
 }
 
 /** TODO
- * XSS 공격 취약점 해결
  * 이미지 경로 서버로 옮기기 (express static)
  * 리뷰수 1000 넘으면 k로 표시할 건지
+ * 상세 페이지 링크 변경
  */
 
 function num(v, d = 0) {
