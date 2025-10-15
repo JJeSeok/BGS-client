@@ -98,7 +98,7 @@ function renderCards(grid, items) {
     //img
     const img = document.createElement('img');
     img.className = 'card-img-top';
-    img.src = it?.mainImageUrl || '/images/흠.png';
+    img.src = normalizeImgUrl(it?.mainImageUrl);
     img.alt = name;
     img.addEventListener('error', () => {
       img.src = '/images/흠.png';
@@ -168,10 +168,23 @@ function renderCards(grid, items) {
 }
 
 /** TODO
- * 이미지 경로 서버로 옮기기 (express static)
  * 리뷰수 1000 넘으면 k로 표시할 건지
  * 상세 페이지 링크 변경
  */
+
+function normalizeImgUrl(url) {
+  if (!url) return '/images/흠.png';
+
+  try {
+    const u = new URL(url, API_BASE);
+    if (!['http:', 'https:'].includes(u.protocol)) {
+      throw new Error('bad url');
+    }
+    return u.href;
+  } catch (error) {
+    return '/images/흠.png';
+  }
+}
 
 function num(v, d = 0) {
   const n = Number(v);
