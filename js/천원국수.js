@@ -1,6 +1,57 @@
+const API_BASE = 'http://localhost:8080';
+
 var starButton = document.getElementById('star_button');
 var starButtonIcon = document.getElementById('star_icon');
 var isClicked = false;
+
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function fetchMe() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function logout() {
+  try {
+    await fetch(`${API_BASE}/users/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+  } catch {}
+  localStorage.removeItem('token');
+  location.reload();
+}
+
+async function initAuthMenu() {
+  const loginBtn = document.getElementById('login-link');
+  const userMenu = document.getElementById('user-menu');
+  const userNameEl = document.getElementById('user-name');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  const me = await fetchMe();
+
+  if (me && me.username) {
+    loginBtn.style.display = 'none';
+    userMenu.style.display = 'block';
+    userNameEl.textContent = me.username;
+  } else {
+    loginBtn.style.display = 'block';
+    userMenu.style.display = 'none';
+  }
+
+  logoutBtn?.addEventListener('click', logout);
+}
 
 starButton.addEventListener('click', function () {
   if (isClicked) {
@@ -93,3 +144,7 @@ loadMoreButton.addEventListener('click', showReviews);
 window.onload = function () {
   filterButtons[0].click();
 };
+
+document.addEventListener('DOMContentLoaded', function () {
+  initAuthMenu();
+});

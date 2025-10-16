@@ -1,24 +1,25 @@
+:root {
+  --maxw: 1200px;
+  --thumb: 300px;
+  --gap: clamp(8px, 1.8vw, 12px);
+  --radius: 14px;
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+  --panel-pad: clamp(12px, 2.4vw, 20px);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
 body,
-div,
-img,
-span,
-h1,
-h2,
-h3,
-strong,
-button,
-table,
-i,
-ul,
-li,
-p,
-table,
-tbody,
-tr,
-th,
-td {
+ul {
   margin: 0;
   padding: 0;
+}
+
+body {
+  overflow-x: hidden;
 }
 
 button {
@@ -37,35 +38,65 @@ button {
 
 #images {
   width: 100%;
-  display: block;
   overflow: hidden;
 }
 
 #images #imgShow {
-  width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: var(--gap);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 2px 8px;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  cursor: pointer;
 }
 
 #images #imgShow .imgwrap {
-  width: 370px;
-  height: 340px;
-  margin-left: 6px;
-  cursor: pointer;
+  flex: 0 0 var(--thumb);
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: var(--radius);
   overflow: hidden;
+  background: #f6f6f7;
+  box-shadow: var(--shadow);
+  scroll-snap-align: start;
+  margin: 0;
 }
 
 #images .imgwrap img {
   width: 100%;
   height: 100%;
+  object-fit: cover;
+}
+
+#images #imgShow {
+  scrollbar-color: #e0e0e0 transparent;
+  scrollbar-width: thin;
+}
+
+#images #imgShow::-webkit-scrollbar {
+  height: 8px;
+}
+
+#images #imgShow::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 999px;
 }
 
 #content {
   padding-top: 6px;
-  height: 100%;
+  display: grid;
+  grid-column: 1fr;
+  gap: clamp(16px, 2.2vw, 24px);
 }
 
-#lside_wrap {
-  height: 100%;
-  box-sizing: border-box;
+#lside_wrap,
+#rside_wrap,
+#column_side {
+  width: 100%;
+  float: none;
 }
 
 #inner {
@@ -78,14 +109,18 @@ button {
 }
 
 .restaurant_header {
-  display: block;
+  /* display: block; */
   border-bottom: 1px solid #e9e9e9;
   padding-bottom: 10px;
-  min-height: 74px;
+  /* min-height: 74px; */
 }
 
 .restaurant_title {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px var(--gap);
+  align-items: center;
+  justify-content: space-between;
 }
 
 .title_wrap {
@@ -168,23 +203,22 @@ button {
 }
 
 .status {
-  /* font-size: 0.8rem; */
-  font-size: 1.2rem;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  font-size: 1rem;
   color: #9b9b9b;
 }
 
 .cnt {
-  display: inline-block;
-  margin-right: 15px;
+  display: inline-flex;
+  align-items: center;
 }
 
 .eye_fill {
   float: left;
-  /* width: 18px;
-  height: 18px;
-  margin-top: 4px; */
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   margin-top: 4px;
   margin-right: 5px;
   background-image: url('/assets/eye-fill.svg');
@@ -194,12 +228,9 @@ button {
 
 .pencil_fill {
   float: left;
-  /* width: 14px;
-  height: 14px;
-  margin-top: 4px; */
-  width: 18px;
-  height: 18px;
-  margin-top: 6px;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
   margin-right: 5px;
   background-image: url('/assets/pencil-fill.svg');
   background-size: cover;
@@ -208,12 +239,8 @@ button {
 
 .star_fill {
   float: left;
-  /* width: 14px;
-  height: 14px;
-  margin-top: 4px; */
-  width: 18px;
-  height: 18px;
-  margin-top: 6px;
+  width: 16px;
+  height: 16px;
   margin-right: 5px;
   background-image: url('/assets/star-fill.svg');
   background-size: cover;
@@ -646,38 +673,53 @@ ul li {
   color: #ff792a;
 }
 
-#column_side {
-  overflow: hidden;
-  height: 100%;
-}
-
-#map_container {
-  display: block;
+.map_container {
+  /* display: block;
   height: 320px;
   width: 100%;
+  cursor: pointer; */
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #f3f4f6;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
   cursor: pointer;
 }
 
-@media screen and (min-width: 769px) {
-  #images #imgShow {
-    height: 340px;
-    display: flex;
-    overflow: hidden;
-  }
+.map_container > div,
+.map_container canvas {
+  width: 100%;
+  height: 100%;
+}
 
+@media (max-width: 1024px) {
   #images #imgShow .imgwrap {
-    min-width: 300px;
+    flex: 0 0 240px;
+    width: 240px;
+    height: 240px;
   }
+}
 
+@media (min-width: 1024px) {
   #content {
-    display: flex;
+    grid-column: 1.6fr 1fr;
+    align-items: start;
   }
 
-  #lside_wrap {
+  #column_side {
+    position: sticky;
+    top: 16px;
+  }
+}
+
+@media screen and (min-width: 769px) {
+  /* #lside_wrap {
     float: left;
     width: calc(100% - 400px);
     padding: 0 20px;
-  }
+  } */
 
   #inner {
     margin: 0 auto;
@@ -686,8 +728,7 @@ ul li {
   }
 
   #restaurant_detail {
-    margin-top: 20px;
-    padding-top: 30px;
+    padding-top: 20px;
   }
 
   .title_wrap {
@@ -698,7 +739,6 @@ ul li {
   }
 
   .status {
-    margin: 20px 0 10px;
     margin-left: 2px;
   }
 
@@ -746,36 +786,23 @@ ul li {
     margin-top: 10px;
   }
 
-  #rside_wrap {
+  /* #rside_wrap {
     float: right;
     width: 400px;
     background-color: #f6f6f6;
-  }
+  } */
 
-  #column_side {
+  /* #column_side {
     width: 400px;
     padding-bottom: 50px;
-  }
+  } */
 }
 
 @media screen and (max-width: 768px) {
-  #images {
-    height: 180px;
-  }
-
-  #images #imgShow {
-    height: 170px;
-    white-space: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
   #images #imgShow .imgwrap {
+    flex: 0 0 170px;
     width: 170px;
     height: 170px;
-    display: inline-block;
-    margin: 0;
-    margin-right: 4px;
   }
 
   .restaurant_header {
@@ -783,7 +810,7 @@ ul li {
   }
 
   .branch {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
   }
 
   .review_writing_button_icon,
@@ -795,10 +822,6 @@ ul li {
   .button_text {
     font-size: 0.63rem;
     margin-top: 4px;
-  }
-
-  .status {
-    margin-top: 10px;
   }
 
   .status.branch_none {
@@ -818,7 +841,7 @@ ul li {
     text-align: left;
     vertical-align: top;
     padding-right: 10px;
-    padding-bottom: 5px;
+    padding-bottom: 6px;
     box-sizing: content-box;
   }
 
@@ -839,6 +862,10 @@ ul li {
 
   .restaurant_Menu {
     margin-right: 20px;
+  }
+
+  .restaurant_introduce_section {
+    margin: 20px 0 25px 15px;
   }
 
   #restaurant_reviewList {

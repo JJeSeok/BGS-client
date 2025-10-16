@@ -66,7 +66,7 @@ async function init() {
     renderCards(grid, items);
   } catch (e) {
     console.error(e);
-    grid.innerHTML = `<div class="text-center text-danger my-4">목록을 불러오지 못했어요</div>`;
+    // grid.innerHTML = `<div class="text-center text-danger my-4">목록을 불러오지 못했어요</div>`;
   }
 }
 
@@ -119,7 +119,7 @@ function renderCards(grid, items) {
       dot(),
       textSpan('stars', `★ ${avg.toFixed(1)}`),
       dot(),
-      textSpan('count', `리뷰 ${cnt}`)
+      textSpan('count', `리뷰 ${new Intl.NumberFormat().format(cnt)}`)
     );
 
     // address
@@ -168,7 +168,7 @@ function renderCards(grid, items) {
 }
 
 /** TODO
- * 리뷰수 1000 넘으면 k로 표시할 건지
+ * init 함수의 주석 변경
  * 상세 페이지 링크 변경
  */
 
