@@ -66,7 +66,7 @@ async function init() {
     renderCards(grid, items);
   } catch (e) {
     console.error(e);
-    // grid.innerHTML = `<div class="text-center text-danger my-4">목록을 불러오지 못했어요</div>`;
+    grid.innerHTML = `<div class="text-center text-danger my-4">목록을 불러오지 못했어요</div>`;
   }
 }
 
@@ -128,8 +128,8 @@ function renderCards(grid, items) {
     // stretched Link
     const a = document.createElement('a');
     a.className = 'stretched-link';
-    a.href = './천원국수.html';
-    a.setAttribute('aria-label', '천원국수 상세로 이동');
+    a.href = `restaurant.html?id=${encodeURIComponent(it.id)}`;
+    a.setAttribute('aria-label', `${name} 상세로 이동`);
 
     body.append(h5, meta, addrEl);
     card.append(img, body, a);
@@ -166,11 +166,6 @@ function renderCards(grid, items) {
     return span(cls, text);
   }
 }
-
-/** TODO
- * init 함수의 주석 변경
- * 상세 페이지 링크 변경
- */
 
 function normalizeImgUrl(url) {
   if (!url) return '/images/흠.png';

@@ -1,5 +1,12 @@
 const API_BASE = 'http://localhost:8080';
 
+const id = new URLSearchParams(location.search).get('id');
+if (!id) {
+  alert('가게 ID가 없습니다. 메인으로 이동합니다.');
+  location.href = 'index.html';
+}
+let data;
+
 var starButton = document.getElementById('star_button');
 var starButtonIcon = document.getElementById('star_icon');
 var isClicked = false;
@@ -51,6 +58,25 @@ async function initAuthMenu() {
   }
 
   logoutBtn?.addEventListener('click', logout);
+}
+
+function updateTitle() {
+  const titleName = [data?.name, data?.branch_info].join(' ');
+  document.title = titleName ? titleName : 'baegoba';
+}
+
+async function init() {
+  try {
+    const res = await fetch(`${API_BASE}/restaurants/${id}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch (e) {
+    console.error(e);
+    alert('상세 정보를 불러오지 못했습니다.');
+    throw e;
+  }
+
+  updateTitle();
 }
 
 starButton.addEventListener('click', function () {
@@ -147,4 +173,5 @@ window.onload = function () {
 
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
+  init();
 });
