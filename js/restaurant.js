@@ -61,8 +61,37 @@ async function initAuthMenu() {
 }
 
 function updateTitle() {
-  const titleName = [data?.name, data?.branch_info].join(' ');
+  const titleName = [data?.restaurant.name, data?.restaurant.branch_info].join(
+    ' '
+  );
   document.title = titleName ? titleName : 'baegoba';
+}
+
+function updateImg() {
+  const imgShow = document.getElementById('imgShow');
+  const photos = Array.isArray(data?.photos)
+    ? [
+        {
+          url: data.restaurant.main_image_url,
+          alt: `${data.restaurant.name} 대표 사진`,
+        },
+        ...data.photos,
+      ]
+    : [];
+
+  photos.forEach((p) => {
+    const figure = document.createElement('figure');
+    figure.className = 'imgwrap';
+
+    const img = document.createElement('img');
+    img.src = normalizeImgUrl(p.url);
+    img.alt = p.alt ?? '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+
+    figure.appendChild(img);
+    imgShow.appendChild(figure);
+  });
 }
 
 async function init() {
@@ -73,10 +102,24 @@ async function init() {
   } catch (e) {
     console.error(e);
     alert('상세 정보를 불러오지 못했습니다.');
+    location.href = 'index.html';
     throw e;
   }
 
   updateTitle();
+  updateImg();
+}
+
+function normalizeImgUrl(url) {
+  try {
+    const u = new URL(url, API_BASE);
+    if (!['http:', 'https:'].includes(u.protocol)) {
+      throw new Error('bad url');
+    }
+    return u.href;
+  } catch (error) {
+    return '';
+  }
 }
 
 starButton.addEventListener('click', function () {
