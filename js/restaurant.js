@@ -94,6 +94,62 @@ function updateImg() {
   });
 }
 
+function updateHeader() {
+  document.querySelector('.restaurant_name').textContent =
+    data?.restaurant.name ?? '';
+  document.querySelector('.rate_point').textContent =
+    data?.restaurant.rating_avg ?? '';
+  document.querySelector('.rate_point').ariaLabel = `평점 ${
+    data?.restaurant.rating_avg ?? ''
+  }`;
+  document.querySelector('.branch').textContent =
+    data?.restaurant.branch_info ?? '';
+}
+
+function updateStatus() {
+  const status = document.querySelectorAll('.status .cnt > span');
+
+  status[0].textContent = data?.restaurant.view_count ?? 0;
+  status[1].textContent =
+    typeof data?.restaurant.review_count === 'number'
+      ? new Intl.NumberFormat().format(data?.restaurant.review_count)
+      : 0;
+  status[2].textContent = data?.restaurant.like_count ?? 0;
+}
+
+function updateInfo() {
+  const rows = document.querySelectorAll('.info tbody tr td');
+
+  // 주소
+  randerAddress(
+    rows[0],
+    data?.restaurant.road_address,
+    data?.restaurant.jibun_address
+  );
+
+  // 전화
+  rows[1].textContent = data?.restaurant.phone ?? '';
+
+  // 음식 종류
+  rows[2].textContent = data?.restaurant.category ?? '';
+
+  // 업데이트 일시
+  const time = document.querySelector('.update time');
+  if (time && data?.restaurant.updatedAt) {
+    const d = new Date(data.restaurant.updatedAt);
+    time.dateTime = d.toISOString();
+    time.textContent = `${d.getFullYear()}. ${
+      d.getMonth() + 1
+    }. ${d.getDate()}`;
+  }
+
+  // 식당 소개
+  document.querySelector('.restaurantOwner_comment').textContent = data
+    ?.restaurant.description
+    ? data.restaurant.description
+    : '식당 소개를 입력해주세요.';
+}
+
 async function init() {
   try {
     const res = await fetch(`${API_BASE}/restaurants/${id}`);
@@ -108,6 +164,9 @@ async function init() {
 
   updateTitle();
   updateImg();
+  updateHeader();
+  updateStatus();
+  updateInfo();
 }
 
 function normalizeImgUrl(url) {
@@ -119,6 +178,29 @@ function normalizeImgUrl(url) {
     return u.href;
   } catch (error) {
     return '';
+  }
+}
+
+function randerAddress(td, road, jibun) {
+  if (!road && !jibun) return;
+
+  if (road) {
+    td.textContent = road;
+    if (jibun) {
+      const br = document.createElement('br');
+
+      const rect = document.createElement('span');
+      rect.className = 'restaurant_infoAddress_rectangle';
+      rect.textContent = '지번';
+
+      const txt = document.createElement('span');
+      txt.className = 'restaurant_infoAddress_text';
+      txt.textContent = jibun;
+
+      td.append(br, rect, txt);
+    }
+  } else {
+    td.textContent = jibun;
   }
 }
 
