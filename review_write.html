@@ -44,19 +44,11 @@
               </li>
             </ul>
             <ul class="navbar-nav">
-              <a
-                style="font-size: 17px"
-                class="navbar-brand"
-                href="/login.html"
-              >
+              <a style="font-size: 17px" class="navbar-brand" href="login.html">
                 로그인
               </a>
 
-              <a
-                style="font-size: 17px"
-                class="navbar-brand"
-                href="http://google.com/maps"
-              >
+              <a style="font-size: 17px" class="navbar-brand" href="map.html">
                 map
               </a>
             </ul>
@@ -73,16 +65,22 @@
         </div>
       </div>
       <div class="ReviewWritingPage_contentWrap">
-        <div class="ReviewWritingPage_formWrap">
+        <form id="reviewForm" class="ReviewWritingPage_formWrap" novalidate>
           <div class="ReviewWritingPage_editorWrap">
             <div class="ReviewEditor">
               <div class="ReviewEditor_writeWrap">
                 <div class="ReviewWritingPage_recommendWrap">
                   <div class="ReviewWritingPage_recommend">
-                    <ul class="ReviewWritingPage_recommend_List">
+                    <ul
+                      class="ReviewWritingPage_recommend_List"
+                      id="ratingPresets"
+                    >
                       <li class="ReviewWritingPage_recommend_Item">
                         <button
+                          type="button"
                           class="recommendButton recommendButton_Recommend"
+                          data-score="4.5"
+                          aria-pressed="false"
                         >
                           <i
                             class="recommendButton_Image recommendButton_Image_Recommend"
@@ -91,7 +89,12 @@
                         </button>
                       </li>
                       <li class="ReviewWritingPage_recommend_Item">
-                        <button class="recommendButton recommendButton_Ok">
+                        <button
+                          type="button"
+                          class="recommendButton recommendButton_Ok"
+                          data-score="2.5"
+                          aria-pressed="false"
+                        >
                           <i
                             class="recommendButton_Image recommendButton_Image_Ok"
                           ></i>
@@ -100,7 +103,10 @@
                       </li>
                       <li class="ReviewWritingPage_recommend_Item">
                         <button
+                          type="button"
                           class="recommendButton recommendButton_NotRecommend"
+                          data-score="1.0"
+                          aria-pressed="false"
                         >
                           <i
                             class="recommendButton_Image recommendButton_Image_NotRecommend"
@@ -111,9 +117,35 @@
                     </ul>
                   </div>
                 </div>
+
+                <fieldset class="StarRating" aria-label="별점 선택">
+                  <input type="radio" id="s50" name="score" value="5.0" />
+                  <input type="radio" id="s45" name="score" value="4.5" />
+                  <input type="radio" id="s40" name="score" value="4.0" />
+                  <input type="radio" id="s35" name="score" value="3.5" />
+                  <input type="radio" id="s30" name="score" value="3.0" />
+                  <input type="radio" id="s25" name="score" value="2.5" />
+                  <input type="radio" id="s20" name="score" value="2.0" />
+                  <input type="radio" id="s15" name="score" value="1.5" />
+                  <input type="radio" id="s10" name="score" value="1.0" />
+                  <input type="radio" id="s05" name="score" value="0.5" />
+                </fieldset>
+
+                <div
+                  id="starView"
+                  class="StarsVisual"
+                  role="slider"
+                  aria-label="별점"
+                  aria-valuemin="0"
+                  aria-valuemax="5"
+                  aria-valuenow="0"
+                  tabindex="0"
+                ></div>
+
                 <textarea
                   class="ReviewEditor_write"
                   placeholder="재석님, 주문하신 메뉴는 어떠셨나요? 식당의 분위기와 서비스도 궁금해요!"
+                  maxlength="10000"
                 ></textarea>
               </div>
               <p class="ReviewEditor_TextLengthStateBox">
@@ -130,24 +162,34 @@
               <span class="ReviewPictureCounter_MaxLength">30</span>
             </div>
             <div class="ReviewPictureContainer">
-              <ul class="ReviewPictureContainer_pictureList">
+              <ul class="ReviewPictureContainer_pictureList" id="pictureList">
                 <li
                   class="ReviewPictureContainer_pictureItem pictureItem_button"
                 >
-                  <button class="ReviewPictureContainer_AddButton">
+                  <button
+                    type="button"
+                    class="ReviewPictureContainer_AddButton"
+                    id="addImages"
+                  >
                     <i class="ReviewPictureContainer_AddIcon"></i>
                   </button>
                 </li>
               </ul>
             </div>
+            <!--사진에 대한 input 들어갈 자리-->
           </div>
-        </div>
-      </div>
-      <div class="ReviewWritingPage_ButtonsWrap">
-        <div class="ReviewWritingPage_Buttons">
-          <button class="ReviewWritingPage_CancelButton">취소</button>
-          <button class="ReviewWritingPage_SubmitButton">리뷰 올리기</button>
-        </div>
+
+          <div class="ReviewWritingPage_ButtonsWrap">
+            <div class="ReviewWritingPage_Buttons">
+              <button type="button" class="ReviewWritingPage_CancelButton">
+                취소
+              </button>
+              <button type="submit" class="ReviewWritingPage_SubmitButton">
+                리뷰 올리기
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
 

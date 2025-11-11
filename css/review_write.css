@@ -335,3 +335,43 @@ button {
   text-align: center;
   background-color: #ff7100;
 }
+
+.StarRating {
+  position: absolute;
+  left: -9999px;
+  top: -9999px;
+}
+
+.StarsVisual {
+  --rating: 0;
+  --hover: 0;
+
+  position: relative;
+  display: inline-block;
+  font-size: 28px;
+  letter-spacing: 2px;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+}
+
+.StarsVisual::before {
+  content: '★★★★★';
+  color: #ddd;
+}
+
+.StarsVisual::after {
+  content: '★★★★★';
+  color: #ffb703;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc((var(--rating) / 5) * 100%);
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.StarsVisual.hovering::after {
+  width: calc((var(--hover) / 5) * 100%);
+}
