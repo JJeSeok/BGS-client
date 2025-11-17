@@ -156,11 +156,6 @@
             </div>
           </div>
           <div class="ReviewWritingPage_pictureWrap">
-            <div class="ReviewPictureCounter">
-              <span class="ReviewPictureCounter_Length">0</span>
-              <span class="ReviewPictureCounter_Divider">/</span>
-              <span class="ReviewPictureCounter_MaxLength">30</span>
-            </div>
             <div class="ReviewPictureContainer">
               <ul class="ReviewPictureContainer_pictureList" id="pictureList">
                 <li
@@ -176,15 +171,34 @@
                 </li>
               </ul>
             </div>
-            <!--사진에 대한 input 들어갈 자리-->
+            <input
+              id="imageInput"
+              type="file"
+              accept="image/*"
+              multiple
+              hidden
+            />
+            <div class="ReviewPictureCounter">
+              <span class="ReviewPictureCounter_Length">0</span>
+              <span class="ReviewPictureCounter_Divider">/</span>
+              <span class="ReviewPictureCounter_MaxLength">30</span>
+            </div>
           </div>
 
           <div class="ReviewWritingPage_ButtonsWrap">
             <div class="ReviewWritingPage_Buttons">
-              <button type="button" class="ReviewWritingPage_CancelButton">
+              <button
+                type="button"
+                class="ReviewWritingPage_CancelButton"
+                id="cancelBtn"
+              >
                 취소
               </button>
-              <button type="submit" class="ReviewWritingPage_SubmitButton">
+              <button
+                type="submit"
+                class="ReviewWritingPage_SubmitButton"
+                id="submitBtn"
+              >
                 리뷰 올리기
               </button>
             </div>
