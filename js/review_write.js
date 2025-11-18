@@ -1,11 +1,68 @@
-const textarea = document.querySelector('.ReviewEditor_write');
-const charCount = document.querySelector('.ReviewEditor_TextLength');
+const API_BASE = 'http://localhost:8080';
 
-textarea.addEventListener('input', () => {
-  charCount.textContent = textarea.value.length;
-  textarea.style.height = '150px';
-  textarea.style.height = textarea.scrollHeight + 'px';
-});
+const restaurantId = new URLSearchParams(location.search).get('restaurant_id');
+if (!restaurantId) {
+  alert('어느 식당에 대한 리뷰인지 알 수 없어요.');
+  location.href = 'index.html';
+}
+
+function authHeaders() {
+  const token = localStorage.getItem('token');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+async function fetchMe() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+async function logout() {
+  try {
+    await fetch(`${API_BASE}/users/logout`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+  } catch {}
+  localStorage.removeItem('token');
+  location.reload();
+}
+
+async function initAuthMenu() {
+  const userMenu = document.getElementById('user-menu');
+  const userNameEl = document.getElementById('user-name');
+  const logoutBtn = document.getElementById('logout-btn');
+
+  const me = await fetchMe();
+
+  if (me && me.username) {
+    userMenu.style.display = 'block';
+    userNameEl.textContent = me.username;
+  } else {
+    const back = location.pathname + location.search;
+    location.href = `login.html?next=${encodeURIComponent(back)}`;
+  }
+
+  logoutBtn?.addEventListener('click', logout);
+}
+
+function initEditor() {
+  const textarea = document.querySelector('.ReviewEditor_write');
+  const charCount = document.querySelector('.ReviewEditor_TextLength');
+
+  textarea.addEventListener('input', () => {
+    charCount.textContent = textarea.value.length;
+    textarea.style.height = '150px';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  });
+}
 
 // --- 별점 라디오 & 표시용 별 ---
 const starInputs = Array.from(
@@ -99,9 +156,6 @@ presets.addEventListener('click', (e) => {
   btn.setAttribute('aria-pressed', 'true');
 });
 
-// 초기 표시값 (나중에 위치 옮기기)
-setScore(5);
-
 const MAX_PICTURES = 30;
 const addBtn = document.getElementById('addImages');
 const imageInput = document.getElementById('imageInput');
@@ -170,6 +224,10 @@ function addPreview(file) {
     li.remove();
     updateCounter();
   });
+
+  extendBtn.addEventListener('click', () => {
+    openLightbox(url);
+  });
 }
 
 function updateCounter() {
@@ -177,3 +235,34 @@ function updateCounter() {
   addBtn.parentElement.style.display =
     filesState.length >= MAX_PICTURES ? 'none' : 'flex';
 }
+
+const ligthboxEl = document.getElementById('lightbox');
+const ligthboxImg = document.querySelector('.Lightbox_image');
+
+function openLightbox(url) {
+  ligthboxImg.src = url;
+  ligthboxEl.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox() {
+  ligthboxEl.hidden = true;
+  ligthboxImg.src = '';
+  document.body.style.overflow = '';
+}
+
+ligthboxEl.addEventListener('click', (e) => {
+  if (!ligthboxImg.contains(e.target)) {
+    closeLightbox();
+  }
+});
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !ligthboxEl.hidden) closeLightbox();
+});
+ligthboxImg.addEventListener('click', (e) => e.stopPropagation());
+
+document.addEventListener('DOMContentLoaded', function () {
+  initAuthMenu();
+  initEditor();
+  setScore(5);
+});

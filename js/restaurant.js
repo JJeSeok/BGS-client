@@ -53,6 +53,9 @@ async function initAuthMenu() {
     userMenu.style.display = 'block';
     userNameEl.textContent = me.username;
   } else {
+    const back = location.pathname + location.search;
+    loginBtn.href = `login.html?next=${encodeURIComponent(back)}`;
+
     loginBtn.style.display = 'block';
     userMenu.style.display = 'none';
   }
@@ -166,6 +169,7 @@ async function init() {
   updateImg();
   updateHeader();
   updateStatus();
+  wireReviewLink();
   updateInfo();
 }
 
@@ -201,6 +205,27 @@ function randerAddress(td, road, jibun) {
     }
   } else {
     td.textContent = jibun;
+  }
+}
+
+function wireReviewLink() {
+  const currentDetail = location.pathname + location.search;
+  const reviewUrl = `review_write.html?restaurant_id=${encodeURIComponent(
+    id
+  )}&next=${encodeURIComponent(currentDetail)}`;
+  const reviewBtn = document.getElementById('reviewWriteButton');
+  if (reviewBtn) {
+    reviewBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      const me = await fetchMe();
+
+      if (me && me.username) {
+        location.href = reviewUrl;
+      } else {
+        location.href = `login.html?next=${encodeURIComponent(reviewUrl)}`;
+      }
+    });
   }
 }
 

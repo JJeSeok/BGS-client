@@ -1,5 +1,6 @@
 const form = document.getElementById('loginForm');
 const errorBox = document.getElementById('login_error');
+const next = new URLSearchParams(location.search).get('next') || 'index.html';
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
@@ -43,7 +44,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     localStorage.setItem('token', data.token);
-    window.location.href = '/index.html';
+    location.href = next;
   } catch (err) {
     errorBox.innerText = '서버 오류가 발생했습니다.';
     errorBox.style.display = 'block';

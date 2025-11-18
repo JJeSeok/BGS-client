@@ -346,3 +346,35 @@ button {
 .StarsVisual.hovering::after {
   width: calc((var(--hover) / 5) * 100%);
 }
+
+.Lightbox[hidden] {
+  display: none !important;
+}
+
+.Lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+}
+
+.Lightbox_backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.Lightbox_body {
+  position: absolute;
+  inset: 32px;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.Lightbox_image {
+  max-width: min(1280px, 96vw);
+  max-height: min(90vh, 900px);
+  border-radius: 8px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}

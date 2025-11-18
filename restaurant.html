@@ -109,8 +109,8 @@
                   </div>
                   <div class="restaurant_action_button">
                     <button
+                      id="reviewWriteButton"
                       class="review_writing_button"
-                      onclick="window.open('review_write.html')"
                       aria-label="리뷰 쓰기"
                     >
                       <i
@@ -227,27 +227,41 @@
                 </h2>
                 <ul class="restaurant_reviewList_filterList only_desktop">
                   <li class="restaurant_reviewList_filterItem">
-                    <button type="button" class="restaurant_reviewList_filterButton" data-rating="전체">
+                    <button
+                      type="button"
+                      class="restaurant_reviewList_filterButton"
+                      data-rating="전체"
+                    >
                       전체
                       <span class="restaurant_reviewList_count">114</span>
                     </button>
                   </li>
                   <li class="restaurant_reviewList_filterItem">
-                    <button type="button" class="restaurant_reviewList_filterButton" data-rating="맛있다">
+                    <button
+                      type="button"
+                      class="restaurant_reviewList_filterButton"
+                      data-rating="맛있다"
+                    >
                       맛있다
                       <span class="restaurant_reviewList_count">114</span>
                     </button>
                   </li>
                   <li class="restaurant_reviewList_filterItem">
-                    <button type="button" class="restaurant_reviewList_filterButton" data-rating="괜찮다">
+                    <button
+                      type="button"
+                      class="restaurant_reviewList_filterButton"
+                      data-rating="괜찮다"
+                    >
                       괜찮다
                       <span class="restaurant_reviewList_count">114</span>
                     </button>
                   </li>
                   <li class="restaurant_reviewList_filterItem">
-                    <button type="button"
+                    <button
+                      type="button"
                       class="restaurant_reviewList_filterButton"
-                      style="padding-right: 0" data-rating="별로"
+                      style="padding-right: 0"
+                      data-rating="별로"
                     >
                       별로
                       <span class="restaurant_reviewList_count">114</span>

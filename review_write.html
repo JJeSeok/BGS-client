@@ -14,7 +14,7 @@
     <header>
       <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container px-4 px-lg-5">
-          <a class="navbar-brand fw-bolder" href="/index.html">배고파</a>
+          <a class="navbar-brand fw-bolder" href="index.html">배고파</a>
           <button
             class="navbar-toggler"
             type="button"
@@ -29,10 +29,7 @@
           <div class="collapse navbar-collapse" id="navbarSupportedContent">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
               <li class="nav-item">
-                <a
-                  class="nav-link active"
-                  aria-current="page"
-                  href="/index.html"
+                <a class="nav-link active" aria-current="page" href="index.html"
                   >홈</a
                 >
               </li>
@@ -42,11 +39,36 @@
               <li class="nav-item">
                 <a class="nav-link active" href="/mypage.html">마이페이지</a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link active" href="/search.html">검색</a>
+              </li>
             </ul>
             <ul class="navbar-nav">
-              <a style="font-size: 17px" class="navbar-brand" href="login.html">
-                로그인
-              </a>
+              <!-- 로그인 상태: username 님 ▼ -->
+              <div
+                id="user-menu"
+                style="padding-top: 0.4rem; display: none"
+                class="dropdown"
+              >
+                <a
+                  id="userDropdown"
+                  style="font-size: 15px"
+                  class="navbar-brand dropdown-toggle"
+                  href="#"
+                  role="button"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                >
+                  <span id="user-name">***</span> 님
+                </a>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown">
+                  <li>
+                    <button id="logout-btn" class="dropdown-item" type="button">
+                      로그아웃
+                    </button>
+                  </li>
+                </ul>
+              </div>
 
               <a style="font-size: 17px" class="navbar-brand" href="map.html">
                 map
@@ -205,6 +227,18 @@
           </div>
         </form>
       </div>
+    </div>
+
+    <div id="lightbox" class="Lightbox" hidden>
+      <div class="Lightbox_backdrop"></div>
+      <figure
+        class="Lightbox_body"
+        role="dialog"
+        aria-modal="true"
+        aria-label="이미지 확대 보기"
+      >
+        <img class="Lightbox_image" alt="리뷰 이미지 확대" />
+      </figure>
     </div>
 
     <!-- Bootstrap core JS-->
