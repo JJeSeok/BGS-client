@@ -210,9 +210,7 @@ function randerAddress(td, road, jibun) {
 
 function wireReviewLink() {
   const currentDetail = location.pathname + location.search;
-  const reviewUrl = `review_write.html?restaurant_id=${encodeURIComponent(
-    id
-  )}&next=${encodeURIComponent(currentDetail)}`;
+  const reviewUrl = `review_write.html?restaurant_id=${encodeURIComponent(id)}`;
   const reviewBtn = document.getElementById('reviewWriteButton');
   if (reviewBtn) {
     reviewBtn.addEventListener('click', async (e) => {

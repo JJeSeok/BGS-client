@@ -53,16 +53,14 @@ async function initAuthMenu() {
   logoutBtn?.addEventListener('click', logout);
 }
 
-function initEditor() {
-  const textarea = document.querySelector('.ReviewEditor_write');
-  const charCount = document.querySelector('.ReviewEditor_TextLength');
+const textarea = document.querySelector('.ReviewEditor_write');
+const charCount = document.querySelector('.ReviewEditor_TextLength');
 
-  textarea.addEventListener('input', () => {
-    charCount.textContent = textarea.value.length;
-    textarea.style.height = '150px';
-    textarea.style.height = textarea.scrollHeight + 'px';
-  });
-}
+textarea.addEventListener('input', () => {
+  charCount.textContent = textarea.value.length;
+  textarea.style.height = '150px';
+  textarea.style.height = textarea.scrollHeight + 'px';
+});
 
 // --- 별점 라디오 & 표시용 별 ---
 const starInputs = Array.from(
@@ -261,8 +259,60 @@ window.addEventListener('keydown', (e) => {
 });
 ligthboxImg.addEventListener('click', (e) => e.stopPropagation());
 
+const submitBtn = document.getElementById('submitBtn');
+submitBtn.addEventListener('click', onSubmitReview);
+
+async function onSubmitReview(e) {
+  e.preventDefault();
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    alert('로그인이 필요합니다.');
+    const back = location.pathname + location.search;
+    location.href = `login.html?next=${encodeURIComponent(back)}`;
+    return;
+  }
+
+  const content = textarea.value.trim();
+
+  if (!currentScore || currentScore <= 0) {
+    alert('별점을 선택해주세요.');
+    return;
+  }
+  if (!content) {
+    alert('리뷰 내용을 입력해주세요.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('rating', String(currentScore * 2));
+  formData.append('content', content);
+
+  filesState.forEach(({ file }) => formData.append('images', file));
+
+  try {
+    const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/reviews`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errBody = await res.json().catch(() => null);
+      console.error('review error', errBody);
+      alert(errBody?.message || '리뷰 등록에 실피했습니다.');
+      return;
+    }
+
+    alert('리뷰가 등록되었습니다!');
+    location.href = `restaurant.html?id=${encodeURIComponent(restaurantId)}`;
+  } catch (err) {
+    console.error(err);
+    alert('서버와 통신 중 오류가 발생했습니다.');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
-  initEditor();
   setScore(5);
 });
