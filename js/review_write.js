@@ -312,7 +312,23 @@ async function onSubmitReview(e) {
   }
 }
 
+async function initRestaurantName() {
+  try {
+    const res = await fetch(`${API_BASE}/restaurants/${restaurantId}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    document.querySelector('.restaurant_name').textContent =
+      data.restaurant.name;
+  } catch (e) {
+    console.error(e);
+    alert('식당 정보를 불러오지 못했습니다.');
+    location.href = 'index.html';
+    throw e;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
+  initRestaurantName();
   setScore(5);
 });

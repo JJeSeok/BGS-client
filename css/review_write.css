@@ -29,19 +29,25 @@ button {
 }
 
 #container {
-  width: 678px;
-  margin: 40px auto 62px;
+  width: 100%;
+  max-width: 678px;
+  margin: 24px auto 40px;
+  padding: 0 16px;
   display: block;
+  box-sizing: border-box;
 }
 
 .ReviewWritingPage_row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 4px 8px;
   margin-bottom: 20px;
 }
 
 .restaurant_name {
   display: block;
-  max-width: 400px;
+  max-width: 100%;
   font-size: 28px;
   line-height: 1.462;
   color: #ff7100;
@@ -56,27 +62,27 @@ button {
 
 .subMessage {
   font-size: 16px;
-  width: 270px;
-  position: absolute;
-  top: 60%;
-  transform: translateY(-50%);
+  width: auto;
+  position: static;
+  transform: none;
   line-height: 1.45;
   color: #7f7f7f;
 }
 
 .ReviewWritingPage_contentWrap {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
 }
 
 .ReviewWritingPage_formWrap {
   display: flex;
   flex-direction: column;
+  gap: 24px;
 }
 
 .ReviewWritingPage_editorWrap {
-  width: 678px;
-  margin-bottom: 22px;
+  width: 100%;
+  margin-bottom: 0;
 }
 
 .ReviewEditor {
@@ -88,19 +94,21 @@ button {
   border-radius: 3px;
   box-sizing: border-box;
   padding: 16px;
+  background-color: #fff;
 }
 
 .ReviewWritingPage_recommendWrap {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .ReviewWritingPage_recommend_List {
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px 24px;
 }
 
 .ReviewWritingPage_recommend_Item {
-  margin-right: 24px;
+  margin-right: 0;
 }
 
 .ReviewWritingPage_recommend_Item:last-child {
@@ -111,6 +119,7 @@ button {
   display: flex;
   flex-direction: row;
   text-align: center;
+  align-items: center;
   color: #cbcbcb;
 }
 
@@ -137,7 +146,6 @@ button {
 .recommendButton_Lable {
   display: block;
   font-size: 14px;
-  margin-top: 8px;
 }
 
 .ReviewEditor_write {
@@ -172,8 +180,7 @@ button {
 
 .ReviewWritingPage_pictureWrap {
   position: relative;
-  width: 687px;
-  margin-bottom: 41px;
+  width: 100%;
 }
 
 .ReviewPictureContainer {
@@ -202,6 +209,7 @@ button {
   height: 98px;
   border: 1px dashed #dbdbdb;
   border-radius: 6px;
+  cursor: pointer;
 }
 
 .ReviewPictureContainer_AddIcon {
@@ -212,14 +220,6 @@ button {
 }
 
 .ReviewPictureContainer_PreviewImage {
-  /* position: relative;
-  width: 89px;
-  height: 89px;
-  background-size: cover;
-  background-position: 50% 50%;
-  cursor: pointer;
-  opacity: 1;
-  transform: scale(1); */
   width: 100%;
   height: 100%;
   background-size: cover;
@@ -228,7 +228,6 @@ button {
 }
 
 .picture_Layer {
-  display: none;
   position: absolute;
   inset: 0;
   background-color: rgba(0, 0, 0, 0.5);
@@ -254,14 +253,9 @@ button {
   background-size: cover;
 }
 
-.ReviewPictureContainer_PreviewImage:hover .picture_Layer {
-  display: block;
-}
-
 .ReviewPictureCounter {
   position: static;
   margin-top: 8px;
-  padding-right: 9px;
   width: auto;
   font-size: 12px;
   text-align: right;
@@ -270,40 +264,39 @@ button {
 
 .ReviewWritingPage_ButtonsWrap {
   display: flex;
-  flex-direction: row;
-  width: 678px;
+  width: 100%;
 }
 
 .ReviewWritingPage_Buttons {
   display: flex;
   justify-content: flex-end;
-  width: 678px;
+  width: 100%;
+  gap: 12px;
+}
+
+.ReviewWritingPage_CancelButton,
+.ReviewWritingPage_SubmitButton {
+  /* min-width: 120px;
+  height: 44px; */
+  width: 140px;
+  height: 50px;
+  padding: 0 14px;
+  border-radius: 50px;
+  font-size: 16px;
+  text-align: center;
+  box-sizing: border-box;
+  white-space: nowrap;
 }
 
 .ReviewWritingPage_CancelButton {
-  width: 140px;
-  height: 50px;
-  margin-right: 16px;
-  padding-left: 14px;
-  padding-right: 14px;
   border: 1px solid #7f7f7f;
-  border-radius: 50px;
-  font-size: 16px;
   color: #7f7f7f;
-  text-align: center;
   background-color: #fff;
 }
 
 .ReviewWritingPage_SubmitButton {
-  width: 140px;
-  height: 50px;
-  padding-left: 14px;
-  padding-right: 14px;
   border: 1px solid #ff7100;
-  border-radius: 50px;
-  font-size: 16px;
   color: #fff;
-  text-align: center;
   background-color: #ff7100;
 }
 
@@ -377,4 +370,71 @@ button {
   max-height: min(90vh, 900px);
   border-radius: 8px;
   box-shadow: 0 12px 48px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 993px) {
+  .picture_Layer {
+    display: none;
+  }
+
+  .ReviewPictureContainer_PreviewImage:hover .picture_Layer {
+    display: block;
+  }
+}
+
+@media (max-width: 992px) {
+  #container {
+    margin-top: 24px;
+    margin-bottom: 32px;
+  }
+
+  .restaurant_name {
+    font-size: 24px;
+  }
+
+  .picture_Layer {
+    display: block;
+    background-color: rgba(0, 0, 0, 0.25);
+  }
+}
+
+@media (max-width: 600px) {
+  #container {
+    margin-top: 16px;
+    margin-bottom: 24px;
+    padding: 0 12px;
+  }
+
+  .ReviewEditor_writeWrap {
+    padding: 12px;
+  }
+
+  .ReviewEditor_write {
+    font-size: 15px;
+  }
+
+  .StarsVisual {
+    font-size: 24px;
+  }
+
+  .ReviewPictureContainer_pictureList {
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 0;
+  }
+
+  .ReviewPictureContainer_pictureItem,
+  .ReviewPictureContainer_AddButton {
+    width: 88px;
+    height: 88px;
+  }
+
+  .ReviewWritingPage_Buttons {
+    justify-content: stretch;
+  }
+
+  .ReviewWritingPage_CancelButton,
+  .ReviewWritingPage_SubmitButton {
+    flex: 1;
+    min-width: 0;
+  }
 }
