@@ -285,13 +285,14 @@ async function onSubmitReview(e) {
   }
 
   const formData = new FormData();
+  formData.append('restaurantId', restaurantId);
   formData.append('rating', String(currentScore * 2));
   formData.append('content', content);
 
   filesState.forEach(({ file }) => formData.append('images', file));
 
   try {
-    const res = await fetch(`${API_BASE}/restaurants/${restaurantId}/reviews`, {
+    const res = await fetch(`${API_BASE}/reviews`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
