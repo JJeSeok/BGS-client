@@ -216,15 +216,18 @@
             <div id="restaurant_reviewList">
               <div class="restaurant_reviewList_header">
                 <h2 class="restaurant_reviewList_title">
-                  <span class="only_mobile">천원국수</span>
+                  <span class="only_mobile" id="restaurant_name_mobile1"
+                    >천원국수</span
+                  >
                   <span class="only_mobile">의 리뷰</span>
                   <span class="only_desktop">리뷰</span>
                   <span
+                    id="review_total_count"
                     class="restaurant_reviewList_count"
                     style="color: #7f7f7f"
-                    >114</span
-                  >
+                  ></span>
                 </h2>
+
                 <ul class="restaurant_reviewList_filterList only_desktop">
                   <li class="restaurant_reviewList_filterItem">
                     <button
@@ -233,7 +236,10 @@
                       data-rating="전체"
                     >
                       전체
-                      <span class="restaurant_reviewList_count">114</span>
+                      <span
+                        class="restaurant_reviewList_count"
+                        data-rating-count="전체"
+                      ></span>
                     </button>
                   </li>
                   <li class="restaurant_reviewList_filterItem">
@@ -243,7 +249,10 @@
                       data-rating="맛있다"
                     >
                       맛있다
-                      <span class="restaurant_reviewList_count">114</span>
+                      <span
+                        class="restaurant_reviewList_count"
+                        data-rating-count="맛있다"
+                      ></span>
                     </button>
                   </li>
                   <li class="restaurant_reviewList_filterItem">
@@ -253,7 +262,10 @@
                       data-rating="괜찮다"
                     >
                       괜찮다
-                      <span class="restaurant_reviewList_count">114</span>
+                      <span
+                        class="restaurant_reviewList_count"
+                        data-rating-count="괜찮다"
+                      ></span>
                     </button>
                   </li>
                   <li class="restaurant_reviewList_filterItem">
@@ -264,129 +276,60 @@
                       data-rating="별로"
                     >
                       별로
-                      <span class="restaurant_reviewList_count">114</span>
+                      <span
+                        class="restaurant_reviewList_count"
+                        data-rating-count="별로"
+                      ></span>
                     </button>
                   </li>
                 </ul>
               </div>
-              <ul id="review_content" class="restaurant_reviewList_content">
+
+              <ul
+                id="review_content"
+                class="restaurant_reviewList_content"
+              ></ul>
+
+              <template id="review-item-template">
                 <li class="restaurant_reviewList_reviewItem">
-                  <a class="restaurant_reviewItem_link">
+                  <div class="restaurant_reviewItem_link">
                     <div class="restaurant_reviewItem_user">
                       <div class="restaurant_reviewItem_userPicturewrap">
                         <img
                           class="restaurant_reviewItem_userPicture"
-                          src="/images/흠.png"
+                          src=""
                           alt="user profile picture"
                         />
                       </div>
-                      <span class="restaurant_reviewItem_userNickname"
-                        >김서하바보다</span
-                      >
+                      <span class="restaurant_reviewItem_userNickname"></span>
                       <ul class="restaurant_reviewItem_userStat">
                         <li
                           class="restaurant_reviewItem_userStatItem userStatItem_like"
-                        >
-                          1261
-                        </li>
+                        ></li>
                         <li
                           class="restaurant_reviewItem_userStatItem userStatItem_hate"
-                        >
-                          711
-                        </li>
+                        ></li>
                       </ul>
                       <button
                         class="restaurant_reviewItem_userBlind only_desktop"
+                        type="button"
                       >
                         블라인드
                       </button>
                     </div>
+
                     <div class="restaurant_reviewItem_content">
                       <div class="restaurant_reviewItem_textWrap">
-                        <p class="restaurant_reviewItem_text">
-                          대한민국 수도 서울의 나름 번화한 망원동 한 골목
-                          귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지
-                          잠시
-                        </p>
-                        <span class="restaurant_reviewItem_Date"
-                          >2023-05-16</span
-                        >
+                        <p class="restaurant_reviewItem_text"></p>
+                        <span class="restaurant_reviewItem_Date"></span>
                       </div>
-                      <ul class="restaurant_reviewItem_PictureList">
-                        <li class="restaurant_reviewItem_PictureItem">
-                          <button class="restaurant_reviewItem_PictureButton">
-                            <img
-                              class="restaurant_reviewItem_Picture"
-                              src="/images/천원국수/천원국수3.png"
-                            />
-                          </button>
-                        </li>
-                      </ul>
+                      <ul class="restaurant_reviewItem_PictureList"></ul>
                     </div>
-                    <div class="restaurant_reviewItem_Rating Rating_Recommend">
-                      <span class="restaurant_reviewItem_RatingText"
-                        >맛있다</span
-                      >
-                      <button
-                        class="restaurant_reviewItem_userBlind only_mobile"
-                      >
-                        블라인드
-                      </button>
-                    </div>
-                  </a>
-                </li>
-                <li class="restaurant_reviewList_reviewItem">
-                  <a class="restaurant_reviewItem_link">
-                    <div class="restaurant_reviewItem_user">
-                      <div class="restaurant_reviewItem_userPicturewrap">
-                        <img
-                          class="restaurant_reviewItem_userPicture"
-                          src="/images/흠.png"
-                          alt="user profile picture"
-                        />
-                      </div>
-                      <span class="restaurant_reviewItem_userNickname"
-                        >김서하멍청</span
-                      >
-                      <ul class="restaurant_reviewItem_userStat">
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_like"
-                        >
-                          1261
-                        </li>
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_hate"
-                        >
-                          711
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_content">
-                      <div class="restaurant_reviewItem_textWrap">
-                        <p class="restaurant_reviewItem_text">
-                          대한민국 수도 서울의 나름 번화한 망원동 한 골목
-                          귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지
-                          잠시
-                        </p>
-                        <span class="restaurant_reviewItem_Date"
-                          >2023-05-15</span
-                        >
-                      </div>
-                      <ul class="restaurant_reviewItem_PictureList">
-                        <li class="restaurant_reviewItem_PictureItem">
-                          <button class="restaurant_reviewItem_PictureButton">
-                            <img
-                              class="restaurant_reviewItem_Picture"
-                              src="/images/천원국수/천원국수3.png"
-                            />
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_Rating Rating_Recommend">
-                      <span class="restaurant_reviewItem_RatingText"
-                        >괜찮다</span
-                      >
+
+                    <div class="restaurant_reviewItem_Rating">
+                      <span class="restaurant_reviewItem_RatingText"></span>
+
+                      <!-- 본인 리뷰일 때만 보이는 관리 버튼 영역-->
                       <div class="restaurant_reviewItem_managementWrap">
                         <button
                           class="restaurant_reviewItem_management"
@@ -413,225 +356,10 @@
                         </div>
                       </div>
                     </div>
-                  </a>
+                  </div>
                 </li>
-                <li class="restaurant_reviewList_reviewItem">
-                  <a class="restaurant_reviewItem_link">
-                    <div class="restaurant_reviewItem_user">
-                      <div class="restaurant_reviewItem_userPicturewrap">
-                        <img
-                          class="restaurant_reviewItem_userPicture"
-                          src="/images/흠.png"
-                          alt="user profile picture"
-                        />
-                      </div>
-                      <span class="restaurant_reviewItem_userNickname"
-                        >김서하개멍청</span
-                      >
-                      <ul class="restaurant_reviewItem_userStat">
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_like"
-                        >
-                          1261
-                        </li>
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_hate"
-                        >
-                          711
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_content">
-                      <div class="restaurant_reviewItem_textWrap">
-                        <p class="restaurant_reviewItem_text">
-                          대한민국 수도 서울의 나름 번화한 망원동 한 골목
-                          귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지
-                          잠시
-                        </p>
-                        <span class="restaurant_reviewItem_Date"
-                          >2023-05-14</span
-                        >
-                      </div>
-                      <ul class="restaurant_reviewItem_PictureList">
-                        <li class="restaurant_reviewItem_PictureItem">
-                          <button class="restaurant_reviewItem_PictureButton">
-                            <img
-                              class="restaurant_reviewItem_Picture"
-                              src="/images/천원국수/천원국수3.png"
-                            />
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_Rating Rating_Recommend">
-                      <span class="restaurant_reviewItem_RatingText">별로</span>
-                    </div>
-                  </a>
-                </li>
-                <li class="restaurant_reviewList_reviewItem">
-                  <a class="restaurant_reviewItem_link">
-                    <div class="restaurant_reviewItem_user">
-                      <div class="restaurant_reviewItem_userPicturewrap">
-                        <img
-                          class="restaurant_reviewItem_userPicture"
-                          src="/images/흠.png"
-                          alt="user profile picture"
-                        />
-                      </div>
-                      <span class="restaurant_reviewItem_userNickname"
-                        >김성하인가</span
-                      >
-                      <ul class="restaurant_reviewItem_userStat">
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_like"
-                        >
-                          1261
-                        </li>
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_hate"
-                        >
-                          711
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_content">
-                      <div class="restaurant_reviewItem_textWrap">
-                        <p class="restaurant_reviewItem_text">
-                          대한민국 수도 서울의 나름 번화한 망원동 한 골목
-                          귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지
-                          잠시
-                        </p>
-                        <span class="restaurant_reviewItem_Date"
-                          >2023-05-10</span
-                        >
-                      </div>
-                      <ul class="restaurant_reviewItem_PictureList">
-                        <li class="restaurant_reviewItem_PictureItem">
-                          <button class="restaurant_reviewItem_PictureButton">
-                            <img
-                              class="restaurant_reviewItem_Picture"
-                              src="/images/천원국수/천원국수3.png"
-                            />
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_Rating Rating_Recommend">
-                      <span class="restaurant_reviewItem_RatingText"
-                        >맛있다</span
-                      >
-                    </div>
-                  </a>
-                </li>
-                <li class="restaurant_reviewList_reviewItem">
-                  <a class="restaurant_reviewItem_link">
-                    <div class="restaurant_reviewItem_user">
-                      <div class="restaurant_reviewItem_userPicturewrap">
-                        <img
-                          class="restaurant_reviewItem_userPicture"
-                          src="/images/흠.png"
-                          alt="user profile picture"
-                        />
-                      </div>
-                      <span class="restaurant_reviewItem_userNickname"
-                        >조혜진분조장</span
-                      >
-                      <ul class="restaurant_reviewItem_userStat">
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_like"
-                        >
-                          1261
-                        </li>
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_hate"
-                        >
-                          711
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_content">
-                      <div class="restaurant_reviewItem_textWrap">
-                        <p class="restaurant_reviewItem_text">
-                          대한민국 수도 서울의 나름 번화한 망원동 한 골목
-                          귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지
-                          잠시
-                        </p>
-                        <span class="restaurant_reviewItem_Date"
-                          >2023-05-05</span
-                        >
-                      </div>
-                      <ul class="restaurant_reviewItem_PictureList">
-                        <li class="restaurant_reviewItem_PictureItem">
-                          <button class="restaurant_reviewItem_PictureButton">
-                            <img
-                              class="restaurant_reviewItem_Picture"
-                              src="/images/천원국수/천원국수3.png"
-                            />
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_Rating Rating_Recommend">
-                      <span class="restaurant_reviewItem_RatingText">별로</span>
-                    </div>
-                  </a>
-                </li>
-                <li class="restaurant_reviewList_reviewItem">
-                  <a class="restaurant_reviewItem_link">
-                    <div class="restaurant_reviewItem_user">
-                      <div class="restaurant_reviewItem_userPicturewrap">
-                        <img
-                          class="restaurant_reviewItem_userPicture"
-                          src="/images/흠.png"
-                          alt="user profile picture"
-                        />
-                      </div>
-                      <span class="restaurant_reviewItem_userNickname"
-                        >분조장치료중</span
-                      >
-                      <ul class="restaurant_reviewItem_userStat">
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_like"
-                        >
-                          1261
-                        </li>
-                        <li
-                          class="restaurant_reviewItem_userStatItem userStatItem_hate"
-                        >
-                          711
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_content">
-                      <div class="restaurant_reviewItem_textWrap">
-                        <p class="restaurant_reviewItem_text">
-                          대한민국 수도 서울의 나름 번화한 망원동 한 골목
-                          귀퉁이. 들어가면 여기가 서울인지 동남아의 휴양지인지
-                          잠시
-                        </p>
-                        <span class="restaurant_reviewItem_Date"
-                          >2023-05-06</span
-                        >
-                      </div>
-                      <ul class="restaurant_reviewItem_PictureList">
-                        <li class="restaurant_reviewItem_PictureItem">
-                          <button class="restaurant_reviewItem_PictureButton">
-                            <img
-                              class="restaurant_reviewItem_Picture"
-                              src="/images/천원국수/천원국수3.png"
-                            />
-                          </button>
-                        </li>
-                      </ul>
-                    </div>
-                    <div class="restaurant_reviewItem_Rating Rating_Recommend">
-                      <span class="restaurant_reviewItem_RatingText"
-                        >괜찮다</span
-                      >
-                    </div>
-                  </a>
-                </li>
-              </ul>
+              </template>
+
               <div
                 id="moreButton"
                 class="restaurant_reviewList_moreButton"

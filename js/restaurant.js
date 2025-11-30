@@ -6,6 +6,14 @@ if (!id) {
   location.href = 'index.html';
 }
 let data;
+let allReviews = [];
+const reviewItemTemplate = document.getElementById('review-item-template');
+
+const RATING_CATEGORY_MAP = {
+  good: { label: '맛있다', cssClass: 'Rating_Recommend' },
+  ok: { label: '괜찮다', cssClass: 'Rating_Ok' },
+  bad: { label: '별로', cssClass: 'Rating_Bad' },
+};
 
 var starButton = document.getElementById('star_button');
 var starButtonIcon = document.getElementById('star_icon');
@@ -153,6 +161,65 @@ function updateInfo() {
     : '식당 소개를 입력해주세요.';
 }
 
+function AvgFromReviews() {
+  if (!Array.isArray(allReviews) || allReviews.length === 0) {
+    return;
+  }
+
+  const sum = allReviews.reduce((acc, r) => {
+    const v = typeof r.rating === 'number' ? r.rating : 0;
+    return acc + v;
+  }, 0);
+
+  const avg = sum / allReviews.length;
+  if (data) data.restaurant.rating_avg = Math.round(avg * 10) / 20;
+}
+
+function setupReviewFilterCounst() {
+  const total = allReviews.length;
+  const good = allReviews.filter((r) => r.ratingCategory === 'good').length;
+  const ok = allReviews.filter((r) => r.ratingCategory === 'ok').length;
+  const bad = allReviews.filter((r) => r.ratingCategory === 'bad').length;
+
+  const span = document.getElementById('review_total_count');
+  span.textContent = total;
+
+  Array.from(filterButtons).forEach((btn) => {
+    const span = btn.querySelector('.restaurant_reviewList_count');
+    if (!span) return;
+
+    const rating = btn.dataset.rating;
+    if (rating === '전체') span.textContent = total;
+    else if (rating === '맛있다') span.textContent = good;
+    else if (rating === '괜찮다') span.textContent = ok;
+    else if (rating === '별로') span.textContent = bad;
+  });
+}
+
+async function initReviews() {
+  try {
+    const res = await fetch(`${API_BASE}/reviews?restaurantId=${id}`);
+    if (!res.ok) {
+      console.warn('리뷰를 불러오지 못했습니다.', res.status);
+      return;
+    }
+
+    allReviews = await res.json();
+
+    // 레스토랑 평점과 리뷰수 설정
+    if (data) data.restaurant.review_count = allReviews.length;
+    AvgFromReviews();
+
+    // 필터 버튼 숫자 설정
+    setupReviewFilterCounst();
+
+    // 필터 버튼 클릭 이벤트 세팅 + 기본 렌더링
+    setupReviewFilterButtons();
+  } catch (e) {
+    console.error('리뷰 로딩 실패', e);
+  }
+}
+
 async function init() {
   try {
     const res = await fetch(`${API_BASE}/restaurants/${id}`);
@@ -164,6 +231,8 @@ async function init() {
     location.href = 'index.html';
     throw e;
   }
+
+  await initReviews();
 
   updateTitle();
   updateImg();
@@ -209,7 +278,6 @@ function randerAddress(td, road, jibun) {
 }
 
 function wireReviewLink() {
-  const currentDetail = location.pathname + location.search;
   const reviewUrl = `review_write.html?restaurant_id=${encodeURIComponent(id)}`;
   const reviewBtn = document.getElementById('reviewWriteButton');
   if (reviewBtn) {
@@ -239,85 +307,139 @@ starButton.addEventListener('click', function () {
   }
 });
 
-var filterButtons = document.getElementsByClassName(
+const filterButtons = document.getElementsByClassName(
   'restaurant_reviewList_filterButton'
 );
-var reviewContainer = document.getElementById('review_content');
-var reviews = Array.from(
-  reviewContainer.getElementsByClassName('restaurant_reviewList_reviewItem')
-);
-var recommends = reviewContainer.getElementsByClassName(
-  'restaurant_reviewItem_RatingText'
-);
-var loadMoreButton = document.getElementById('moreButton');
-const visibleReviews = 5;
-var currentIndex = 0;
-var filteredReviews = [];
+const reviewContainer = document.getElementById('review_content');
+const loadMoreButton = document.getElementById('moreButton');
+// 페이지네이션 적용할 때 이 코드 삭제
+if (loadMoreButton) {
+  loadMoreButton.style.display = 'none';
+}
 
-for (var i = 0; i < filterButtons.length; i++) {
-  filterButtons[i].addEventListener('click', function () {
-    for (var j = 0; j < filterButtons.length; j++) {
-      filterButtons[j].classList.remove(
-        'restaurant_reviewList_filterButton-Selected'
+function setupReviewFilterButtons() {
+  const buttons = Array.from(filterButtons);
+  if (!buttons.length) return;
+
+  buttons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      buttons.forEach((b) =>
+        b.classList.remove('restaurant_reviewList_filterButton-Selected')
       );
-    }
+      btn.classList.add('restaurant_reviewList_filterButton-Selected');
 
-    var fillter = this.textContent;
-    this.classList.add('restaurant_reviewList_filterButton-Selected');
-    if (fillter.includes('전체')) {
-      filterReviews('전체');
-    } else if (fillter.includes('맛있다')) {
-      filterReviews('맛있다');
-    } else if (fillter.includes('괜찮다')) {
-      filterReviews('괜찮다');
-    } else if (fillter.includes('별로')) {
-      filterReviews('별로');
-    }
+      const rating = btn.dataset.rating || '전체';
+      renderReviews(rating);
+    });
+  });
+
+  const first = buttons[0];
+  if (first) {
+    first.classList.add('restaurant_reviewList_filterButton-Selected');
+    renderReviews(first.dataset.rating || '전체');
+  }
+}
+
+// 리뷰 목록 렌더링
+function renderReviews(filter) {
+  reviewContainer.innerHTML = '';
+
+  const filtered = allReviews.filter((review) => {
+    if (filter === '전체') return true;
+    const meta = RATING_CATEGORY_MAP[review.ratingCategory];
+    return meta && meta.label === filter;
+  });
+
+  filtered.forEach((review) => {
+    const li = buildReviewItem(review);
+    reviewContainer.appendChild(li);
   });
 }
 
-function filterReviews(filter) {
-  currentIndex = 0;
-  for (var i = 0; i < reviews.length; i++) {
-    reviews[i].style.display = 'none';
+// 리뷰 생성
+function buildReviewItem(review) {
+  if (!reviewItemTemplate) return document.createTextNode('');
+
+  const li = reviewItemTemplate.content.firstElementChild.cloneNode(true);
+  const nicknameEl = li.querySelector('.restaurant_reviewItem_userNickname');
+  const profilImgEl = li.querySelector('.restaurant_reviewItem_userPicture');
+  const likeEl = li.querySelector('.userStatItem_like');
+  const hateEl = li.querySelector('.userStatItem_hate');
+  const textEl = li.querySelector('.restaurant_reviewItem_text');
+  const dateEl = li.querySelector('.restaurant_reviewItem_Date');
+  const pictureListEl = li.querySelector('.restaurant_reviewItem_PictureList');
+  const ratingWrapEl = li.querySelector('.restaurant_reviewItem_Rating');
+  const ratingTextEl = li.querySelector('.restaurant_reviewItem_RatingText');
+
+  // 닉네임
+  if (nicknameEl) nicknameEl.textContent = review.userName;
+
+  // 프로필 이미지
+  if (profilImgEl) {
+    profilImgEl.src = profilImgEl.src || '/images/흠.png';
+    profilImgEl.alt = 'user profile picture';
   }
 
-  filteredReviews = [];
+  // 좋아요/싫어요
+  if (likeEl) likeEl.textContent = review.likeCount ?? '';
+  if (hateEl) likeEl.textContent = review.hateCount ?? '';
 
-  if (filter === '전체') {
-    filteredReviews = reviews;
-  } else {
-    var j = 0;
-    for (var i = 0; i < reviews.length; i++) {
-      if (filter === recommends[i].textContent) {
-        filteredReviews[j++] = reviews[i];
-      }
+  // 리뷰 내용
+  if (textEl) textEl.textContent = review.content ?? '';
+
+  // 날짜
+  if (dateEl) {
+    const dStr = review.updateAt || review.createdAt;
+    if (dStr) {
+      const d = new Date(dStr);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dateEl.textContent = `${yyyy}-${mm}-${dd}`;
+    } else {
+      dateEl.textContent = '';
     }
   }
-  showReviews();
-}
 
-function showReviews() {
-  for (var i = currentIndex; i < currentIndex + visibleReviews; i++) {
-    if (filteredReviews[i]) {
-      filteredReviews[i].style.display = 'block';
+  // 이미지 목록
+  if (pictureListEl) {
+    if (Array.isArray(review.images) && review.images.length > 0) {
+      const img = review.images[0];
+
+      const item = document.createElement('li');
+      item.className = 'restaurant_reviewItem_PictureItem';
+
+      const btn = document.createElement('button');
+      btn.className = 'restaurant_reviewItem_PictureButton';
+      btn.type = 'button';
+
+      const imgEl = document.createElement('img');
+      imgEl.className = 'restaurant_reviewItem_Picture';
+      imgEl.src = normalizeImgUrl(img.url);
+
+      btn.appendChild(imgEl);
+      item.appendChild(btn);
+      pictureListEl.appendChild(item);
     }
   }
 
-  currentIndex += visibleReviews;
+  if (ratingWrapEl && ratingTextEl) {
+    const meta = RATING_CATEGORY_MAP[review.ratingCategory] ?? {
+      label: '평가 없음',
+      cssClass: '',
+    };
 
-  if (currentIndex >= filteredReviews.length) {
-    loadMoreButton.style.display = 'none';
-  } else {
-    loadMoreButton.style.display = 'flex';
+    if (meta.cssClass) {
+      ratingWrapEl.classList.add(meta.cssClass);
+    }
+
+    ratingTextEl.textContent = meta.label;
   }
+
+  // TODO: 내 리뷰에 대한 수정/삭제는 나중에 내 리뷰에만 보이게 코드 추가하기
+
+  return li;
 }
-
-loadMoreButton.addEventListener('click', showReviews);
-
-window.onload = function () {
-  filterButtons[0].click();
-};
 
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
