@@ -109,10 +109,8 @@ button {
 }
 
 .restaurant_header {
-  /* display: block; */
   border-bottom: 1px solid #e9e9e9;
   padding-bottom: 10px;
-  /* min-height: 74px; */
 }
 
 .restaurant_title {
@@ -473,6 +471,14 @@ ul li {
   height: 8px;
   margin: 0 2px;
   background-size: cover;
+}
+
+.userStatItem_like.is-active::before {
+  background-image: url(/assets/hand-thumbs-up-fill.svg);
+}
+
+.userStatItem_hate.is-active::before {
+  background-image: url(/assets/hand-thumbs-down-fill.svg);
 }
 
 .restaurant_reviewItem_userBlind {

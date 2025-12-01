@@ -8,6 +8,18 @@ if (!id) {
 let data;
 let allReviews = [];
 const reviewItemTemplate = document.getElementById('review-item-template');
+const filterButtons = document.getElementsByClassName(
+  'restaurant_reviewList_filterButton'
+);
+const reviewContainer = document.getElementById('review_content');
+if (reviewContainer) {
+  reviewContainer.addEventListener('click', onReviewReactionClick);
+}
+const loadMoreButton = document.getElementById('moreButton');
+// 페이지네이션 적용할 때 이 코드 삭제
+if (loadMoreButton) {
+  loadMoreButton.style.display = 'none';
+}
 
 const RATING_CATEGORY_MAP = {
   good: { label: '맛있다', cssClass: 'Rating_Recommend' },
@@ -307,16 +319,6 @@ starButton.addEventListener('click', function () {
   }
 });
 
-const filterButtons = document.getElementsByClassName(
-  'restaurant_reviewList_filterButton'
-);
-const reviewContainer = document.getElementById('review_content');
-const loadMoreButton = document.getElementById('moreButton');
-// 페이지네이션 적용할 때 이 코드 삭제
-if (loadMoreButton) {
-  loadMoreButton.style.display = 'none';
-}
-
 function setupReviewFilterButtons() {
   const buttons = Array.from(filterButtons);
   if (!buttons.length) return;
@@ -361,6 +363,9 @@ function buildReviewItem(review) {
   if (!reviewItemTemplate) return document.createTextNode('');
 
   const li = reviewItemTemplate.content.firstElementChild.cloneNode(true);
+
+  li.dataset.reviewId = review.id;
+
   const nicknameEl = li.querySelector('.restaurant_reviewItem_userNickname');
   const profilImgEl = li.querySelector('.restaurant_reviewItem_userPicture');
   const likeEl = li.querySelector('.userStatItem_like');
@@ -382,7 +387,14 @@ function buildReviewItem(review) {
 
   // 좋아요/싫어요
   if (likeEl) likeEl.textContent = review.likeCount ?? '';
-  if (hateEl) likeEl.textContent = review.hateCount ?? '';
+  if (hateEl) hateEl.textContent = review.dislikeCount ?? '';
+
+  if (likeEl && review.userReaction === 'like') {
+    likeEl.classList.add('is-active');
+  }
+  if (hateEl && review.userReaction === 'dislike') {
+    hateEl.classList.add('is-active');
+  }
 
   // 리뷰 내용
   if (textEl) textEl.textContent = review.content ?? '';
@@ -439,6 +451,65 @@ function buildReviewItem(review) {
   // TODO: 내 리뷰에 대한 수정/삭제는 나중에 내 리뷰에만 보이게 코드 추가하기
 
   return li;
+}
+
+async function onReviewReactionClick(event) {
+  const likeEl = event.target.closest('.userStatItem_like');
+  const hateEl = event.target.closest('.userStatItem_hate');
+
+  if (!likeEl && !hateEl) return;
+
+  const li = event.target.closest('.restaurant_reviewList_reviewItem');
+  if (!li) return;
+
+  const reviewId = li.dataset.reviewId;
+  if (!reviewId) return;
+
+  const type = likeEl ? 'like' : 'dislike';
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    location.href = `login.html?next=${encodeURIComponent(
+      location.pathname + location.search
+    )}`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reviews/${reviewId}/reactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ type }),
+    });
+
+    if (!res.ok) {
+      console.error('리뷰 반응 실패', res.status);
+      return;
+    }
+
+    const data = await res.json();
+
+    const likeNode = li.querySelector('.userStatItem_like');
+    const hateNode = li.querySelector('.userStatItem_hate');
+
+    if (likeNode) {
+      likeNode.textContent = data.likeCount ?? 0;
+      likeNode.classList.toggle('is-active', data.userReaction === 'like');
+    }
+    if (hateNode) {
+      hateNode.textContent = data.dislikeCount ?? 0;
+      hateNode.classList.toggle('is-active', data.userReaction === 'dislike');
+    }
+
+    const idx = allReviews.findIndex((r) => r.id === data.reviewId);
+    if (idx !== -1) {
+      allReviews[idx].likeCount = data.likeCount;
+      allReviews[idx].dislikeCount = data.dislikeCount;
+      allReviews[idx].userReaction = data.userReaction;
+    }
+  } catch (err) {
+    console.error('리뷰 반응 요청 에러', err);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', function () {
