@@ -15,6 +15,10 @@ async function fetchMe() {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      return null;
+    }
     if (!res.ok) return null;
     return await res.json();
   } catch {

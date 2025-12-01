@@ -42,6 +42,10 @@ async function fetchMe() {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
+    if (res.status === 401) {
+      localStorage.removeItem('token');
+      return null;
+    }
     if (!res.ok) return null;
     return await res.json();
   } catch {
@@ -210,7 +214,10 @@ function setupReviewFilterCounst() {
 
 async function initReviews() {
   try {
-    const res = await fetch(`${API_BASE}/reviews?restaurantId=${id}`);
+    const res = await fetch(`${API_BASE}/reviews?restaurantId=${id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
     if (!res.ok) {
       console.warn('리뷰를 불러오지 못했습니다.', res.status);
       return;
