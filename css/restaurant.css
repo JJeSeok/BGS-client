@@ -609,6 +609,10 @@ ul li {
   display: none;
 }
 
+.restaurant_reviewItem_managementWrap.is-open .managementWrap {
+  display: block;
+}
+
 .managementList {
   display: block;
   position: relative;

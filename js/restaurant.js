@@ -14,6 +14,7 @@ const filterButtons = document.getElementsByClassName(
 const reviewContainer = document.getElementById('review_content');
 if (reviewContainer) {
   reviewContainer.addEventListener('click', onReviewReactionClick);
+  reviewContainer.addEventListener('click', onReviewManagementClick);
 }
 const loadMoreButton = document.getElementById('moreButton');
 // 페이지네이션 적용할 때 이 코드 삭제
@@ -518,6 +519,44 @@ async function onReviewReactionClick(event) {
     console.error('리뷰 반응 요청 에러', err);
   }
 }
+
+function onReviewManagementClick(event) {
+  const managementBtn = event.target.closest(
+    '.restaurant_reviewItem_management'
+  );
+  if (!managementBtn) return;
+
+  event.stopPropagation();
+
+  const wrap = managementBtn.closest('.restaurant_reviewItem_managementWrap');
+  if (!wrap) return;
+
+  const isOpen = wrap.classList.contains('is-open');
+
+  document
+    .querySelectorAll('.restaurant_reviewItem_managementWrap.is-open')
+    .forEach((el) => {
+      if (el !== wrap) {
+        el.classList.remove('is-open');
+      }
+    });
+
+  if (isOpen) {
+    wrap.classList.remove('is-open');
+  } else {
+    wrap.classList.add('is-open');
+  }
+}
+
+document.addEventListener('click', (event) => {
+  if (event.target.closest('.restaurant_reviewItem_managementWrap')) {
+    return;
+  }
+
+  document
+    .querySelectorAll('.restaurant_reviewItem_managementWrap.is-open')
+    .forEach((el) => el.classList.remove('is-open'));
+});
 
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
