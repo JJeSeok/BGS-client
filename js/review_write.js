@@ -8,6 +8,10 @@ if (!restaurantId) {
   location.href = 'index.html';
 }
 
+let existingImages = [];
+const deletedImageIds = new Set();
+const newImages = [];
+
 function authHeaders() {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -58,7 +62,18 @@ async function initAuthMenu() {
 
   if (isEdit) {
     const review = await fetchReviewForEdit();
+    existingImages = review.images.map((img) => ({
+      id: img.id,
+      url: normalizeImgUrl(img.url),
+      width: img.width,
+      height: img.height,
+      sortOrder: img.sortOrderm,
+    }));
     fillFormForEdit(review);
+    renderExistingImages();
+    updateCounter();
+
+    if (submitBtn) submitBtn.textContent = '리뷰 수정하기';
   }
 
   logoutBtn?.addEventListener('click', logout);
@@ -93,6 +108,28 @@ function fillFormForEdit(review) {
     textarea.value = review.content ?? '';
   }
   setScore(review.rating / 2);
+}
+
+function renderExistingImages() {
+  existingImages.forEach((img) => {
+    addPreview({
+      type: 'existing',
+      id: img.id,
+      url: img.url,
+    });
+  });
+}
+
+function normalizeImgUrl(url) {
+  try {
+    const u = new URL(url, API_BASE);
+    if (!['http:', 'https:'].includes(u.protocol)) {
+      throw new Error('bad url');
+    }
+    return u.href;
+  } catch (error) {
+    return '';
+  }
 }
 
 const textarea = document.querySelector('.ReviewEditor_write');
@@ -201,24 +238,35 @@ const addBtn = document.getElementById('addImages');
 const imageInput = document.getElementById('imageInput');
 const pictureList = document.getElementById('pictureList');
 const counterLen = document.querySelector('.ReviewPictureCounter_Length');
-const filesState = [];
 
 addBtn.addEventListener('click', () => imageInput.click());
 imageInput.addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
-  const available = Math.max(0, MAX_PICTURES - filesState.length);
+  const available = Math.max(0, MAX_PICTURES - newImages.length);
   const picked = files.slice(0, available);
-  picked.forEach((file) => addPreview(file));
+  picked.forEach((file) => {
+    const url = URL.createObjectURL(file);
+    newImages.push({ file, url });
+    addPreview({
+      type: 'new',
+      id: null,
+      url,
+    });
+  });
   imageInput.value = '';
   updateCounter();
 });
 
-function addPreview(file) {
-  const url = URL.createObjectURL(file);
-  filesState.push({ file, url });
+if (pictureList) {
+  pictureList.addEventListener('click', onRemoveBtnClick);
+}
 
+function addPreview({ type, id, url }) {
   const li = document.createElement('li');
   li.className = 'ReviewPictureContainer_pictureItem pictureItem_picture';
+  li.dataset.type = type;
+  if (id) li.dataset.imageId = id;
+  li.dataset.url = url;
 
   const imgDiv = document.createElement('div');
   imgDiv.className = 'ReviewPictureContainer_PreviewImage';
@@ -255,25 +303,43 @@ function addPreview(file) {
     pictureList.querySelector('.pictureItem_button')
   );
 
-  removeBtn.addEventListener('click', () => {
-    const idx = filesState.findIndex((f) => f.url === url);
-    if (idx >= 0) {
-      URL.revokeObjectURL(filesState[idx].url);
-      filesState.splice(idx, 1);
-    }
-    li.remove();
-    updateCounter();
-  });
-
   extendBtn.addEventListener('click', () => {
     openLightbox(url);
   });
 }
 
 function updateCounter() {
-  counterLen.textContent = String(filesState.length);
-  addBtn.parentElement.style.display =
-    filesState.length >= MAX_PICTURES ? 'none' : 'flex';
+  const imgLen = existingImages.length + newImages.length;
+  counterLen.textContent = String(imgLen);
+  addBtn.parentElement.style.display = imgLen >= MAX_PICTURES ? 'none' : 'flex';
+}
+
+function onRemoveBtnClick(event) {
+  const removeBtn = event.target.closest('.picture_removeIcon');
+  if (!removeBtn) return;
+
+  const li = event.target.closest('.ReviewPictureContainer_pictureItem');
+  if (!li) return;
+
+  const type = li.dataset.type;
+  const url = li.dataset.url;
+
+  if (type === 'existing') {
+    const imageId = Number(li.dataset.imageId);
+    if (imageId) {
+      deletedImageIds.add(imageId);
+      existingImages = existingImages.filter((img) => img.id !== imageId);
+    }
+  } else if (type === 'new') {
+    const idx = newImages.findIndex((img) => img.url === url);
+    if (idx >= 0) {
+      URL.revokeObjectURL(newImages[idx].url);
+      newImages.splice(idx, 1);
+    }
+  }
+
+  li.remove();
+  updateCounter();
 }
 
 const ligthboxEl = document.getElementById('lightbox');
@@ -327,15 +393,29 @@ async function onSubmitReview(e) {
   }
 
   const formData = new FormData();
-  formData.append('restaurantId', restaurantId);
   formData.append('rating', String(currentScore * 2));
   formData.append('content', content);
 
-  filesState.forEach(({ file }) => formData.append('images', file));
+  if (!isEdit) {
+    formData.append('restaurantId', restaurantId);
+  }
+
+  newImages.forEach(({ file }) => formData.append('images', file));
+
+  if (isEdit && deletedImageIds.size > 0) {
+    deletedImageIds.forEach((id) =>
+      formData.append('deletedImageIds', String(id))
+    );
+  }
+
+  const url = isEdit
+    ? `${API_BASE}/reviews/${reviewId}`
+    : `${API_BASE}/reviews`;
+  const method = isEdit ? 'PUT' : 'POST';
 
   try {
-    const res = await fetch(`${API_BASE}/reviews`, {
-      method: 'POST',
+    const res = await fetch(url, {
+      method,
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
@@ -343,11 +423,14 @@ async function onSubmitReview(e) {
     if (!res.ok) {
       const errBody = await res.json().catch(() => null);
       console.error('review error', errBody);
-      alert(errBody?.message || '리뷰 등록에 실피했습니다.');
+      alert(
+        errBody?.message ||
+          (isEdit ? '리뷰 수정에 실패했습니다.' : '리뷰 등록에 실패했습니다.')
+      );
       return;
     }
 
-    alert('리뷰가 등록되었습니다!');
+    alert(isEdit ? '리뷰가 수정되었습니다!' : '리뷰가 등록되었습니다!');
     location.href = `restaurant.html?id=${encodeURIComponent(restaurantId)}`;
   } catch (err) {
     console.error(err);
@@ -373,5 +456,8 @@ async function initRestaurantName() {
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
   initRestaurantName();
-  setScore(5);
+
+  if (!isEdit) {
+    setScore(5);
+  }
 });

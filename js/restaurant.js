@@ -607,7 +607,6 @@ async function deleteReview(reviewId, liElement) {
 
       liElement.remove();
 
-      // 리뷰수, 평점, 필터 카운트 다시 계산하기
       if (data) data.restaurant.review_count = allReviews.length;
       AvgFromReviews();
       setupReviewFilterCounts();
