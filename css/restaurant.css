@@ -578,6 +578,7 @@ ul li {
 
 .restaurant_reviewItem_managementWrap {
   position: relative;
+  z-index: 50;
 }
 
 .restaurant_reviewItem_management {
@@ -607,6 +608,7 @@ ul li {
   background: #fff;
   box-sizing: border-box;
   display: none;
+  z-index: 100;
 }
 
 .restaurant_reviewItem_managementWrap.is-open .managementWrap {
@@ -614,37 +616,36 @@ ul li {
 }
 
 .managementList {
-  display: block;
-  position: relative;
+  width: 100%;
+}
+
+.managementBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   width: 100%;
   height: 56px;
-  padding-left: 17px;
+  padding: 0 17px;
   box-sizing: border-box;
+  background: transparent;
+  border: none;
+  outline: none;
   text-align: left;
+  cursor: pointer;
+}
+
+.managementText {
   white-space: nowrap;
 }
 
-.modify {
-  width: 100%;
-  height: 100%;
-  line-height: 56px;
-}
-
-.modifyButton {
-  width: 100%;
-  height: 100%;
-  text-align: inherit;
+.managementIcon {
+  width: 15px;
+  height: 15px;
+  background-size: cover;
 }
 
 .modifyIcon {
   background-image: url(/assets/pencil.svg);
-  position: absolute;
-  top: 0;
-  right: 15px;
-  bottom: 0;
-  width: 15px;
-  height: 15px;
-  margin: auto;
 }
 
 .deleteButton {
@@ -653,13 +654,6 @@ ul li {
 
 .deleteIcon {
   background-image: url(/assets/trash.svg);
-  position: absolute;
-  top: 0;
-  right: 15px;
-  bottom: 0;
-  width: 15px;
-  height: 15px;
-  margin: auto;
 }
 
 .restaurant_reviewList_moreButton {

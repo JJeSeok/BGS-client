@@ -192,7 +192,7 @@ function AvgFromReviews() {
   if (data) data.restaurant.rating_avg = Math.round(avg * 10) / 20;
 }
 
-function setupReviewFilterCounst() {
+function setupReviewFilterCounts() {
   const total = allReviews.length;
   const good = allReviews.filter((r) => r.ratingCategory === 'good').length;
   const ok = allReviews.filter((r) => r.ratingCategory === 'ok').length;
@@ -231,7 +231,7 @@ async function initReviews() {
     AvgFromReviews();
 
     // 필터 버튼 숫자 설정
-    setupReviewFilterCounst();
+    setupReviewFilterCounts();
 
     // 필터 버튼 클릭 이벤트 세팅 + 기본 렌더링
     setupReviewFilterButtons();
@@ -521,6 +521,42 @@ async function onReviewReactionClick(event) {
 }
 
 function onReviewManagementClick(event) {
+  const modifyBtn = event.target.closest('.modifyButton');
+  if (modifyBtn) {
+    event.stopPropagation();
+
+    const li = event.target.closest('.restaurant_reviewList_reviewItem');
+    if (!li) return;
+
+    const reviewId = li.dataset.reviewId;
+    if (!reviewId) return;
+
+    const editUrl = `review_write.html?restaurant_id=${encodeURIComponent(
+      id
+    )}&review_id=${encodeURIComponent(reviewId)}`;
+
+    location.href = editUrl;
+    return;
+  }
+
+  const deleteBtn = event.target.closest('.deleteButton');
+  if (deleteBtn) {
+    event.stopPropagation();
+
+    const li = event.target.closest('.restaurant_reviewList_reviewItem');
+    if (!li) return;
+
+    const reviewId = li.dataset.reviewId;
+    if (!reviewId) return;
+
+    if (!confirm('이 리뷰를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    deleteReview(reviewId, li);
+    return;
+  }
+
   const managementBtn = event.target.closest(
     '.restaurant_reviewItem_management'
   );
@@ -557,6 +593,33 @@ document.addEventListener('click', (event) => {
     .querySelectorAll('.restaurant_reviewItem_managementWrap.is-open')
     .forEach((el) => el.classList.remove('is-open'));
 });
+
+async function deleteReview(reviewId, liElement) {
+  try {
+    const res = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() },
+    });
+
+    if (res.status === 204) {
+      const idNum = Number(reviewId);
+      allReviews = allReviews.filter((r) => r.id !== idNum);
+
+      liElement.remove();
+
+      // 리뷰수, 평점, 필터 카운트 다시 계산하기
+      if (data) data.restaurant.review_count = allReviews.length;
+      AvgFromReviews();
+      setupReviewFilterCounts();
+      updateHeader();
+      updateStatus();
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+    alert('리뷰 삭제 중 오류가 발생했습니다.');
+  }
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();

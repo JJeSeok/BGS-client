@@ -1,6 +1,8 @@
 const API_BASE = 'http://localhost:8080';
 
 const restaurantId = new URLSearchParams(location.search).get('restaurant_id');
+const reviewId = new URLSearchParams(location.search).get('review_id');
+const isEdit = !!reviewId;
 if (!restaurantId) {
   alert('어느 식당에 대한 리뷰인지 알 수 없어요.');
   location.href = 'index.html';
@@ -54,7 +56,43 @@ async function initAuthMenu() {
     location.href = `login.html?next=${encodeURIComponent(back)}`;
   }
 
+  if (isEdit) {
+    const review = await fetchReviewForEdit();
+    fillFormForEdit(review);
+  }
+
   logoutBtn?.addEventListener('click', logout);
+}
+
+async function fetchReviewForEdit() {
+  if (!isEdit) return null;
+
+  try {
+    const res = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+
+    if (!res.ok) {
+      alert('리뷰 정보를 불러오지 못했습니다.');
+      return null;
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    alert('리뷰 정보를 불러올 수 없습니다.');
+    return null;
+  }
+}
+
+function fillFormForEdit(review) {
+  if (!review) return;
+
+  if (textarea) {
+    textarea.value = review.content ?? '';
+  }
+  setScore(review.rating / 2);
 }
 
 const textarea = document.querySelector('.ReviewEditor_write');
