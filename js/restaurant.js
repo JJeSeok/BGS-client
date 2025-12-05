@@ -7,6 +7,7 @@ if (!id) {
 }
 let data;
 let allReviews = [];
+let currentUser = null;
 const reviewItemTemplate = document.getElementById('review-item-template');
 const filterButtons = document.getElementsByClassName(
   'restaurant_reviewList_filterButton'
@@ -72,6 +73,7 @@ async function initAuthMenu() {
   const logoutBtn = document.getElementById('logout-btn');
 
   const me = await fetchMe();
+  currentUser = me;
 
   if (me && me.username) {
     loginBtn.style.display = 'none';
@@ -383,6 +385,9 @@ function buildReviewItem(review) {
   const pictureListEl = li.querySelector('.restaurant_reviewItem_PictureList');
   const ratingWrapEl = li.querySelector('.restaurant_reviewItem_Rating');
   const ratingTextEl = li.querySelector('.restaurant_reviewItem_RatingText');
+  const managementWrapEl = li.querySelector(
+    '.restaurant_reviewItem_managementWrap'
+  );
 
   // 닉네임
   if (nicknameEl) nicknameEl.textContent = review.userName;
@@ -456,7 +461,16 @@ function buildReviewItem(review) {
     ratingTextEl.textContent = meta.label;
   }
 
-  // TODO: 내 리뷰에 대한 수정/삭제는 나중에 내 리뷰에만 보이게 코드 추가하기
+  if (managementWrapEl) {
+    const isMine =
+      currentUser && currentUser.username
+        ? currentUser.username === review.userName
+        : false;
+
+    if (!isMine) {
+      managementWrapEl.remove();
+    }
+  }
 
   return li;
 }
