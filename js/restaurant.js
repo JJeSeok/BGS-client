@@ -32,9 +32,9 @@ const RATING_CATEGORY_MAP = {
 const mapContainer = document.getElementById('restaurant_map');
 const mapLink = document.getElementById('map_link');
 
-var starButton = document.getElementById('star_button');
-var starButtonIcon = document.getElementById('star_icon');
-var isClicked = false;
+const starButton = document.getElementById('star_button');
+const starButtonIcon = document.getElementById('star_icon');
+let isClicked = false;
 
 function authHeaders() {
   const token = localStorage.getItem('token');
@@ -137,6 +137,12 @@ function updateHeader() {
   }`;
   document.querySelector('.branch').textContent =
     data?.restaurant.branch_info ?? '';
+
+  if (data?.isLiked) {
+    starButtonIcon.classList.remove('star_button_icon');
+    starButtonIcon.classList.add('star_button_icon-check');
+    isClicked = true;
+  }
 }
 
 function updateStatus() {
@@ -322,7 +328,9 @@ async function initReviews() {
 
 async function init() {
   try {
-    const res = await fetch(`${API_BASE}/restaurants/${id}`);
+    const res = await fetch(`${API_BASE}/restaurants/${id}`, {
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     data = await res.json();
   } catch (e) {
@@ -395,18 +403,6 @@ function wireReviewLink() {
     });
   }
 }
-
-starButton.addEventListener('click', function () {
-  if (isClicked) {
-    starButtonIcon.classList.remove('star_button_icon-check');
-    starButtonIcon.classList.add('star_button_icon');
-    isClicked = false;
-  } else {
-    starButtonIcon.classList.remove('star_button_icon');
-    starButtonIcon.classList.add('star_button_icon-check');
-    isClicked = true;
-  }
-});
 
 function setupReviewFilterButtons() {
   const buttons = Array.from(filterButtons);
@@ -712,6 +708,42 @@ async function deleteReview(reviewId, liElement) {
     alert('리뷰 삭제 중 오류가 발생했습니다.');
   }
 }
+
+starButton.addEventListener('click', async function () {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    const back = location.pathname + location.search;
+    location.href = `login.html?next=${encodeURIComponent(back)}`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/restaurants/${id}/likes`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+    if (!res.ok) return;
+
+    const result = await res.json();
+
+    if (result.isLiked) {
+      starButtonIcon.classList.remove('star_button_icon');
+      starButtonIcon.classList.add('star_button_icon-check');
+    } else {
+      starButtonIcon.classList.remove('star_button_icon-check');
+      starButtonIcon.classList.add('star_button_icon');
+    }
+    isClicked = result.isLiked;
+
+    if (data && data.restaurant) {
+      data.restaurant.like_count = result.likeCount;
+      updateStatus();
+    }
+  } catch (err) {
+    console.error(err);
+    alert('레스토랑 반응 중 오류가 발생했습니다.');
+  }
+});
 
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
