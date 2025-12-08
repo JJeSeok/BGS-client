@@ -29,6 +29,9 @@ const RATING_CATEGORY_MAP = {
   bad: { label: '별로', cssClass: 'Rating_Bad' },
 };
 
+const mapContainer = document.getElementById('restaurant_map');
+const mapLink = document.getElementById('map_link');
+
 var starButton = document.getElementById('star_button');
 var starButtonIcon = document.getElementById('star_icon');
 var isClicked = false;
@@ -180,6 +183,81 @@ function updateInfo() {
     : '식당 소개를 입력해주세요.';
 }
 
+function initRestaurantMap() {
+  if (!mapContainer) return;
+  if (!window.naver || !naver.maps) {
+    console.warn('네이버 지도 스크립트가 로드되지 않았습니다.');
+    return;
+  }
+
+  const latFromData = data?.restaurant?.latitude;
+  const lngFromData = data?.restaurant?.longitude;
+
+  const lat =
+    typeof latFromData === 'number'
+      ? latFromData
+      : Number(mapContainer.dataset.lat);
+  const lng =
+    typeof lngFromData === 'number'
+      ? lngFromData
+      : Number(mapContainer.dataset.lng);
+
+  const name =
+    data?.restaurant?.name || mapContainer.dataset.name || '식당 위치';
+
+  if (!lat || !lng || Number.isNaN(lat) || Number.isNaN(lng)) {
+    console.warn('식당 위치 정보가 없습니다. (lat/lng 누락)');
+    return;
+  }
+
+  mapContainer.dataset.lat = lat;
+  mapContainer.dataset.lng = lng;
+  mapContainer.dataset.name = name;
+
+  const center = new naver.maps.LatLng(lat, lng);
+  const map = new naver.maps.Map(mapContainer, {
+    center,
+    zoom: 16,
+    zoomControl: false,
+  });
+  const marker = new naver.maps.Marker({
+    position: center,
+    map,
+  });
+  const infoHtml = `
+    <div style="
+      padding:6px 10px;
+      border-radius:999px;
+      background:#ffffff;
+      border:1px solid #e5e7eb;
+      box-shadow:0 3px 8px rgba(0,0,0,0.18);
+      font-size:12px;
+      font-weigth:600;
+      color:#111827;
+      white-space:nowrap;
+      ">${name}</div>`;
+  const infoWindow = new naver.maps.InfoWindow({
+    content: infoHtml,
+    borderWidth: 0,
+    backgroundColor: 'transparent',
+    pixelOffset: new naver.maps.Point(0, -8),
+  });
+
+  infoWindow.open(map, marker);
+
+  if (mapLink) {
+    mapLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const url = new URL('map.html', window.location.origin);
+      url.searchParams.set('lat', lat);
+      url.searchParams.set('lng', lng);
+      url.searchParams.set('name', name);
+      url.searchParams.set('id', id);
+      window.location.href = url.toString();
+    });
+  }
+}
+
 function AvgFromReviews() {
   if (!Array.isArray(allReviews) || allReviews.length === 0) {
     return;
@@ -262,6 +340,7 @@ async function init() {
   updateStatus();
   wireReviewLink();
   updateInfo();
+  initRestaurantMap();
 }
 
 function normalizeImgUrl(url) {

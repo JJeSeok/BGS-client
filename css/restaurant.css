@@ -88,8 +88,10 @@ button {
 #content {
   padding-top: 6px;
   display: grid;
-  grid-column: 1fr;
+  grid-template-columns: 1fr;
   gap: clamp(16px, 2.2vw, 24px);
+  max-width: 1160px;
+  margin: 0 auto;
 }
 
 #lside_wrap,
@@ -399,7 +401,6 @@ ul li {
 .restaurant_reviewList_reviewItem {
   position: relative;
   border-bottom: 1px solid #dbdbdb;
-  /* display: none; */
 }
 
 .restaurant_reviewItem_link {
@@ -692,10 +693,6 @@ ul li {
 }
 
 .map_container {
-  /* display: block;
-  height: 320px;
-  width: 100%;
-  cursor: pointer; */
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -709,7 +706,7 @@ ul li {
 .map_container > div,
 .map_container canvas {
   width: 100%;
-  height: 100%;
+  height: 100% !important;
 }
 
 @media (max-width: 1024px) {
@@ -722,8 +719,13 @@ ul li {
 
 @media (min-width: 1024px) {
   #content {
-    grid-column: 1.6fr 1fr;
-    align-items: start;
+    grid-template-columns: minmax(0, 2fr) minmax(260px, 340px);
+    align-items: flex-start;
+    padding-inline: 16px;
+  }
+
+  #rside_wrap {
+    justify-self: end;
   }
 
   #column_side {
@@ -733,18 +735,6 @@ ul li {
 }
 
 @media screen and (min-width: 769px) {
-  /* #lside_wrap {
-    float: left;
-    width: calc(100% - 400px);
-    padding: 0 20px;
-  } */
-
-  #inner {
-    margin: 0 auto;
-    width: 800px;
-    clear: both;
-  }
-
   #restaurant_detail {
     padding-top: 20px;
   }
@@ -803,17 +793,6 @@ ul li {
   .restaurant_reviewItem_Rating {
     margin-top: 10px;
   }
-
-  /* #rside_wrap {
-    float: right;
-    width: 400px;
-    background-color: #f6f6f6;
-  } */
-
-  /* #column_side {
-    width: 400px;
-    padding-bottom: 50px;
-  } */
 }
 
 @media screen and (max-width: 768px) {
