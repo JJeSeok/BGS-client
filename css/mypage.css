@@ -680,6 +680,15 @@ input[type='radio'] {
   margin-top: 40px;
 }
 
+.error_box {
+  display: block;
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 14px;
+  color: red;
+  text-align: center;
+}
+
 .pwCheck_button {
   display: block;
   padding: 0 10px;
@@ -696,18 +705,6 @@ input[type='radio'] {
 .pwCheckButton_text {
   display: inline-block;
   font-size: 16px;
-  font-weight: 500;
-}
-
-.pwInput_error {
-  padding: 10px 0;
-}
-
-.pwError_text {
-  font-size: 13px;
-  color: rgb(240, 63, 64);
-  margin-top: -4px;
-  margin-bottom: 0;
   font-weight: 500;
 }
 
@@ -893,6 +890,21 @@ input[type='radio'] {
 
 .dropdown_menu {
   padding-top: 20px;
+}
+
+.custom-alert {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  min-width: 300px;
+  max-width: 90%;
+  text-align: center;
+  font-size: 1.1rem;
+  padding: 15px 20px;
+  animation: fadein 0.5s ease-in-out;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 @media screen and (min-width: 769px) {
