@@ -3,6 +3,19 @@ const API_BASE = 'http://localhost:8080';
 let layer_wrap = document.querySelector('.layer_wrap');
 let Modal = document.querySelector('.Modal');
 let closeButton = document.querySelector('.btn_layer_close');
+const mypageLink = document.querySelector('a[href="/mypage.html"]');
+if (mypageLink) {
+  mypageLink.addEventListener('click', (e) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      e.preventDefault();
+
+      const back = '/mypage.html';
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+    }
+  });
+}
 
 function authHeaders() {
   const token = localStorage.getItem('token');

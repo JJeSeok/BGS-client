@@ -29,6 +29,20 @@ const RATING_CATEGORY_MAP = {
   bad: { label: '별로', cssClass: 'Rating_Bad' },
 };
 
+const mypageLink = document.querySelector('a[href="/mypage.html"]');
+if (mypageLink) {
+  mypageLink.addEventListener('click', (e) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      e.preventDefault();
+
+      const back = '/mypage.html';
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+    }
+  });
+}
+
 const mapContainer = document.getElementById('restaurant_map');
 const mapLink = document.getElementById('map_link');
 

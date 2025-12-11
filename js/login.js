@@ -2,6 +2,20 @@ const form = document.getElementById('loginForm');
 const errorBox = document.getElementById('login_error');
 const next = new URLSearchParams(location.search).get('next') || 'index.html';
 
+const mypageLink = document.querySelector('a[href="/mypage.html"]');
+if (mypageLink) {
+  mypageLink.addEventListener('click', (e) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      e.preventDefault();
+
+      const back = '/mypage.html';
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+    }
+  });
+}
+
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 

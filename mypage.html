@@ -108,34 +108,43 @@
           </div>
           <div class="side_wrap">
             <div class="inside_wrap">
-              <button class="inside_action_button1">
+              <button class="inside_action_button1" id="stat-written-reviews">
                 <div class="inside_button_div1">
-                  좋아요<span class="compact_right only_desktop"></span>
+                  작성 리뷰<span class="compact_right only_desktop"></span>
                 </div>
                 <div class="inside_button_div2">
-                  213<span class="inside_button_div_font">개</span>
+                  <span id="stat-review-count">0</span>
+                  <span class="inside_button_div_font">개</span>
                 </div>
                 <span class="compact_right only_mobile"></span>
               </button>
             </div>
             <div class="inside_wrap">
-              <button class="inside_action_button1">
+              <button
+                class="inside_action_button1"
+                id="stat-visited-restaurants"
+              >
                 <div class="inside_button_div1">
-                  싫어요<span class="compact_right only_desktop"></span>
+                  방문 식당<span class="compact_right only_desktop"></span>
                 </div>
                 <div class="inside_button_div2">
-                  13<span class="inside_button_div_font">개</span>
+                  <span id="stat-visited-count">0</span>
+                  <span class="inside_button_div_font">곳</span>
                 </div>
                 <span class="compact_right only_mobile"></span>
               </button>
             </div>
             <div class="inside_wrap">
-              <button class="inside_action_button1">
+              <button
+                class="inside_action_button1"
+                id="stat-bookmarked-restaurants"
+              >
                 <div class="inside_button_div1">
-                  찜목록<span class="compact_right only_desktop"></span>
+                  찜한 식당<span class="compact_right only_desktop"></span>
                 </div>
                 <div class="inside_button_div2">
-                  15<span class="inside_button_div_font">개</span>
+                  <span id="stat-bookmark-count">0</span>
+                  <span class="inside_button_div_font">곳</span>
                 </div>
                 <span class="compact_right only_mobile"></span>
               </button>
@@ -143,20 +152,23 @@
           </div>
           <div class="side_wrap">
             <div class="inside_wrap">
-              <button class="inside_action_button2">
+              <button class="inside_action_button2" id="stat-review-reactions">
                 <div class="inside_button_div1">
-                  방문식당<span class="compact_right only_desktop"></span>
+                  리뷰 반응<span class="compact_right only_desktop"></span>
                 </div>
-                <div class="inside_button_div3">알아보기</div>
+                <div class="inside_button_div3">
+                  좋아요
+                  <span id="stat-reaction-like">0</span>개 · 싫어요
+                  <span id="stat-reaction-dislike">0</span>개
+                </div>
                 <span class="compact_right only_mobile"></span>
               </button>
             </div>
             <div class="inside_wrap">
-              <button class="inside_action_button2">
+              <button class="inside_action_button2" id="stat-blind-list">
                 <div class="inside_button_div1">
-                  블라인드한 목록<span
-                    class="compact_right only_desktop"
-                  ></span>
+                  블라인드한 목록
+                  <span class="compact_right only_desktop"></span>
                 </div>
                 <div class="inside_button_div3">알아보기</div>
                 <span class="compact_right only_mobile"></span>
@@ -352,6 +364,79 @@
               </a>
             </li>
           </ul>
+
+          <template id="review-item-template">
+            <li class="restaurant_reviewList_reviewItem">
+              <div class="restaurant_reviewItem_link">
+                <div class="restaurant_reviewItem_user">
+                  <div class="restaurant_reviewItem_userPicturewrap">
+                    <img
+                      class="restaurant_reviewItem_userPicture"
+                      src=""
+                      alt="user profile picture"
+                    />
+                  </div>
+                  <span class="restaurant_reviewItem_userNickname"></span>
+                  <ul class="restaurant_reviewItem_userStat">
+                    <li
+                      class="restaurant_reviewItem_userStatItem userStatItem_like"
+                    ></li>
+                    <li
+                      class="restaurant_reviewItem_userStatItem userStatItem_hate"
+                    ></li>
+                  </ul>
+                  <button
+                    class="restaurant_reviewItem_userBlind only_desktop"
+                    type="button"
+                  >
+                    블라인드
+                  </button>
+                </div>
+
+                <div class="restaurant_reviewItem_content">
+                  <div class="restaurant_reviewItem_textWrap">
+                    <p class="restaurant_reviewItem_text"></p>
+                    <span class="restaurant_reviewItem_Date"></span>
+                  </div>
+                  <ul class="restaurant_reviewItem_PictureList"></ul>
+                </div>
+
+                <div class="restaurant_reviewItem_Rating">
+                  <span class="restaurant_reviewItem_RatingText"></span>
+
+                  <!-- 본인 리뷰일 때만 보이는 관리 버튼 영역-->
+                  <div class="restaurant_reviewItem_managementWrap">
+                    <button
+                      class="restaurant_reviewItem_management"
+                      type="button"
+                    >
+                      <span class="managementButton"></span>
+                    </button>
+                    <div class="managementWrap">
+                      <div class="managementList">
+                        <button
+                          class="managementBtn modifyButton"
+                          type="button"
+                        >
+                          <span class="managementText">수정하기</span>
+                          <span class="managementIcon modifyIcon"></span>
+                        </button>
+                      </div>
+                      <div class="managementList">
+                        <button
+                          class="managementBtn deleteButton"
+                          type="button"
+                        >
+                          <span class="managementText">삭제하기</span>
+                          <span class="managementIcon deleteIcon"></span>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </li>
+          </template>
         </div>
         <div class="rside_wrap" id="section-likes">
           <div class="list_header">
