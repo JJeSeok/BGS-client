@@ -800,6 +800,8 @@ async function deleteReview(reviewId, liElement) {
 
       if (likeStatEl) likeStatEl.textContent = totalLikes;
       if (dislikeStatEl) dislikeStatEl.textContent = totalDisLikes;
+
+      await refreshVisitedRestaurants();
       return;
     }
   } catch (err) {
@@ -808,9 +810,121 @@ async function deleteReview(reviewId, liElement) {
   }
 }
 
+async function fetchVisitedRestaurants() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me/visited-restaurants`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+
+    if (res.status === 401) return null;
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+function renderVisitedRestaurants(restaurants) {
+  const statEl = document.getElementById('stat-visited-count');
+  if (statEl) statEl.textContent = restaurants.length;
+
+  const countEl = document.getElementById('visitListCount');
+  if (countEl) countEl.textContent = `총 ${restaurants.length}개`;
+
+  const container = document.querySelector('.visitList_content');
+  if (!container) return;
+
+  container.querySelectorAll('.visitList_wrap').forEach((el) => el.remove());
+
+  if (restaurants.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'visitList_wrap';
+    empty.style.justifyContent = 'center';
+    empty.style.color = '#999';
+    empty.textContent = '방문(리뷰 작성)한 식당이 없습니다.';
+    container.appendChild(empty);
+    return;
+  }
+
+  restaurants.forEach((r) => {
+    const rid = r.id;
+    const name = r.name;
+    const address =
+      r.address.road ||
+      r.address.jibun ||
+      `${r.address.sido} ${r.address.sigugun} ${r.address.dongmyun}` ||
+      '';
+    const imageUrl = r.mainImageUrl;
+
+    const item = buildVisitRestaurantItem({
+      id: rid,
+      name,
+      address,
+      imageUrl,
+    });
+
+    container.appendChild(item);
+  });
+}
+
+function buildVisitRestaurantItem({ id, name, address, imageUrl }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'visitList_wrap';
+
+  const href = `restaurant.html?id=${encodeURIComponent(id)}`;
+
+  const aImg = document.createElement('a');
+  aImg.href = href;
+
+  const img = document.createElement('img');
+  img.className = 'restaurant_img';
+  img.src = normalizeImgUrl(imageUrl);
+  img.alt = String(name);
+
+  aImg.appendChild(img);
+
+  const p = document.createElement('p');
+  p.className = 'visitList_restaurant';
+
+  const aName = document.createElement('a');
+  aName.href = href;
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'restaurant_name';
+  nameSpan.textContent = name;
+
+  aName.appendChild(nameSpan);
+
+  const addrSpan = document.createElement('span');
+  addrSpan.textContent = address;
+
+  p.appendChild(aName);
+  p.appendChild(addrSpan);
+
+  wrap.appendChild(aImg);
+  wrap.appendChild(p);
+
+  return wrap;
+}
+
+async function loadVisitedRestaurants() {
+  const data = await fetchVisitedRestaurants();
+  if (!data) return;
+  renderVisitedRestaurants(data);
+}
+
+async function refreshVisitedRestaurants() {
+  const restaurants = await fetchVisitedRestaurants();
+  renderVisitedRestaurants(restaurants || []);
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   await initAuthMenu();
   await loadMyReviews();
+  await loadVisitedRestaurants();
 
   // 초기 진입: 맛집 리뷰 탭 열기
   showSection('section-reviews');
