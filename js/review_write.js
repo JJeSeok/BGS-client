@@ -2,6 +2,7 @@ const API_BASE = 'http://localhost:8080';
 
 const restaurantId = new URLSearchParams(location.search).get('restaurant_id');
 const reviewId = new URLSearchParams(location.search).get('review_id');
+const next = new URLSearchParams(location.search).get('next');
 const isEdit = !!reviewId;
 if (!restaurantId) {
   alert('어느 식당에 대한 리뷰인지 알 수 없어요.');
@@ -11,6 +12,20 @@ if (!restaurantId) {
 let existingImages = [];
 const deletedImageIds = new Set();
 const newImages = [];
+
+const mypageLink = document.querySelector('a[href="/mypage.html"]');
+if (mypageLink) {
+  mypageLink.addEventListener('click', (e) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      e.preventDefault();
+
+      const back = '/mypage.html';
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+    }
+  });
+}
 
 function authHeaders() {
   const token = localStorage.getItem('token');
@@ -431,7 +446,15 @@ async function onSubmitReview(e) {
     }
 
     alert(isEdit ? '리뷰가 수정되었습니다!' : '리뷰가 등록되었습니다!');
-    location.href = `restaurant.html?id=${encodeURIComponent(restaurantId)}`;
+
+    let redirectUrl;
+    if (next) {
+      redirectUrl = decodeURIComponent(next);
+    } else {
+      redirectUrl = `restaurant.html?id=${encodeURIComponent(restaurantId)}`;
+    }
+
+    location.href = redirectUrl;
   } catch (err) {
     console.error(err);
     alert('서버와 통신 중 오류가 발생했습니다.');

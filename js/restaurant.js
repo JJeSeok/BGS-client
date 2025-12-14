@@ -552,9 +552,7 @@ function buildReviewItem(review) {
 
   if (managementWrapEl) {
     const isMine =
-      currentUser && currentUser.username
-        ? currentUser.username === review.userName
-        : false;
+      currentUser && currentUser.id ? currentUser.id === review.userId : false;
 
     if (!isMine) {
       managementWrapEl.remove();

@@ -1,6 +1,34 @@
 const API_BASE = 'http://localhost:8080';
 
 let currentUser = null;
+let myReviews = [];
+const reviewContainer = document.getElementById('review_content');
+const reviewItemTemplate = document.getElementById('review-item-template');
+
+const RATING_CATEGORY_MAP = {
+  good: { label: '맛있다', cssClass: 'Rating_Recommend' },
+  ok: { label: '괜찮다', cssClass: 'Rating_Ok' },
+  bad: { label: '별로', cssClass: 'Rating_Bad' },
+};
+
+if (reviewContainer) {
+  reviewContainer.addEventListener('click', onReviewReactionClick);
+  reviewContainer.addEventListener('click', onReviewManagementClick);
+}
+
+const mypageLink = document.querySelector('a[href="/mypage.html"]');
+if (mypageLink) {
+  mypageLink.addEventListener('click', (e) => {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      e.preventDefault();
+
+      const back = '/mypage.html';
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+    }
+  });
+}
 
 function authHeaders() {
   const token = localStorage.getItem('token');
@@ -33,6 +61,7 @@ async function logout() {
     });
   } catch {}
   localStorage.removeItem('token');
+  currentUser = null;
   location.reload();
 }
 
@@ -143,9 +172,12 @@ const actionButton2 = document.getElementsByClassName('inside_action_button2');
 
 for (let i = 0; i < actionButton.length; i++) {
   actionButton[i].addEventListener('click', function () {
-    if (i === 0 || i === 1) {
+    if (i === 0) {
       showSection('section-reviews');
       setActiveSide('section-reviews');
+    } else if (i === 1) {
+      showSection('section-visits');
+      setActiveSide('section-visits');
     } else if (i === 2) {
       showSection('section-likes');
       setActiveSide('section-likes');
@@ -156,8 +188,8 @@ for (let i = 0; i < actionButton.length; i++) {
 for (let i = 0; i < actionButton2.length; i++) {
   actionButton2[i].addEventListener('click', function () {
     if (i === 0) {
-      showSection('section-visits');
-      setActiveSide('section-visits');
+      showSection('section-reviews');
+      setActiveSide('section-reviews');
     } else if (i === 1) {
       showSection('section-blind');
       setActiveSide('section-blind');
@@ -421,8 +453,364 @@ async function onSubmitProfileForm(event) {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  initAuthMenu();
+async function fetchMyReviews() {
+  if (!currentUser) {
+    const profile = await fetchMyProfile();
+    if (!profile) return null;
+    currentUser = profile;
+  }
+
+  const userId = currentUser.id;
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/reviews?userId=${encodeURIComponent(userId)}`,
+      {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      }
+    );
+
+    if (!res.ok) {
+      console.error('failed to fetch my reviews', res.status);
+      return null;
+    }
+
+    const reviews = await res.json();
+    return reviews;
+  } catch (err) {
+    console.error('failed to fetch my reviews', err);
+    return null;
+  }
+}
+
+async function loadMyReviews() {
+  const reviews = await fetchMyReviews();
+  if (!reviews) return;
+
+  myReviews = reviews;
+
+  const reviewCountEl = document.getElementById('stat-review-count');
+  if (reviewCountEl) {
+    reviewCountEl.textContent = myReviews.length;
+  }
+
+  const totalLikes = myReviews.reduce((sum, r) => sum + (r.likeCount || 0), 0);
+  const totalDisLikes = myReviews.reduce(
+    (sum, r) => sum + (r.dislikeCount || 0),
+    0
+  );
+
+  const likeStatEl = document.getElementById('stat-reaction-like');
+  const dislikeStatEl = document.getElementById('stat-reaction-dislike');
+
+  if (likeStatEl) likeStatEl.textContent = totalLikes;
+  if (dislikeStatEl) dislikeStatEl.textContent = totalDisLikes;
+
+  if (!reviewContainer) return;
+  reviewContainer.innerHTML = '';
+
+  if (myReviews.length === 0) {
+    const emptyLi = document.createElement('li');
+    emptyLi.className = 'restaurant_reviewList_reviewItem';
+    emptyLi.style.padding = '40px 0';
+    emptyLi.style.textAlign = 'center';
+    emptyLi.textContent = '작성한 리뷰가 없습니다.';
+    reviewContainer.appendChild(emptyLi);
+    return;
+  }
+
+  myReviews.forEach((review) => {
+    const li = buildReviewItem(review);
+    reviewContainer.appendChild(li);
+  });
+}
+
+// 리뷰 생성
+function buildReviewItem(review) {
+  if (!reviewItemTemplate) return document.createTextNode('');
+
+  const li = reviewItemTemplate.content.firstElementChild.cloneNode(true);
+
+  li.dataset.reviewId = review.id;
+  li.dataset.restaurantId = review.restaurantId;
+
+  const nicknameEl = li.querySelector('.restaurant_reviewItem_userNickname');
+  const profilImgEl = li.querySelector('.restaurant_reviewItem_userPicture');
+  const likeEl = li.querySelector('.userStatItem_like');
+  const hateEl = li.querySelector('.userStatItem_hate');
+  const textEl = li.querySelector('.restaurant_reviewItem_text');
+  const dateEl = li.querySelector('.restaurant_reviewItem_Date');
+  const pictureListEl = li.querySelector('.restaurant_reviewItem_PictureList');
+  const ratingWrapEl = li.querySelector('.restaurant_reviewItem_Rating');
+  const ratingTextEl = li.querySelector('.restaurant_reviewItem_RatingText');
+
+  // 닉네임
+  if (nicknameEl) nicknameEl.textContent = review.userName || '';
+
+  // 프로필 이미지
+  if (profilImgEl) {
+    profilImgEl.src = profilImgEl.src || '/images/흠.png';
+    profilImgEl.alt = 'user profile picture';
+  }
+
+  // 좋아요/싫어요
+  if (likeEl) likeEl.textContent = review.likeCount ?? 0;
+  if (hateEl) hateEl.textContent = review.dislikeCount ?? 0;
+
+  if (likeEl && review.userReaction === 'like') {
+    likeEl.classList.add('is-active');
+  }
+  if (hateEl && review.userReaction === 'dislike') {
+    hateEl.classList.add('is-active');
+  }
+
+  // 리뷰 내용
+  if (textEl) textEl.textContent = review.content ?? '';
+
+  // 날짜
+  if (dateEl) {
+    const dStr = review.updateAt || review.createdAt;
+    if (dStr) {
+      const d = new Date(dStr);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      dateEl.textContent = `${yyyy}-${mm}-${dd}`;
+    } else {
+      dateEl.textContent = '';
+    }
+  }
+
+  // 이미지 목록
+  if (pictureListEl) {
+    if (Array.isArray(review.images) && review.images.length > 0) {
+      const img = review.images[0];
+
+      const item = document.createElement('li');
+      item.className = 'restaurant_reviewItem_PictureItem';
+
+      const btn = document.createElement('button');
+      btn.className = 'restaurant_reviewItem_PictureButton';
+      btn.type = 'button';
+
+      const imgEl = document.createElement('img');
+      imgEl.className = 'restaurant_reviewItem_Picture';
+      imgEl.src = normalizeImgUrl(img.url);
+
+      btn.appendChild(imgEl);
+      item.appendChild(btn);
+      pictureListEl.appendChild(item);
+    }
+  }
+
+  if (ratingWrapEl && ratingTextEl) {
+    const meta = RATING_CATEGORY_MAP[review.ratingCategory] ?? {
+      label: '평가 없음',
+      cssClass: '',
+    };
+
+    if (meta.cssClass) {
+      ratingWrapEl.classList.add(meta.cssClass);
+    }
+
+    ratingTextEl.textContent = meta.label;
+  }
+
+  return li;
+}
+
+function normalizeImgUrl(url) {
+  try {
+    const u = new URL(url, API_BASE);
+    if (!['http:', 'https:'].includes(u.protocol)) {
+      throw new Error('bad url');
+    }
+    return u.href;
+  } catch (error) {
+    return '';
+  }
+}
+
+async function onReviewReactionClick(event) {
+  const likeEl = event.target.closest('.userStatItem_like');
+  const hateEl = event.target.closest('.userStatItem_hate');
+
+  if (!likeEl && !hateEl) return;
+
+  const li = event.target.closest('.restaurant_reviewList_reviewItem');
+  if (!li) return;
+
+  const reviewId = li.dataset.reviewId;
+  if (!reviewId) return;
+
+  const type = likeEl ? 'like' : 'dislike';
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    location.href = `login.html?next=${encodeURIComponent(
+      location.pathname + location.search
+    )}`;
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_BASE}/reviews/${reviewId}/reactions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ type }),
+    });
+
+    if (!res.ok) {
+      console.error('리뷰 반응 실패', res.status);
+      return;
+    }
+
+    const data = await res.json();
+
+    const likeNode = li.querySelector('.userStatItem_like');
+    const hateNode = li.querySelector('.userStatItem_hate');
+
+    if (likeNode) {
+      likeNode.textContent = data.likeCount ?? 0;
+      likeNode.classList.toggle('is-active', data.userReaction === 'like');
+    }
+    if (hateNode) {
+      hateNode.textContent = data.dislikeCount ?? 0;
+      hateNode.classList.toggle('is-active', data.userReaction === 'dislike');
+    }
+
+    const idx = myReviews.findIndex((r) => r.id === data.reviewId);
+    if (idx !== -1) {
+      myReviews[idx].likeCount = data.likeCount;
+      myReviews[idx].dislikeCount = data.dislikeCount;
+      myReviews[idx].userReaction = data.userReaction;
+    }
+  } catch (err) {
+    console.error('리뷰 반응 요청 에러', err);
+  }
+}
+
+function onReviewManagementClick(event) {
+  const modifyBtn = event.target.closest('.modifyButton');
+  if (modifyBtn) {
+    event.stopPropagation();
+
+    const li = event.target.closest('.restaurant_reviewList_reviewItem');
+    if (!li) return;
+
+    const reviewId = li.dataset.reviewId;
+    const restaurantId = li.dataset.restaurantId;
+    if (!reviewId || !restaurantId) return;
+
+    const editUrl = `review_write.html?restaurant_id=${encodeURIComponent(
+      restaurantId
+    )}&review_id=${encodeURIComponent(reviewId)}&next=${encodeURIComponent(
+      '/mypage.html'
+    )}`;
+
+    location.href = editUrl;
+    return;
+  }
+
+  const deleteBtn = event.target.closest('.deleteButton');
+  if (deleteBtn) {
+    event.stopPropagation();
+
+    const li = event.target.closest('.restaurant_reviewList_reviewItem');
+    if (!li) return;
+
+    const reviewId = li.dataset.reviewId;
+    if (!reviewId) return;
+
+    if (!confirm('이 리뷰를 삭제하시겠습니까?')) {
+      return;
+    }
+
+    deleteReview(reviewId, li);
+    return;
+  }
+
+  const managementBtn = event.target.closest(
+    '.restaurant_reviewItem_management'
+  );
+  if (!managementBtn) return;
+
+  event.stopPropagation();
+
+  const wrap = managementBtn.closest('.restaurant_reviewItem_managementWrap');
+  if (!wrap) return;
+
+  const isOpen = wrap.classList.contains('is-open');
+
+  document
+    .querySelectorAll('.restaurant_reviewItem_managementWrap.is-open')
+    .forEach((el) => {
+      if (el !== wrap) {
+        el.classList.remove('is-open');
+      }
+    });
+
+  if (isOpen) {
+    wrap.classList.remove('is-open');
+  } else {
+    wrap.classList.add('is-open');
+  }
+}
+
+document.addEventListener('click', (event) => {
+  if (event.target.closest('.restaurant_reviewItem_managementWrap')) {
+    return;
+  }
+
+  document
+    .querySelectorAll('.restaurant_reviewItem_managementWrap.is-open')
+    .forEach((el) => el.classList.remove('is-open'));
+});
+
+async function deleteReview(reviewId, liElement) {
+  try {
+    const res = await fetch(`${API_BASE}/reviews/${reviewId}`, {
+      method: 'DELETE',
+      headers: { ...authHeaders() },
+    });
+
+    if (res.status === 204) {
+      const idNum = Number(reviewId);
+      myReviews = myReviews.filter((r) => r.id !== idNum);
+
+      liElement.remove();
+
+      const reviewCountEl = document.getElementById('stat-review-count');
+      if (reviewCountEl) {
+        reviewCountEl.textContent = myReviews.length;
+      }
+
+      const totalLikes = myReviews.reduce(
+        (sum, r) => sum + (r.likeCount || 0),
+        0
+      );
+      const totalDisLikes = myReviews.reduce(
+        (sum, r) => sum + (r.dislikeCount || 0),
+        0
+      );
+
+      const likeStatEl = document.getElementById('stat-reaction-like');
+      const dislikeStatEl = document.getElementById('stat-reaction-dislike');
+
+      if (likeStatEl) likeStatEl.textContent = totalLikes;
+      if (dislikeStatEl) dislikeStatEl.textContent = totalDisLikes;
+      return;
+    }
+  } catch (err) {
+    console.error(err);
+    alert('리뷰 삭제 중 오류가 발생했습니다.');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
+  await initAuthMenu();
+  await loadMyReviews();
 
   // 초기 진입: 맛집 리뷰 탭 열기
   showSection('section-reviews');
