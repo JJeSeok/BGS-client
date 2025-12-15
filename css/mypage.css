@@ -531,17 +531,20 @@ input[type='radio'] {
   color: rgb(153, 153, 153);
 }
 
-.visitList_wrap {
+.visitList_wrap,
+.likeList_wrap {
   gap: 16px;
   transition: background-color 0.15s ease, transform 0.15s ease;
   border-radius: 10px;
 }
 
-.visitList_wrap:hover {
+.visitList_wrap:hover,
+.likeList_wrap:hover {
   background-color: rgba(0, 0, 0, 0.03);
 }
 
-.visitList_wrap a {
+.visitList_wrap a,
+.likeList_wrap a {
   color: inherit;
 }
 
@@ -561,7 +564,8 @@ input[type='radio'] {
   flex-direction: column;
 }
 
-.visitList_restaurant {
+.visitList_restaurant,
+.likeList_restaurant {
   margin: 0;
   gap: 4px;
 }
@@ -590,8 +594,10 @@ input[type='radio'] {
   line-height: 1.3;
 }
 
-.visitList_restaurant > span {
+.visitList_restaurant > span,
+.likeList_restaurant > span {
   display: -webkit-box;
+  line-clamp: 2;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
@@ -600,25 +606,18 @@ input[type='radio'] {
 
 .star_button {
   margin-left: auto;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px;
 }
 
 .star_button_icon {
   display: block;
   width: 32px;
   height: 32px;
-  background-image: url('/assets/star.svg');
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-.star_button_icon-check {
-  display: block;
-  width: 32px;
-  height: 32px;
   background-image: url('/assets/star-fill-orange.svg');
   background-size: cover;
   background-repeat: no-repeat;
-  background-color: rgb(255, 255, 255);
 }
 
 .blind_userPicture {

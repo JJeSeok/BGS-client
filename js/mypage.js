@@ -801,7 +801,7 @@ async function deleteReview(reviewId, liElement) {
       if (likeStatEl) likeStatEl.textContent = totalLikes;
       if (dislikeStatEl) dislikeStatEl.textContent = totalDisLikes;
 
-      await refreshVisitedRestaurants();
+      await loadVisitedRestaurants();
       return;
     }
   } catch (err) {
@@ -916,15 +916,194 @@ async function loadVisitedRestaurants() {
   renderVisitedRestaurants(data);
 }
 
-async function refreshVisitedRestaurants() {
-  const restaurants = await fetchVisitedRestaurants();
-  renderVisitedRestaurants(restaurants || []);
+async function fetchLikedRestaurants() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me/liked-restaurants`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+
+    if (res.status === 401) return null;
+    if (!res.ok) return null;
+
+    return await res.json();
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+function renderLikedRestaurants(restaurants) {
+  const statEl = document.getElementById('stat-bookmark-count');
+  if (statEl) statEl.textContent = restaurants.length;
+
+  const countEl = document.getElementById('likeListCount');
+  if (countEl) countEl.textContent = `총 ${restaurants.length}개`;
+
+  const container = document.querySelector('.likeList_content');
+  if (!container) return;
+
+  container.querySelectorAll('.likeList_wrap').forEach((el) => el.remove());
+
+  if (restaurants.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'likeList_wrap';
+    empty.style.justifyContent = 'center';
+    empty.style.color = '#999';
+    empty.textContent = '찜한 식당이 없습니다.';
+    container.appendChild(empty);
+    return;
+  }
+
+  restaurants.forEach((r) => {
+    const rid = r.id;
+    const name = r.name;
+    const address =
+      r.address.road ||
+      r.address.jibun ||
+      `${r.address.sido} ${r.address.sigugun} ${r.address.dongmyun}` ||
+      '';
+    const imageUrl = r.mainImageUrl;
+
+    const item = buildLikedRestaurantItem({
+      id: rid,
+      name,
+      address,
+      imageUrl,
+    });
+
+    container.appendChild(item);
+  });
+}
+
+function buildLikedRestaurantItem({ id, name, address, imageUrl }) {
+  const wrap = document.createElement('div');
+  wrap.className = 'likeList_wrap';
+  wrap.dataset.restaurantId = id;
+
+  const href = `restaurant.html?id=${encodeURIComponent(id)}`;
+
+  const aImg = document.createElement('a');
+  aImg.href = href;
+
+  const img = document.createElement('img');
+  img.className = 'restaurant_img';
+  img.src = normalizeImgUrl(imageUrl);
+  img.alt = String(name);
+
+  aImg.appendChild(img);
+
+  const p = document.createElement('p');
+  p.className = 'likeList_restaurant';
+
+  const aName = document.createElement('a');
+  aName.href = href;
+
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'restaurant_name';
+  nameSpan.textContent = name;
+
+  aName.appendChild(nameSpan);
+
+  const addrSpan = document.createElement('span');
+  addrSpan.textContent = address;
+
+  p.appendChild(aName);
+  p.appendChild(addrSpan);
+
+  const starBtn = document.createElement('button');
+  starBtn.type = 'button';
+  starBtn.className = 'star_button';
+  starBtn.setAttribute('aria-label', '찜 해제');
+
+  const icon = document.createElement('i');
+  icon.className = 'star_button_icon';
+  starBtn.appendChild(icon);
+
+  wrap.appendChild(aImg);
+  wrap.appendChild(p);
+  wrap.appendChild(starBtn);
+
+  return wrap;
+}
+
+async function loadLikedRestaurants() {
+  initLikedRestaurantEvents();
+  const data = await fetchLikedRestaurants();
+  if (!data) return;
+  renderLikedRestaurants(data);
+}
+
+async function unlikeRestaurant(restaurantId) {
+  try {
+    const res = await fetch(
+      `${API_BASE}/restaurants/${encodeURIComponent(restaurantId)}/likes`,
+      {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      }
+    );
+
+    if (res.status === 401) return { ok: false, code: 401 };
+    if (!res.ok) return { ok: false, code: res.status };
+
+    return { ok: true };
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
+function initLikedRestaurantEvents() {
+  const container = document.querySelector('.likeList_content');
+  if (!container) return;
+
+  container.addEventListener('click', async (e) => {
+    const starBtn = e.target.closest('.star_button');
+    if (!starBtn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const wrap = starBtn.closest('.likeList_wrap');
+    if (!wrap) return;
+
+    const restaurantId = wrap.dataset.restaurantId;
+    if (!restaurantId) return;
+
+    if (starBtn.disabled) return;
+    starBtn.disabled = true;
+
+    try {
+      const result = await unlikeRestaurant(restaurantId);
+
+      if (!result.ok) {
+        if (result.code === 401) {
+          const back = location.pathname + location.search;
+          location.href = `login.html?next=${encodeURIComponent(back)}`;
+          return;
+        }
+        alert(result.message || '찜 해제에 실패했습니다.');
+        return;
+      }
+
+      await refreshlikedRestaurants();
+    } finally {
+      starBtn.disabled = false;
+    }
+  });
+}
+
+async function refreshlikedRestaurants() {
+  const restaurants = await fetchLikedRestaurants();
+  renderLikedRestaurants(restaurants || []);
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
   await initAuthMenu();
   await loadMyReviews();
   await loadVisitedRestaurants();
+  await loadLikedRestaurants();
 
   // 초기 진입: 맛집 리뷰 탭 열기
   showSection('section-reviews');
