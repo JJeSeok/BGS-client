@@ -85,6 +85,7 @@ async function initAuthMenu() {
   currentUser = profile;
   fillProfile(profile);
   fillUserForm(profile);
+  initProfileImageUploader();
 }
 
 function fillProfile(me) {
@@ -96,7 +97,8 @@ function fillProfile(me) {
   }
 
   if (profileImageEl) {
-    profileImageEl.src = me.profileImageUrl || '/images/흠.png';
+    profileImageEl.src =
+      normalizeImgUrl(me.profile_image_url) || '/images/흠.png';
   }
 }
 
@@ -621,6 +623,7 @@ function buildReviewItem(review) {
 }
 
 function normalizeImgUrl(url) {
+  if (!url) return '';
   try {
     const u = new URL(url, API_BASE);
     if (!['http:', 'https:'].includes(u.protocol)) {
@@ -1097,6 +1100,175 @@ function initLikedRestaurantEvents() {
 async function refreshlikedRestaurants() {
   const restaurants = await fetchLikedRestaurants();
   renderLikedRestaurants(restaurants || []);
+}
+
+async function uploadMyProfileImage(file) {
+  const fd = new FormData();
+  fd.append('image', file);
+
+  const res = await fetch(`${API_BASE}/users/me/profile-image`, {
+    method: 'PUT',
+    headers: { ...authHeaders() },
+    body: fd,
+  });
+
+  if (res.status === 401) return { ok: false, code: 401 };
+
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    return { ok: false, code: res.status, message: body?.message };
+  }
+
+  return { ok: true, data: body };
+}
+
+async function deleteMyProfileImage() {
+  const res = await fetch(`${API_BASE}/users/me/profile-image`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  });
+
+  if (res.status === 401) return { ok: false, code: 401 };
+
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    return { ok: false, code: res.status, message: body?.message };
+  }
+
+  return { ok: true, data: body };
+}
+
+function initProfileImageUploader() {
+  const wrap = document.getElementById('avatar-wrap');
+  const input = document.getElementById('avatar-file');
+  const img = document.getElementById('avatar-img');
+  const removeBtn = document.getElementById('avatar-remove-btn');
+  if (!wrap || !input || !img) return;
+
+  let previewUrl = null;
+  let prevSrc = img.src;
+  let uploading = false;
+
+  const setRemoveVisible = (visible) => {
+    if (!removeBtn) return;
+    removeBtn.style.display = visible ? 'inline-flex' : 'none';
+  };
+
+  const setUploading = (on) => {
+    uploading = on;
+    wrap.style.pointerEvents = on ? 'none' : '';
+    if (removeBtn) removeBtn.disabled = on;
+  };
+
+  setRemoveVisible(img.src && !img.src.includes('/images'));
+
+  const openPicker = () => {
+    if (!uploading) input.click();
+  };
+
+  wrap.addEventListener('click', openPicker);
+  wrap.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openPicker();
+    }
+  });
+
+  removeBtn?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (uploading) return;
+
+    const ok = confirm('프로필 이미지를 기본 이미지로 변경할까요?');
+    if (!ok) return;
+
+    setUploading(true);
+    try {
+      const result = await deleteMyProfileImage();
+
+      if (!result.ok) {
+        if (result.code === 401) {
+          const back = location.pathname + location.search;
+          location.href = `login.html?next=${encodeURIComponent(back)}`;
+          return;
+        }
+        alert(result.message || '프로필 이미지 삭제에 실패했습니다.');
+        return;
+      }
+
+      img.src = '/images/흠.png';
+      prevSrc = img.src;
+      setRemoveVisible(false);
+    } catch (err) {
+      console.error(err);
+      alert('서버와 통신 중 오류가 발생했습니다.');
+    } finally {
+      setUploading(false);
+    }
+  });
+
+  input.addEventListener('change', async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 선택할 수 있어요.');
+      input.value = '';
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('이미지는 5MB 이하로 업로드해 주세요.');
+      input.value = '';
+      return;
+    }
+
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+      previewUrl = null;
+    }
+
+    previewUrl = URL.createObjectURL(file);
+    img.src = previewUrl;
+
+    setUploading(true);
+    try {
+      const result = await uploadMyProfileImage(file);
+
+      if (!result.ok) {
+        if (result.code === 401) {
+          const back = location.pathname + location.search;
+          location.href = `login.html?next=${encodeURIComponent(back)}`;
+          return;
+        }
+        img.src = prevSrc || '/images/흠.png';
+        alert(result.message || '프로필 이미지 업로드에 실패했습니다.');
+        return;
+      }
+
+      const url = result.data?.profileImageUrl;
+      if (!url) {
+        img.src = prevSrc || '/images/흠.png';
+        alert('업로드 응답이 올바르지 않습니다.');
+        return;
+      }
+
+      img.src = normalizeImgUrl(url) || '/images/흠.png';
+      prevSrc = img.src;
+      setRemoveVisible(true);
+    } catch (err) {
+      console.error(err);
+      img.src = prevSrc || '/images/흠.png';
+      alert('서버와 통신 중 오류가 발생했습니다.');
+    } finally {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+        previewUrl = null;
+      }
+
+      setUploading(false);
+      input.value = '';
+    }
+  });
 }
 
 document.addEventListener('DOMContentLoaded', async function () {

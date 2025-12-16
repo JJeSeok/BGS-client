@@ -86,8 +86,39 @@
               <div class="user_name">
                 <strong class="user_nameStyle"></strong>
               </div>
-              <div class="user_photo">
-                <img class="user_photoStyle" alt="userphoto" />
+              <div class="user_photoWrap">
+                <div
+                  class="user_photo"
+                  id="avatar-wrap"
+                  role="button"
+                  tabindex="0"
+                  aria-label="프로필 이미지 변경"
+                >
+                  <img
+                    class="user_photoStyle"
+                    id="avatar-img"
+                    alt="userphoto"
+                  />
+                  <div class="user_photoOverlay">
+                    <span class="user_photoOverlayText">변경</span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  class="photoRemoveLink"
+                  id="avatar-remove-btn"
+                  style="display: none"
+                >
+                  기본 이미지로
+                </button>
+
+                <input
+                  id="avatar-file"
+                  type="file"
+                  accept="image/*"
+                  class="sr-only"
+                />
               </div>
             </div>
             <div class="profile_center_wrap"></div>
@@ -293,42 +324,6 @@
           </div>
           <div class="likeList_content">
             <span class="likeList_count" id="likeListCount">총 0개</span>
-            <div class="likeList_wrap">
-              <a href="천원국수.html">
-                <img
-                  src="/images/천원국수.jpg"
-                  alt="천원국수"
-                  class="restaurant_img"
-                />
-              </a>
-              <p class="likeList_restaurant">
-                <a href="/images/천원국수.jpg">
-                  <span class="restaurant_name">천원국수</span>
-                </a>
-                <span>충남 아산시 신창면 순천향로 16-3</span>
-              </p>
-              <button class="star_button">
-                <i class="star_button_icon"></i>
-              </button>
-            </div>
-            <div class="likeList_wrap">
-              <a href="천원국수.html">
-                <img
-                  src="/images/천원국수.jpg"
-                  alt="천원국수"
-                  class="restaurant_img"
-                />
-              </a>
-              <p class="likeList_restaurant">
-                <a href="/images/천원국수.jpg">
-                  <span class="restaurant_name">천원국수</span>
-                </a>
-                <span>충남 아산시 신창면 순천향로 16-3</span>
-              </p>
-              <button class="star_button">
-                <i class="star_button_icon"></i>
-              </button>
-            </div>
           </div>
         </div>
         <div class="rside_wrap" id="section-visits">
