@@ -552,7 +552,8 @@ function buildReviewItem(review) {
 
   // 프로필 이미지
   if (profilImgEl) {
-    profilImgEl.src = profilImgEl.src || '/images/흠.png';
+    profilImgEl.src =
+      normalizeImgUrl(review.userProfileImage) || '/images/흠.png';
     profilImgEl.alt = 'user profile picture';
   }
 
