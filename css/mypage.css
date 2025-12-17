@@ -1250,10 +1250,6 @@ input[type='radio'] {
     margin-bottom: 15px;
   }
 
-  .user_photo {
-    margin-left: auto;
-  }
-
   .side_wrap {
     display: flex;
     flex-direction: column;

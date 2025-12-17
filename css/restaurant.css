@@ -486,15 +486,15 @@ ul li {
 .restaurant_reviewItem_userBlind {
   font-size: 12px;
   text-align: center;
-  margin-top: 2px;
+  padding: 6px 10px;
+  border-radius: 6px;
   background-color: #ff792a;
-  color: white;
+  color: #fff;
 }
 
 .restaurant_reviewItem_content {
   display: flex;
   flex-direction: column;
-  width: 605px;
 }
 
 .restaurant_reviewItem_textWrap {
@@ -794,6 +794,13 @@ ul li {
   .restaurant_reviewItem_Rating {
     margin-top: 10px;
   }
+
+  .restaurant_reviewItem_userBlind {
+    position: absolute;
+    left: 8px;
+    top: 150px;
+    margin-top: 0;
+  }
 }
 
 @media screen and (max-width: 768px) {
@@ -886,9 +893,15 @@ ul li {
     color: #ff792a;
   }
 
+  .restaurant_reviewList_reviewItem {
+    position: relative;
+    min-height: 115px;
+  }
+
   .restaurant_reviewItem_link {
     display: block;
-    padding: 9px 50px 13px 37px;
+    padding: 9px 70px 22px 37px;
+    position: relative;
   }
 
   .restaurant_reviewItem_user {
@@ -945,10 +958,22 @@ ul li {
     margin-right: 5px;
   }
 
+  .restaurant_reviewItem_Picture {
+    width: 100%;
+    max-width: 180px;
+    height: 100px;
+    object-fit: cover;
+  }
+
   .restaurant_reviewItem_Rating {
     position: absolute;
     top: 10px;
-    right: 4px;
+    right: 8px;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
   }
 
   .restaurant_reviewItem_Rating::before {
@@ -961,20 +986,38 @@ ul li {
   }
 
   .Rating_Ok::before {
-    background-image: url(/assets/emoji-smile.svg);
-    width: 38px;
-    height: 38px;
-    background-size: cover;
+    width: 30px;
+    height: 30px;
   }
 
   .Rating_Bad::before {
-    background-image: url(/assets/emoji-expressionless.svg);
-    width: 38px;
-    height: 38px;
-    background-size: cover;
+    width: 30px;
+    height: 30px;
   }
 
   .restaurant_reviewItem_RatingText {
-    font-size: 12px;
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  .restaurant_reviewItem_userBlind {
+    position: static;
+    margin-top: 0;
+  }
+
+  .restaurant_reviewItem_managementWrap {
+    display: flex;
+    align-items: center;
+  }
+
+  .restaurant_reviewItem_management {
+    width: 28px;
+    height: 28px;
+  }
+
+  .managementButton {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 }

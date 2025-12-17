@@ -16,6 +16,7 @@ const reviewContainer = document.getElementById('review_content');
 if (reviewContainer) {
   reviewContainer.addEventListener('click', onReviewReactionClick);
   reviewContainer.addEventListener('click', onReviewManagementClick);
+  reviewContainer.addEventListener('click', onReviewBlindClick);
 }
 const loadMoreButton = document.getElementById('moreButton');
 // 페이지네이션 적용할 때 이 코드 삭제
@@ -144,11 +145,6 @@ function updateImg() {
 function updateHeader() {
   document.querySelector('.restaurant_name').textContent =
     data?.restaurant.name ?? '';
-  document.querySelector('.rate_point').textContent =
-    data?.restaurant.rating_avg ?? '';
-  document.querySelector('.rate_point').ariaLabel = `평점 ${
-    data?.restaurant.rating_avg ?? ''
-  }`;
   document.querySelector('.branch').textContent =
     data?.restaurant.branch_info ?? '';
 
@@ -163,10 +159,6 @@ function updateStatus() {
   const status = document.querySelectorAll('.status .cnt > span');
 
   status[0].textContent = data?.restaurant.view_count ?? 0;
-  status[1].textContent =
-    typeof data?.restaurant.review_count === 'number'
-      ? new Intl.NumberFormat().format(data?.restaurant.review_count)
-      : 0;
   status[2].textContent = data?.restaurant.like_count ?? 0;
 }
 
@@ -278,18 +270,17 @@ function initRestaurantMap() {
   }
 }
 
-function AvgFromReviews() {
-  if (!Array.isArray(allReviews) || allReviews.length === 0) {
-    return;
+function applyReviewMeta(meta) {
+  if (!meta) return;
+
+  const countEl = document.getElementById('reviewCount');
+  if (countEl) countEl.textContent = meta.totalCount ?? 0;
+
+  const avgEl = document.querySelector('.rate_point');
+  if (avgEl) {
+    avgEl.textContent = meta.avgRating ?? 0;
+    avgEl.ariaLabel = `평점 ${meta.avgRating ?? 0}`;
   }
-
-  const sum = allReviews.reduce((acc, r) => {
-    const v = typeof r.rating === 'number' ? r.rating : 0;
-    return acc + v;
-  }, 0);
-
-  const avg = sum / allReviews.length;
-  if (data) data.restaurant.rating_avg = Math.round(avg * 10) / 20;
 }
 
 function setupReviewFilterCounts() {
@@ -313,6 +304,13 @@ function setupReviewFilterCounts() {
   });
 }
 
+function parseReviewsResponse(body) {
+  if (Array.isArray(body)) return { meta: null, data: body };
+  if (body && Array.isArray(body.data))
+    return { meta: body.meta ?? null, data: body.data };
+  return { meta: null, allReviews: [] };
+}
+
 async function initReviews() {
   try {
     const res = await fetch(`${API_BASE}/reviews?restaurantId=${id}`, {
@@ -324,11 +322,13 @@ async function initReviews() {
       return;
     }
 
-    allReviews = await res.json();
+    const body = await res.json();
+    const { meta, data } = parseReviewsResponse(body);
+
+    allReviews = data;
 
     // 레스토랑 평점과 리뷰수 설정
-    if (data) data.restaurant.review_count = allReviews.length;
-    AvgFromReviews();
+    applyReviewMeta(meta);
 
     // 필터 버튼 숫자 설정
     setupReviewFilterCounts();
@@ -465,6 +465,7 @@ function buildReviewItem(review) {
   const li = reviewItemTemplate.content.firstElementChild.cloneNode(true);
 
   li.dataset.reviewId = review.id;
+  li.dataset.userId = review.userId;
 
   const nicknameEl = li.querySelector('.restaurant_reviewItem_userNickname');
   const profilImgEl = li.querySelector('.restaurant_reviewItem_userPicture');
@@ -475,6 +476,7 @@ function buildReviewItem(review) {
   const pictureListEl = li.querySelector('.restaurant_reviewItem_PictureList');
   const ratingWrapEl = li.querySelector('.restaurant_reviewItem_Rating');
   const ratingTextEl = li.querySelector('.restaurant_reviewItem_RatingText');
+  const blindBtn = li.querySelector('.restaurant_reviewItem_userBlind');
   const managementWrapEl = li.querySelector(
     '.restaurant_reviewItem_managementWrap'
   );
@@ -552,13 +554,14 @@ function buildReviewItem(review) {
     ratingTextEl.textContent = meta.label;
   }
 
-  if (managementWrapEl) {
-    const isMine =
-      currentUser && currentUser.id ? currentUser.id === review.userId : false;
+  const isMine =
+    currentUser && currentUser.id ? currentUser.id === review.userId : false;
 
-    if (!isMine) {
-      managementWrapEl.remove();
-    }
+  if (isMine) {
+    blindBtn?.remove();
+  } else {
+    managementWrapEl?.remove();
+    if (blindBtn) blindBtn.dataset.blockedUserId = review.userId;
   }
 
   return li;
@@ -704,23 +707,79 @@ async function deleteReview(reviewId, liElement) {
       headers: { ...authHeaders() },
     });
 
-    if (res.status === 204) {
-      const idNum = Number(reviewId);
-      allReviews = allReviews.filter((r) => r.id !== idNum);
-
-      liElement.remove();
-
-      if (data) data.restaurant.review_count = allReviews.length;
-      AvgFromReviews();
-      setupReviewFilterCounts();
-      updateHeader();
-      updateStatus();
+    if (!res.ok) {
+      alert('리뷰 삭제에 실패했습니다.');
       return;
     }
+
+    const body = await res.json();
+
+    const idNum = Number(reviewId);
+    allReviews = allReviews.filter((r) => r.id !== idNum);
+
+    liElement.remove();
+
+    applyReviewMeta(body.meta);
+    setupReviewFilterCounts();
+    return;
   } catch (err) {
     console.error(err);
     alert('리뷰 삭제 중 오류가 발생했습니다.');
   }
+}
+
+async function blockUser(blockedUserId) {
+  const res = await fetch(`${API_BASE}/users/me/blocks/${blockedUserId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+
+  if (res.status === 401) return { ok: false, code: 401 };
+  const body = await res.json().catch(() => null);
+  if (!res.ok) return { ok: false, code: res.status, message: body?.message };
+  return { ok: true, data: body };
+}
+
+async function onReviewBlindClick(event) {
+  const blindBtn = event.target.closest('.restaurant_reviewItem_userBlind');
+  if (!blindBtn) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    location.href = `login.html?next=${encodeURIComponent(
+      location.pathname + location.search
+    )}`;
+    return;
+  }
+
+  const blockedUserId = blindBtn.dataset.blockedUserId;
+  if (!blockedUserId) return;
+
+  const li = blindBtn.closest('.restaurant_reviewList_reviewItem');
+  if (!li) return;
+
+  const ok = confirm('이 사용자의 리뷰를 더 이상 보지 않을까요?');
+  if (!ok) return;
+
+  const result = await blockUser(blockedUserId);
+  if (!result.ok) {
+    alert(result.message || '블라인드 처리에 실패했습니다.');
+    return;
+  }
+
+  allReviews = allReviews.filter(
+    (r) => Number(r.userId) !== Number(blockedUserId)
+  );
+
+  const items = document.querySelectorAll(
+    `.restaurant_reviewList_reviewItem[data-user-id="${blockedUserId}"]`
+  );
+  items.forEach((el) => el.remove());
+
+  setupReviewFilterCounts();
 }
 
 starButton.addEventListener('click', async function () {

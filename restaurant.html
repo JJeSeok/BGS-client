@@ -138,7 +138,7 @@
                   </span>
                   <span class="cnt">
                     <i class="pencil_fill"></i>
-                    <span></span>
+                    <span id="reviewCount"></span>
                   </span>
                   <span class="cnt">
                     <i class="star_fill"></i>
@@ -317,12 +317,6 @@
                           class="restaurant_reviewItem_userStatItem userStatItem_hate"
                         ></li>
                       </ul>
-                      <button
-                        class="restaurant_reviewItem_userBlind only_desktop"
-                        type="button"
-                      >
-                        블라인드
-                      </button>
                     </div>
 
                     <div class="restaurant_reviewItem_content">
@@ -335,6 +329,13 @@
 
                     <div class="restaurant_reviewItem_Rating">
                       <span class="restaurant_reviewItem_RatingText"></span>
+
+                      <button
+                        class="restaurant_reviewItem_userBlind"
+                        type="button"
+                      >
+                        블라인드
+                      </button>
 
                       <!-- 본인 리뷰일 때만 보이는 관리 버튼 영역-->
                       <div class="restaurant_reviewItem_managementWrap">
