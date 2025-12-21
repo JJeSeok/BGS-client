@@ -1272,11 +1272,190 @@ function initProfileImageUploader() {
   });
 }
 
+async function fetchMyBlocks() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me/blocks`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+
+    if (res.status === 401) return { ok: false, code: 401 };
+    const body = await res.json().catch(() => null);
+    if (!res.ok) return { ok: false, code: res.status, message: body?.message };
+
+    return { ok: true, data: body };
+  } catch (err) {
+    console.error(err);
+    return {
+      ok: false,
+      code: 0,
+      message: '블라인드 목록을 불러올 수 없습니다.',
+    };
+  }
+}
+
+async function unblockUser(blockedUserId) {
+  const res = await fetch(
+    `${API_BASE}/users/me/blocks/${encodeURIComponent(blockedUserId)}`,
+    {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    }
+  );
+
+  if (res.status === 401) return { ok: false, code: 401 };
+  const body = await res.json().catch(() => null);
+  if (!res.ok) {
+    return { ok: false, code: res.status, message: body?.message };
+  }
+
+  return { ok: true, data: body };
+}
+
+function setBlindCount(container, count) {
+  const countEl = document.getElementById('blindListCount');
+  if (countEl) countEl.textContent = `총 ${count}개`;
+
+  let emptyEl = container.querySelector('.blindList_empty');
+  if (count === 0) {
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.className = 'blindList_wrap blindList_empty';
+      emptyEl.style.justifyContent = 'center';
+      emptyEl.style.color = '#999';
+      emptyEl.textContent = '블라인드한 사용자가 없습니다.';
+      container.appendChild(emptyEl);
+    }
+  } else {
+    if (emptyEl) emptyEl.remove();
+  }
+}
+
+function buildBlindUserItem(user) {
+  const wrap = document.createElement('div');
+  wrap.className = 'blindList_wrap';
+  wrap.dataset.blockedUserId = user.id;
+
+  const aImg = document.createElement('a');
+  const img = document.createElement('img');
+  img.className = 'blind_userPicture';
+  img.alt = user.name ?? '';
+  img.src = normalizeImgUrl(user.profileImageUrl) || '/images/흠.png';
+
+  aImg.appendChild(img);
+
+  const p = document.createElement('p');
+  p.className = 'blindList_user';
+
+  const aName = document.createElement('a');
+  const nameSpan = document.createElement('span');
+  nameSpan.className = 'blind_userName';
+  nameSpan.textContent = user.name ?? '';
+
+  aName.appendChild(nameSpan);
+  p.appendChild(aName);
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'blind_button';
+  btn.textContent = '블라인드 해제';
+
+  wrap.appendChild(aImg);
+  wrap.appendChild(p);
+  wrap.appendChild(btn);
+
+  return wrap;
+}
+
+function renderBlindList(users) {
+  const container = document.querySelector('.blindList_content');
+  if (!container) return;
+
+  container.querySelectorAll('.blindList_wrap').forEach((el) => el.remove());
+
+  if (!Array.isArray(users) || users.length === 0) {
+    setBlindCount(container, 0);
+    return;
+  }
+
+  users.forEach((u) => {
+    const item = buildBlindUserItem(u);
+    container.appendChild(item);
+  });
+
+  setBlindCount(container, users.length);
+}
+
+function initBlindListEvents() {
+  const container = document.querySelector('.blindList_content');
+  if (!container) return;
+
+  container.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.blind_button');
+    if (!btn) return;
+
+    const row = btn.closest('.blindList_wrap');
+    const blockedUserId = row?.dataset.blockedUserId;
+    if (!blockedUserId) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const ok = confirm('이 유저의 블라인드를 해제할까요?');
+    if (!ok) return;
+
+    if (btn.disabled) return;
+    btn.disabled = true;
+
+    try {
+      const result = await unblockUser(blockedUserId);
+
+      if (!result.ok) {
+        if (result.code === 401) {
+          const back = location.pathname + location.search;
+          location.href = `login.html?next=${encodeURIComponent(back)}`;
+          return;
+        }
+        alert(result.message || '블라인드 해제에 실패했습니다.');
+        return;
+      }
+
+      row.remove();
+
+      const remainCount = container.querySelectorAll('.blindList_wrap').length;
+      setBlindCount(container, remainCount);
+    } catch (err) {
+      console.error(err);
+      alert('서버와 통신 중 오류가 발생했습니다.');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+async function loadBlindList() {
+  initBlindListEvents();
+
+  const result = await fetchMyBlocks();
+  if (!result.ok) {
+    if (result.code === 401) {
+      const back = location.pathname + location.search;
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+      return;
+    }
+    renderBlindList([]);
+    return;
+  }
+
+  renderBlindList(result.data);
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   await initAuthMenu();
   await loadMyReviews();
   await loadVisitedRestaurants();
   await loadLikedRestaurants();
+  await loadBlindList();
 
   // 초기 진입: 맛집 리뷰 탭 열기
   showSection('section-reviews');

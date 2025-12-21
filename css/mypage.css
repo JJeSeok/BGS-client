@@ -410,14 +410,6 @@ input[type='radio'] {
   background-image: url(/assets/hand-thumbs-down-fill.svg);
 }
 
-.restaurant_reviewItem_userBlind {
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2px;
-  background-color: #ff792a;
-  color: white;
-}
-
 .restaurant_reviewItem_content {
   display: flex;
   flex-direction: column;
@@ -620,14 +612,16 @@ input[type='radio'] {
 }
 
 .visitList_wrap,
-.likeList_wrap {
+.likeList_wrap,
+.blindList_wrap {
   gap: 16px;
   transition: background-color 0.15s ease, transform 0.15s ease;
   border-radius: 10px;
 }
 
 .visitList_wrap:hover,
-.likeList_wrap:hover {
+.likeList_wrap:hover,
+.blindList_wrap:hover {
   background-color: rgba(0, 0, 0, 0.03);
 }
 

@@ -308,7 +308,7 @@ function parseReviewsResponse(body) {
   if (Array.isArray(body)) return { meta: null, data: body };
   if (body && Array.isArray(body.data))
     return { meta: body.meta ?? null, data: body.data };
-  return { meta: null, allReviews: [] };
+  return { meta: null, data: [] };
 }
 
 async function initReviews() {
