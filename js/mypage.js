@@ -455,6 +455,25 @@ async function onSubmitProfileForm(event) {
   }
 }
 
+function getLevelByReviewCount(count) {
+  const n = Number(count) || 0;
+  if (n <= 3) return 'level-bronze';
+  if (n <= 10) return 'level-silver';
+  if (n <= 30) return 'level-gold';
+  return 'level-platinum';
+}
+
+function applyHonorLevelBadge(el, reviewCount) {
+  if (!el) return;
+  el.classList.remove(
+    'level-bronze',
+    'level-silver',
+    'level-gold',
+    'level-platinum'
+  );
+  el.classList.add(getLevelByReviewCount(reviewCount));
+}
+
 async function fetchMyReviews() {
   if (!currentUser) {
     const profile = await fetchMyProfile();
@@ -496,6 +515,9 @@ async function loadMyReviews() {
   if (reviewCountEl) {
     reviewCountEl.textContent = myReviews.length;
   }
+
+  const badgeEl = document.querySelector('.honor_level');
+  applyHonorLevelBadge(badgeEl, myReviews.length);
 
   const totalLikes = myReviews.reduce((sum, r) => sum + (r.likeCount || 0), 0);
   const totalDisLikes = myReviews.reduce(

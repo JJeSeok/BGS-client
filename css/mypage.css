@@ -66,8 +66,23 @@ input[type='radio'] {
   font-weight: normal;
   font-size: 13px;
   text-align: center;
-  background-image: url('/images/bronze.png');
+  background-image: var(--badge-url);
   background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.honor_level.level-bronze {
+  --badge-url: url('/images/bronze.pgn');
+}
+.honor_level.level-silver {
+  --badge-url: url('/images/silver.png');
+}
+.honor_level.level-gold {
+  --badge-url: url('/images/gold.png');
+}
+.honor_level.level-platinum {
+  --badge-url: url('/images/platinum.png');
 }
 
 .user_name {

@@ -8,6 +8,8 @@ if (!id) {
 let data;
 let allReviews = [];
 let currentUser = null;
+let currentModalReview = null;
+let currentModalImageIndex = 0;
 const reviewItemTemplate = document.getElementById('review-item-template');
 const filterButtons = document.getElementsByClassName(
   'restaurant_reviewList_filterButton'
@@ -17,6 +19,7 @@ if (reviewContainer) {
   reviewContainer.addEventListener('click', onReviewReactionClick);
   reviewContainer.addEventListener('click', onReviewManagementClick);
   reviewContainer.addEventListener('click', onReviewBlindClick);
+  reviewContainer.addEventListener('click', onReviewImageClick);
 }
 const loadMoreButton = document.getElementById('moreButton');
 // 페이지네이션 적용할 때 이 코드 삭제
@@ -522,22 +525,35 @@ function buildReviewItem(review) {
   // 이미지 목록
   if (pictureListEl) {
     if (Array.isArray(review.images) && review.images.length > 0) {
-      const img = review.images[0];
+      const MAX_THUMBS = 3;
+      const total = review.images.length;
+      const thumbs = review.images.slice(0, MAX_THUMBS);
 
-      const item = document.createElement('li');
-      item.className = 'restaurant_reviewItem_PictureItem';
+      thumbs.forEach((img, index) => {
+        const item = document.createElement('li');
+        item.className = 'restaurant_reviewItem_PictureItem';
 
-      const btn = document.createElement('button');
-      btn.className = 'restaurant_reviewItem_PictureButton';
-      btn.type = 'button';
+        const btn = document.createElement('button');
+        btn.className = 'restaurant_reviewItem_PictureButton';
+        btn.type = 'button';
+        btn.dataset.imageIndex = String(index);
 
-      const imgEl = document.createElement('img');
-      imgEl.className = 'restaurant_reviewItem_Picture';
-      imgEl.src = normalizeImgUrl(img.url);
+        const imgEl = document.createElement('img');
+        imgEl.className = 'restaurant_reviewItem_Picture';
+        imgEl.src = normalizeImgUrl(img.url);
 
-      btn.appendChild(imgEl);
-      item.appendChild(btn);
-      pictureListEl.appendChild(item);
+        btn.appendChild(imgEl);
+
+        if (index === MAX_THUMBS - 1 && total > MAX_THUMBS) {
+          const moreBadge = document.createElement('span');
+          moreBadge.className = 'reviewPicture_moreBadge';
+          moreBadge.textContent = `+${total - MAX_THUMBS}`;
+          btn.appendChild(moreBadge);
+        }
+
+        item.appendChild(btn);
+        pictureListEl.appendChild(item);
+      });
     }
   }
 
@@ -817,6 +833,91 @@ starButton.addEventListener('click', async function () {
     alert('레스토랑 반응 중 오류가 발생했습니다.');
   }
 });
+
+const reviewImageModal = document.getElementById('reviewImageModal');
+const modalImg = reviewImageModal.querySelector('.reviewImageModal_img');
+const modalCounter = reviewImageModal.querySelector(
+  '.reviewImageModal_counter'
+);
+const modalPrevBtn = document.getElementById('review-image-prev');
+const modalNextBtn = document.getElementById('review-image-next');
+const modalCloseBtn = reviewImageModal.querySelector('.reviewImageModal_close');
+
+function openReviewImageModal(reviewId, startIndex) {
+  const review = allReviews.find((r) => r.id === reviewId);
+  if (!review || !Array.isArray(review.images) || review.images.length === 0) {
+    return;
+  }
+
+  currentModalReview = review;
+  currentModalImageIndex = startIndex || 0;
+
+  updateReviewImageModal();
+  reviewImageModal.classList.add('is-open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeReviewImageModal() {
+  reviewImageModal.classList.remove('is-open');
+  document.body.style.overflow = '';
+  currentModalReview = null;
+}
+
+function updateReviewImageModal() {
+  if (!currentModalReview) return;
+  const images = currentModalReview.images;
+  const len = images.length;
+  if (len === 0) return;
+
+  currentModalImageIndex = ((currentModalImageIndex % len) + len) % len;
+
+  const img = images[currentModalImageIndex];
+  modalImg.src = normalizeImgUrl(img.url);
+
+  if (modalCounter) {
+    modalCounter.textContent = `${currentModalImageIndex + 1} / ${len}`;
+  }
+}
+
+modalPrevBtn.addEventListener('click', () => {
+  if (!currentModalReview) return;
+  currentModalImageIndex -= 1;
+  updateReviewImageModal();
+});
+
+modalNextBtn.addEventListener('click', () => {
+  if (!currentModalReview) return;
+  currentModalImageIndex += 1;
+  updateReviewImageModal();
+});
+
+modalCloseBtn.addEventListener('click', closeReviewImageModal);
+reviewImageModal
+  .querySelector('.reviewImageModal_backdrop')
+  .addEventListener('click', closeReviewImageModal);
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && reviewImageModal.classList.contains('is-open')) {
+    closeReviewImageModal();
+  }
+});
+
+function onReviewImageClick(event) {
+  const pictureBtn = event.target.closest(
+    '.restaurant_reviewItem_PictureButton'
+  );
+
+  if (pictureBtn) {
+    const li = pictureBtn.closest('.restaurant_reviewList_reviewItem');
+    if (!li) return;
+
+    const reviewId = Number(li.dataset.reviewId);
+    const imageIndex = Number(pictureBtn.dataset.imageIndex || 0);
+
+    openReviewImageModal(reviewId, imageIndex);
+    return;
+  }
+}
 
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
