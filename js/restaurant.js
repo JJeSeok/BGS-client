@@ -7,6 +7,10 @@ if (!id) {
 }
 let data;
 let allReviews = [];
+let cursor = null;
+let hasMore = false;
+let currentCategory = null;
+let isLoading = false;
 let currentUser = null;
 let currentModalReview = null;
 let currentModalImageIndex = 0;
@@ -21,11 +25,7 @@ if (reviewContainer) {
   reviewContainer.addEventListener('click', onReviewBlindClick);
   reviewContainer.addEventListener('click', onReviewImageClick);
 }
-const loadMoreButton = document.getElementById('moreButton');
-// 페이지네이션 적용할 때 이 코드 삭제
-if (loadMoreButton) {
-  loadMoreButton.style.display = 'none';
-}
+const moreBtn = document.getElementById('moreButton');
 
 const RATING_CATEGORY_MAP = {
   good: { label: '맛있다', cssClass: 'Rating_Recommend' },
@@ -286,11 +286,11 @@ function applyReviewMeta(meta) {
   }
 }
 
-function setupReviewFilterCounts() {
-  const total = allReviews.length;
-  const good = allReviews.filter((r) => r.ratingCategory === 'good').length;
-  const ok = allReviews.filter((r) => r.ratingCategory === 'ok').length;
-  const bad = allReviews.filter((r) => r.ratingCategory === 'bad').length;
+function setupReviewFilterCounts(meta) {
+  const total = meta.totalCount ?? 0;
+  const good = meta.ratingCounts.good ?? 0;
+  const ok = meta.ratingCounts.ok ?? 0;
+  const bad = meta.ratingCounts.bad ?? 0;
 
   const span = document.getElementById('review_total_count');
   span.textContent = total;
@@ -308,10 +308,14 @@ function setupReviewFilterCounts() {
 }
 
 function parseReviewsResponse(body) {
-  if (Array.isArray(body)) return { meta: null, data: body };
+  if (Array.isArray(body)) return { meta: null, page: null, data: body };
   if (body && Array.isArray(body.data))
-    return { meta: body.meta ?? null, data: body.data };
-  return { meta: null, data: [] };
+    return {
+      meta: body.meta ?? null,
+      page: body.page ?? null,
+      data: body.data,
+    };
+  return { meta: null, page: null, data: [] };
 }
 
 async function initReviews() {
@@ -334,10 +338,19 @@ async function initReviews() {
     applyReviewMeta(meta);
 
     // 필터 버튼 숫자 설정
-    setupReviewFilterCounts();
+    setupReviewFilterCounts(meta);
 
     // 필터 버튼 클릭 이벤트 세팅 + 기본 렌더링
     setupReviewFilterButtons();
+
+    if (moreBtn) {
+      moreBtn.addEventListener('click', async () => {
+        await fetchReviewsPage({ reset: false });
+      });
+    }
+
+    currentCategory = null;
+    await fetchReviewsPage({ reset: true });
   } catch (e) {
     console.error('리뷰 로딩 실패', e);
   }
@@ -422,43 +435,126 @@ function wireReviewLink() {
   }
 }
 
+function mapLabelToCategory(label) {
+  if (label === '전체') return null;
+  if (label === '맛있다') return 'good';
+  if (label === '괜찮다') return 'ok';
+  if (label === '별로') return 'bad';
+  return null;
+}
+
 function setupReviewFilterButtons() {
   const buttons = Array.from(filterButtons);
   if (!buttons.length) return;
 
   buttons.forEach((btn) => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', async () => {
       buttons.forEach((b) =>
         b.classList.remove('restaurant_reviewList_filterButton-Selected')
       );
       btn.classList.add('restaurant_reviewList_filterButton-Selected');
 
-      const rating = btn.dataset.rating || '전체';
-      renderReviews(rating);
+      const label = btn.dataset.rating || '전체';
+      currentCategory = mapLabelToCategory(label);
+
+      await fetchReviewsPage({ reset: true });
     });
   });
 
   const first = buttons[0];
   if (first) {
     first.classList.add('restaurant_reviewList_filterButton-Selected');
-    renderReviews(first.dataset.rating || '전체');
   }
 }
 
-// 리뷰 목록 렌더링
-function renderReviews(filter) {
+function clearReviewList() {
   reviewContainer.innerHTML = '';
+}
 
-  const filtered = allReviews.filter((review) => {
-    if (filter === '전체') return true;
-    const meta = RATING_CATEGORY_MAP[review.ratingCategory];
-    return meta && meta.label === filter;
-  });
+function renderReviewsReplace() {
+  clearReviewList();
 
-  filtered.forEach((review) => {
+  allReviews.forEach((review) => {
     const li = buildReviewItem(review);
     reviewContainer.appendChild(li);
   });
+}
+
+function renderReviewsAppend(newData) {
+  newData.forEach((review) => {
+    const li = buildReviewItem(review);
+    reviewContainer.appendChild(li);
+  });
+}
+
+function updateMoreButton() {
+  if (!moreBtn) return;
+
+  if (hasMore) {
+    moreBtn.style.display = '';
+    moreBtn.disabled = false;
+  } else if (isLoading) {
+    moreBtn.style.display = '';
+    moreBtn.disabled = true;
+  } else {
+    moreBtn.style.display = 'none';
+  }
+}
+
+function buildReviewsUrl() {
+  const qs = new URLSearchParams();
+  qs.set('restaurantId', id);
+
+  if (cursor) qs.set('cursor', cursor);
+  if (currentCategory) qs.set('category', currentCategory);
+
+  return `${API_BASE}/reviews?${qs.toString()}`;
+}
+
+async function fetchReviewsPage({ reset = false } = {}) {
+  if (isLoading) return;
+  if (!reset && !hasMore) return;
+
+  isLoading = true;
+  updateMoreButton();
+
+  if (reset) {
+    cursor = null;
+    hasMore = false;
+    allReviews = [];
+    clearReviewList();
+  }
+
+  try {
+    const res = await fetch(buildReviewsUrl(), {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+
+    if (!res.ok) {
+      console.warn('리뷰를 불러오지 못했습니다.', res.status);
+      return;
+    }
+
+    const body = await res.json();
+    const { meta, page, data } = parseReviewsResponse(body);
+
+    hasMore = page?.hasMore ?? false;
+    cursor = page?.nextCursor ?? null;
+
+    if (reset) {
+      allReviews = data;
+      renderReviewsReplace();
+    } else {
+      allReviews.push(...data);
+      renderReviewsAppend(data);
+    }
+  } catch (err) {
+    console.error('리뷰 로딩 실패', e);
+  } finally {
+    isLoading = false;
+    updateMoreButton();
+  }
 }
 
 // 리뷰 생성
@@ -736,8 +832,11 @@ async function deleteReview(reviewId, liElement) {
     liElement.remove();
 
     applyReviewMeta(body.meta);
-    setupReviewFilterCounts();
-    return;
+    setupReviewFilterCounts(body.meta);
+
+    if (allReviews.length < 5 && hasMore) {
+      await fetchReviewsPage({ reset: true });
+    }
   } catch (err) {
     console.error(err);
     alert('리뷰 삭제 중 오류가 발생했습니다.');
