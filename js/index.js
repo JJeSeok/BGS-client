@@ -1,4 +1,6 @@
 const API_BASE = 'http://localhost:8080';
+const RECENT_KEY = 'recent_searches';
+const MAX_RECENT = 5;
 
 let layer_wrap = document.querySelector('.layer_wrap');
 let Modal = document.querySelector('.Modal');
@@ -17,11 +19,12 @@ if (mypageLink) {
   });
 }
 
+let selectedQ = '';
 let selectedArea = null;
 let selectedSort = null;
 
 const SORT_LABEL = {
-  추천순: null,
+  추천순: 'default',
   평점순: 'rating',
   조회순: 'views',
   인기순: 'likes',
@@ -106,7 +109,11 @@ async function init() {
   try {
     clearEl(grid);
 
-    const items = await fetchList({ sido: selectedArea, sort: selectedSort });
+    const items = await fetchList({
+      sido: selectedArea,
+      sort: selectedSort,
+      q: selectedQ,
+    });
     if (!items || items.length === 0) {
       empty.style.display = 'block';
       return;
@@ -123,10 +130,11 @@ async function init() {
   }
 }
 
-async function fetchList({ sido, sort } = {}) {
+async function fetchList({ sido, sort, q } = {}) {
   const qs = new URLSearchParams();
   if (sido) qs.set('sido', sido);
   if (sort) qs.set('sort', sort);
+  if (q) qs.set('q', q);
 
   const url = qs.toString()
     ? `${API_BASE}/restaurants?${qs.toString()}`
@@ -317,6 +325,7 @@ function syncUrlQuery() {
   const qs = new URLSearchParams();
   qs.set('area', selectedArea ?? '내위치');
   qs.set('sort', selectedSort ?? 'default');
+  if (selectedQ) qs.set('q', selectedQ);
 
   history.replaceState(null, '', `${location.pathname}?${qs.toString()}`);
 }
@@ -364,29 +373,150 @@ document.addEventListener('DOMContentLoaded', async function () {
   const params = new URLSearchParams(window.location.search);
   const areaLabel = params.get('area') || '내위치';
   const sortLabel = SORT_CODE[params.get('sort')] || '추천순';
+  const q = params.get('q') || '';
 
   applyAreaUI(areaLabel);
-  applySortUI(sortLabel);
 
   selectedArea = areaLabel === '내위치' ? null : areaLabel;
-  selectedSort = SORT_LABEL[sortLabel] ?? null;
+  selectedQ = q;
+
+  if (selectedQ) {
+    selectedSort = 'rating';
+    applySortUI('평점순');
+  } else {
+    selectedSort = SORT_LABEL[sortLabel] ?? null;
+    applySortUI(sortLabel);
+  }
+
+  if (searchInput) searchInput.value = selectedQ;
+
+  renderActiveMeta();
+  syncUrlQuery();
 
   await init();
 });
 
+function renderActiveMeta() {
+  const el = document.getElementById('search-active-meta');
+  if (!el) return;
+
+  const areaLabel = selectedArea ?? '내위치';
+  const sortLabel = SORT_CODE[selectedSort] ?? '추천순';
+
+  if (!selectedQ) {
+    el.textContent = `지역: ${areaLabel} · 정렬: ${sortLabel}`;
+  } else {
+    el.textContent = `지역: ${areaLabel} · 정렬: ${sortLabel} · 검색: ${selectedQ}`;
+  }
+}
+
+function loadRecent() {
+  try {
+    const arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+    return Array.isArray(arr) ? arr : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveRecent(arr) {
+  localStorage.setItem(RECENT_KEY, JSON.stringify(arr.slice(0, MAX_RECENT)));
+}
+
+function addRecent(term) {
+  const t = term.trim();
+  if (!t) return;
+
+  const arr = loadRecent().filter((x) => x !== t);
+  arr.unshift(t);
+  saveRecent(arr);
+}
+
+function removeRecent(term) {
+  const arr = loadRecent().filter((x) => x !== term);
+  saveRecent(arr);
+}
+
+function renderRecentUI() {
+  const listEl = document.querySelector('.search-list');
+  if (!listEl) return;
+  listEl.innerHTML = '';
+
+  const items = loadRecent();
+  items.forEach((term) => {
+    const li = document.createElement('li');
+
+    const a = document.createElement('a');
+    a.href = '#';
+    a.className = 'recently-list';
+
+    const span = document.createElement('span');
+    span.textContent = term;
+    a.appendChild(span);
+
+    a.addEventListener('click', (e) => {
+      e.preventDefault();
+      runSearch(term);
+    });
+
+    const delWrap = document.createElement('span');
+    delWrap.className = 'search-delete';
+
+    const delBtn = document.createElement('a');
+    delBtn.href = '#';
+    delBtn.className = 'btn_search_delete';
+    delBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      removeRecent(term);
+      renderRecentUI();
+    });
+
+    delWrap.appendChild(delBtn);
+    li.appendChild(a);
+    li.appendChild(delWrap);
+
+    listEl.appendChild(li);
+  });
+}
+
+const searchForm = document.getElementById('search-form');
 const searchInput = document.querySelector('.HomeSearchInput');
 const searchRecently = document.querySelector('.search-recently');
 
-searchInput.addEventListener('click', function () {
+async function runSearch(term) {
+  selectedQ = (term ?? '').trim();
+  if (searchInput) searchInput.value = selectedQ;
+
+  if (selectedQ) {
+    selectedSort = 'rating';
+    applySortUI('평점순');
+
+    addRecent(selectedQ);
+    renderRecentUI();
+  } else {
+    selectedSort = 'default';
+    applySortUI('추천순');
+  }
+
+  syncUrlQuery();
+  renderActiveMeta();
+  await init();
+}
+
+searchForm?.addEventListener('submit', (e) => {
+  e.preventDefault();
+  runSearch(searchInput?.value ?? '');
+});
+
+searchInput.addEventListener('focus', function () {
   searchRecently.style.display = 'block';
+  renderRecentUI();
 });
 
 document.addEventListener('click', (event) => {
-  if (event.target === searchInput || event.target === searchRecently) {
-    return;
-  }
-
-  if (searchRecently.style.display === 'block') {
+  if (event.target === searchInput) return;
+  if (searchRecently?.contains(event.target)) return;
+  if (searchRecently && searchRecently.style.display === 'block') {
     searchRecently.style.display = 'none';
   }
 });

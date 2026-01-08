@@ -96,52 +96,34 @@
     <header class="bg-warning py-5">
       <div class="container px-4 px-lg-5 my-5">
         <div class="text-center text-black">
-          <fieldset class="main-search">
-            <legend>전체 검색</legend>
-            <label class="search-word" for="main-search">
-              <span class="search-icon">검색 :</span>
-              <input
-                id="main-search"
-                class="HomeSearchInput"
-                name="main-search"
-                type="text"
-                maxlength="50"
-                placeholder="지역, 식당 또는 음식"
-                autocomplete="off"
-              />
-              <div class="search-recently">
-                <div class="contents">
-                  <ul class="search-list">
-                    <li>
-                      <a href="#" class="recently-list">
-                        <span>천원국수</span>
-                      </a>
-                      <span class="search-delete">
-                        <a href="#" class="btn_search_delete"> </a>
-                      </span>
-                    </li>
-                    <li>
-                      <a href="#" class="recently-list">
-                        <span>최고당</span>
-                      </a>
-                      <span class="search-delete">
-                        <a href="#" class="btn_search_delete"> </a>
-                      </span>
-                    </li>
-                    <li>
-                      <a href="#" class="recently-list">
-                        <span>싸다</span>
-                      </a>
-                      <span class="search-delete">
-                        <a href="#" class="btn_search_delete"> </a>
-                      </span>
-                    </li>
-                  </ul>
+          <form id="search-form" autocomplete="off">
+            <fieldset class="main-search">
+              <legend>전체 검색</legend>
+              <label class="search-word" for="main-search">
+                <span class="search-icon">검색 :</span>
+                <input
+                  id="main-search"
+                  class="HomeSearchInput"
+                  name="main-search"
+                  type="text"
+                  maxlength="50"
+                  placeholder="지역, 식당 또는 음식"
+                  autocomplete="off"
+                />
+                <div
+                  class="search-active-meta"
+                  id="search-active-meta"
+                  aria-live="polite"
+                ></div>
+                <div class="search-recently">
+                  <div class="contents">
+                    <ul class="search-list"></ul>
+                  </div>
                 </div>
-              </div>
-            </label>
-            <input class="btn-search" type="submit" value="검색" />
-          </fieldset>
+              </label>
+              <input class="btn-search" type="submit" value="검색" />
+            </fieldset>
+          </form>
         </div>
       </div>
     </header>
