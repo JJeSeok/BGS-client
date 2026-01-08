@@ -17,6 +17,35 @@ if (mypageLink) {
   });
 }
 
+let selectedArea = null;
+let selectedSort = null;
+
+const SORT_LABEL = {
+  추천순: null,
+  평점순: 'rating',
+  조회순: 'views',
+  인기순: 'likes',
+  리뷰순: 'reviews',
+  // 거리순: distance
+};
+
+const SORT_CODE = {
+  default: '추천순',
+  rating: '평점순',
+  views: '조회순',
+  likes: '인기순',
+  reviews: '리뷰순',
+  // 거리순: distance
+};
+
+function getText(el) {
+  return (el?.textContent ?? '').trim();
+}
+
+function clearEl(el) {
+  el.innerHTML = '';
+}
+
 function authHeaders() {
   const token = localStorage.getItem('token');
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -75,7 +104,9 @@ async function init() {
   const empty = document.getElementById('empty');
 
   try {
-    const items = await fetchList();
+    clearEl(grid);
+
+    const items = await fetchList({ sido: selectedArea, sort: selectedSort });
     if (!items || items.length === 0) {
       empty.style.display = 'block';
       return;
@@ -83,12 +114,25 @@ async function init() {
     renderCards(grid, items);
   } catch (e) {
     console.error(e);
-    grid.innerHTML = `<div class="text-center text-danger my-4">목록을 불러오지 못했어요</div>`;
+    clearEl(grid);
+
+    const div = document.createElement('div');
+    div.className = 'text-center text-danger my-4';
+    div.textContent = '목록을 불러오지 못했어요';
+    grid.appendChild(div);
   }
 }
 
-async function fetchList() {
-  const res = await fetch(`${API_BASE}/restaurants`);
+async function fetchList({ sido, sort } = {}) {
+  const qs = new URLSearchParams();
+  if (sido) qs.set('sido', sido);
+  if (sort) qs.set('sort', sort);
+
+  const url = qs.toString()
+    ? `${API_BASE}/restaurants?${qs.toString()}`
+    : `${API_BASE}/restaurants`;
+
+  const res = await fetch(url);
   if (!res.ok) throw new Error('목록 API 실패');
   return res.json();
 }
@@ -226,66 +270,108 @@ let area_list = document.querySelectorAll('.area_list1');
 let filter_list = document.querySelectorAll('.filter_list1');
 
 for (let i = 0; i < area_list.length; i++) {
-  area_list[i].addEventListener('click', function () {
-    for (let j = 0; j < area_list.length; j++) {
-      area_list[j].classList.remove('on');
-    }
+  area_list[i].addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    area_list.forEach((li) => li.classList.remove('on'));
     this.classList.add('on');
 
-    if (i === 0) {
-      filter_list[5].style.display = 'block';
-    } else {
-      filter_list[5].style.display = 'none';
-    }
+    if (i === 0) filter_list[5].style.display = 'block';
+    else filter_list[5].style.display = 'none';
+
+    await applyFilters();
   });
 }
 
 for (let i = 0; i < filter_list.length; i++) {
-  filter_list[i].addEventListener('click', function () {
-    for (let j = 0; j < filter_list.length; j++) {
-      filter_list[j].classList.remove('on');
-    }
+  filter_list[i].addEventListener('click', async function (e) {
+    e.preventDefault();
+
+    filter_list.forEach((li) => li.classList.remove('on'));
     this.classList.add('on');
+
+    const label = getText(this.querySelector('span')) || getText(this);
+    if (label === '거리순') {
+      alert('거리순은 아직입니다.');
+      return;
+    }
+
+    await applyFilters();
   });
 }
 
-document.addEventListener('DOMContentLoaded', function () {
+function readSelectedAreaFromUI() {
+  const on = document.querySelector('.area_list1.on');
+  const label = getText(on?.querySelector('span')) || getText(on);
+  if (!label || label === '내위치') return;
+  return label;
+}
+
+function readSelectedSortFromUI() {
+  const on = document.querySelector('.filter_list1.on');
+  const label = getText(on?.querySelector('span')) || getText(on);
+  return SORT_LABEL[label] ?? null;
+}
+
+function syncUrlQuery() {
+  const qs = new URLSearchParams();
+  qs.set('area', selectedArea ?? '내위치');
+  qs.set('sort', selectedSort ?? 'default');
+
+  history.replaceState(null, '', `${location.pathname}?${qs.toString()}`);
+}
+
+async function applyFilters() {
+  selectedArea = readSelectedAreaFromUI();
+  selectedSort = readSelectedSortFromUI();
+
+  syncUrlQuery();
+  await init();
+}
+
+function applyAreaUI(areaLabel) {
+  area_list.forEach((li) => li.classList.remove('on'));
+
+  let idx = 0;
+  const spans = document.querySelectorAll('.area_list1 span');
+  spans.forEach((sp, i) => {
+    if (getText(sp) === areaLabel) idx = i;
+  });
+
+  area_list[idx]?.classList.add('on');
+
+  if (idx === 0) filter_list[5].style.display = 'block';
+  else filter_list[5].style.display = 'none';
+}
+
+function applySortUI(sortLabel) {
+  filter_list.forEach((li) => li.classList.remove('on'));
+
+  if (sortLabel === '거리순') sortLabel = '추천순';
+
+  let idx = 0;
+  const spans = document.querySelectorAll('.filter_list1 span');
+  spans.forEach((sp, i) => {
+    if (getText(sp) === sortLabel) idx = i;
+  });
+
+  filter_list[idx]?.classList.add('on');
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
   initAuthMenu();
-  init();
 
-  // URL에서 쿼리 스트링을 파싱하는 함수
-  function getQueryStringParams(query = window.location.search) {
-    return new URLSearchParams(query);
-  }
+  const params = new URLSearchParams(window.location.search);
+  const areaLabel = params.get('area') || '내위치';
+  const sortLabel = SORT_CODE[params.get('sort')] || '추천순';
 
-  const params = getQueryStringParams();
-  const selectedArea = params.get('area');
-  const selectedSort = params.get('sort');
+  applyAreaUI(areaLabel);
+  applySortUI(sortLabel);
 
-  let spanText_area = document.querySelectorAll('.area_list1 span').textContent;
-  let spanText_filter =
-    document.querySelectorAll('.filter_list1 span').textContent;
+  selectedArea = areaLabel === '내위치' ? null : areaLabel;
+  selectedSort = SORT_LABEL[sortLabel] ?? null;
 
-  // 선택된 필터에 'on' 클래스 적용
-  if (selectedArea) {
-    for (let i = 0; i < spanText_area.length; i++) {
-      if (spanText_area[i] === selectedArea) {
-        area_list[i].click();
-      }
-    }
-  } else {
-    area_list[0].click();
-  }
-
-  if (selectedSort) {
-    for (let i = 0; i < spanText_filter.length; i++) {
-      if (spanText_filter[i] === selectedSort) {
-        filter_list[i].click();
-      }
-    }
-  } else {
-    filter_list[0].click();
-  }
+  await init();
 });
 
 const searchInput = document.querySelector('.HomeSearchInput');
