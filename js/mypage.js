@@ -1472,12 +1472,167 @@ async function loadBlindList() {
   renderBlindList(result.data);
 }
 
+function formatDate(dStr) {
+  if (!dStr) return '';
+  const d = new Date(dStr);
+  if (Number.isNaN(d.getTime())) return '';
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function statusMeta(status) {
+  if (status === 'pending')
+    return { label: '검토중', cls: 'badge bg-secondary' };
+  if (status === 'approved') return { label: '승인', cls: 'badge bg-success' };
+  if (status === 'rejected') return { label: '반려', cls: 'badge bg-danger' };
+  return { label: status || '알 수 없음', cls: 'badge bg-dark' };
+}
+
+async function fetchMyRestaurantRequests() {
+  const res = await fetch(`${API_BASE}/restaurant-requests/me`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+
+  if (res.status === 401) {
+    const back = '/mypage.html';
+    location.href = `login.html?next=${encodeURIComponent(back)}`;
+    return null;
+  }
+
+  if (!res.ok) throw new Error('내 요청 목록 API 실패');
+
+  return res.json();
+}
+
+function renderMyRequests(rows) {
+  const root = document.getElementById('myRequestList');
+  if (!root) return;
+
+  root.textContent = '';
+
+  if (!rows || rows.length === 0) {
+    const p = document.createElement('p');
+    p.className = 'text-muted';
+    p.style.fontSize = '14px';
+    p.textContent = '등록 요청 내역이 아직 없어요.';
+    root.appendChild(p);
+    return;
+  }
+
+  const list = document.createElement('div');
+  list.className = 'd-flex flex-column gap-2';
+
+  rows.forEach((r) => {
+    const card = document.createElement('div');
+    card.className = 'border rounded-3 p-2 d-flex gap-2 align-items-start';
+    card.style.background = '#fff';
+
+    // 썸네일
+    const img = document.createElement('img');
+    img.src = normalizeImgUrl(r.main_image_url);
+    img.alt = '요청 대표 이미지';
+    img.style.width = '64px';
+    img.style.height = '64px';
+    img.style.objectFit = 'cover';
+    img.style.borderRadius = '10px';
+    img.addEventListener('error', () => (img.src = '/images/흠.png'));
+
+    const body = document.createElement('div');
+    body.className = 'flex-grow-1';
+
+    // 상단: 이름 + 상태
+    const top = document.createElement('div');
+    top.className = 'd-flex justify-content-between align-items-start gap-2';
+
+    const titleWrap = document.createElement('div');
+
+    const title = document.createElement('div');
+    title.style.fontWeight = '700';
+    title.textContent = `${r.name || '(이름 없음)'} · ${
+      r.category || ''
+    }`.trim();
+
+    const addr = document.createElement('div');
+    addr.className = 'text-muted';
+    addr.style.fontSize = '13px';
+    addr.textContent = `${r.sido || ''} ${r.sigugun || ''} ${
+      r.dongmyun || ''
+    }`.trim();
+
+    titleWrap.append(title, addr);
+
+    const st = statusMeta(r.status);
+    const badge = document.createElement('span');
+    badge.className = st.cls;
+    badge.textContent = st.label;
+
+    top.append(titleWrap, badge);
+
+    // 하단: 날짜 + 승인된 경우 링크
+    const bottom = document.createElement('div');
+    bottom.className = 'mt-1 d-flex flex-wrap gap-2 align-items-center';
+
+    const date = document.createElement('span');
+    date.className = 'text-muted';
+    date.style.fontSize = '12px';
+    date.textContent = `요청일: ${formatDate(r.createdAt)}`;
+
+    bottom.appendChild(date);
+
+    // 승인된 경우 restaurant 상세로 이동 링크(approved_restaurant_id 있으면)
+    if (r.status === 'approved' && r.approved_restaurant_id) {
+      const link = document.createElement('a');
+      link.href = `/restaurant.html?id=${encodeURIComponent(
+        r.approved_restaurant_id
+      )}`;
+      link.className = 'btn btn-sm btn-outline-success';
+      link.textContent = '등록된 식당 보기';
+      bottom.appendChild(link);
+    }
+
+    // 반려 사유
+    if (r.status === 'rejected' && r.reject_reason) {
+      const reason = document.createElement('div');
+      reason.className = 'mt-1';
+      reason.style.fontSize = '13px';
+      reason.style.color = '#b02a37';
+      reason.textContent = `반려 사유: ${r.reject_reason}`;
+      body.append(top, bottom, reason);
+    } else {
+      body.append(top, bottom);
+    }
+
+    card.append(img, body);
+    list.appendChild(card);
+  });
+
+  root.appendChild(list);
+}
+
+async function initMyRestaurantRequests() {
+  try {
+    const json = await fetchMyRestaurantRequests();
+    if (!json) return;
+    renderMyRequests(json || []);
+  } catch (e) {
+    console.error(e);
+    const root = document.getElementById('myRequestList');
+    if (root) {
+      root.textContent = '요청 목록을 불러오지 못했어요.';
+    }
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   await initAuthMenu();
   await loadMyReviews();
   await loadVisitedRestaurants();
   await loadLikedRestaurants();
   await loadBlindList();
+  await initMyRestaurantRequests();
 
   // 초기 진입: 맛집 리뷰 탭 열기
   showSection('section-reviews');

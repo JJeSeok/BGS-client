@@ -151,7 +151,8 @@ function renderCards(grid, items) {
     const avg = num(it.rating.avg, 0);
     const cnt = num(it.rating.count, 0);
     const addr = [
-      it.address.sido.endsWith('도') ? it.address.sigugun : it.address.sido,
+      it.address.sido,
+      it.address.sigugun.split(' ')[0],
       it.address.dongmyun,
     ].join(' ');
     const category = it.category;
