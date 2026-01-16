@@ -73,7 +73,7 @@ input[type='radio'] {
 }
 
 .honor_level.level-bronze {
-  --badge-url: url('/images/bronze.pgn');
+  --badge-url: url('/images/bronze.png');
 }
 .honor_level.level-silver {
   --badge-url: url('/images/silver.png');

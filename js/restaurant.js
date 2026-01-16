@@ -205,8 +205,8 @@ function initRestaurantMap() {
     return;
   }
 
-  const latFromData = data?.restaurant?.latitude;
-  const lngFromData = data?.restaurant?.longitude;
+  const latFromData = data?.restaurant?.lat;
+  const lngFromData = data?.restaurant?.lng;
 
   const lat =
     typeof latFromData === 'number'

@@ -232,6 +232,14 @@
                 블라인드 목록<span class="compact_right only_desktop"></span>
               </a>
             </li>
+            <li class="side_listItem">
+              <a
+                class="side_listName"
+                data-section="section-restaurant-requests"
+              >
+                식당 등록 요청<span class="compact_right only_desktop"></span>
+              </a>
+            </li>
           </ul>
         </div>
         <div class="rside_wrap" id="section-reviews">
@@ -340,21 +348,48 @@
             <span class="blindList_count" id="blindListCount">총 0개</span>
             <div class="blindList_wrap">
               <a>
-                <img
-                  src="/images/흠.png"
-                  alt="김서하바보다"
-                  class="blind_userPicture"
-                />
+                <img src="/images/흠.png" alt="" class="blind_userPicture" />
               </a>
               <p class="blindList_user">
                 <a>
-                  <span class="blind_userName">김서하바보다</span>
+                  <span class="blind_userName"></span>
                 </a>
               </p>
               <button class="blind_button">블라인드 해제</button>
             </div>
           </div>
         </div>
+        <div class="rside_wrap" id="section-restaurant-requests">
+          <div class="list_header">
+            <div class="listName_wrap">
+              <h2 class="list_name">식당 등록 요청</h2>
+            </div>
+          </div>
+
+          <div class="p-3">
+            <p class="text-muted mb-3" style="font-size: 14px">
+              찾는 식당이 없다면 등록을 요청할 수 있어요. 관리자가 검토 후
+              승인합니다.
+            </p>
+
+            <a href="/restaurant_request.html" class="btn btn-warning">
+              식당 등록 요청하기
+            </a>
+
+            <!-- (선택) 나중에 내 요청 목록까지 여기 붙이면 완성도 업 -->
+            <div class="mt-4">
+              <h6 class="mb-2" style="font-weight: 700">내 요청</h6>
+              <div
+                id="myRequestList"
+                class="text-muted"
+                style="font-size: 14px"
+              >
+                (추후 구현) 요청 목록이 여기에 표시됩니다.
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="rside_wrap" id="section-pw-check">
           <div class="list_header">
             <div class="listName_wrap">
