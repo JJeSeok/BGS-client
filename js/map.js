@@ -154,7 +154,7 @@ function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
 
         const text = r?.roadaddr || r?.addr || fallbackText;
         resolve(text);
-      }
+      },
     );
   });
 }
@@ -168,9 +168,18 @@ async function setCandidate(latlng, source = 'manual') {
   const { lat, lng } = fmtLatLng(latlng);
   const text = await reverseGeocode(
     latlng,
-    `위도 ${lat.toFixed(6)}, 경도 ${lng.toFixed(6)}`
+    `위도 ${lat.toFixed(6)}, 경도 ${lng.toFixed(6)}`,
   );
   showPanel(text);
+}
+
+function getBackUrl() {
+  const params = new URLSearchParams(location.search);
+  const back = params.get('back');
+  if (!back) return '/index.html';
+
+  if (back.startsWith('/')) return back;
+  return '/index.html';
 }
 
 function confirmCurrentLocation() {
@@ -181,7 +190,7 @@ function confirmCurrentLocation() {
   LocationStore.saveLocation({ lat, lng, source });
 
   hidePanel();
-  window.location.href = '/index.html';
+  window.location.href = getBackUrl();
 }
 
 async function initMap() {
@@ -221,14 +230,14 @@ function goMyLocation() {
       marker.setIcon(iconDotPulse());
       map.setZoom(17);
     },
-    () => alert('위치 접근이 거부되었어요.')
+    () => alert('위치 접근이 거부되었어요.'),
   );
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   if (!window.naver || !naver.maps) {
     console.error(
-      'Naver Maps JS가 로드되지 않았습니다. clientId 또는 도메인 허용을 확인하세요.'
+      'Naver Maps JS가 로드되지 않았습니다. clientId 또는 도메인 허용을 확인하세요.',
     );
     return;
   }

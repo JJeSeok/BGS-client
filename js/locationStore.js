@@ -22,7 +22,7 @@ function clearLocation() {
 }
 
 function geolocate(
-  opts = { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 }
+  opts = { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
 ) {
   if (!navigator.geolocation) {
     return Promise.resolve(null);
@@ -31,7 +31,7 @@ function geolocate(
     navigator.geolocation.getCurrentPosition(
       (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => resolve(null),
-      opts
+      opts,
     );
   });
 }

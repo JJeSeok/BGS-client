@@ -1,3 +1,5 @@
+import { LocationStore } from './locationStore.js';
+
 const API_BASE = 'http://localhost:8080';
 const RECENT_KEY = 'recent_searches';
 const MAX_RECENT = 5;
@@ -29,7 +31,7 @@ const SORT_LABEL = {
   조회순: 'views',
   인기순: 'likes',
   리뷰순: 'reviews',
-  // 거리순: distance
+  거리순: 'distance',
 };
 
 const SORT_CODE = {
@@ -38,15 +40,24 @@ const SORT_CODE = {
   views: '조회순',
   likes: '인기순',
   reviews: '리뷰순',
-  // 거리순: distance
+  distance: '거리순',
 };
+
+let paging = {
+  cursor: null,
+  hasMore: true,
+  loading: false,
+};
+
+let io = null;
 
 function getText(el) {
   return (el?.textContent ?? '').trim();
 }
 
 function clearEl(el) {
-  el.innerHTML = '';
+  if (!el) return;
+  while (el.firstChild) el.removeChild(el.firstChild);
 }
 
 function authHeaders() {
@@ -105,36 +116,89 @@ async function initAuthMenu() {
 async function init() {
   const grid = document.getElementById('grid');
   const empty = document.getElementById('empty');
+  if (!grid) return;
+
+  paging.cursor = null;
+  paging.hasMore = true;
+  paging.loading = false;
+
+  clearEl(grid);
+  if (empty) empty.style.display = 'none';
+
+  await loadNextPage();
+}
+
+async function loadNextPage() {
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!grid) return;
+
+  if (paging.loading) return;
+  if (!paging.hasMore) return;
+
+  paging.loading = true;
 
   try {
-    clearEl(grid);
+    let loc = null;
+    if (selectedSort === 'distance') {
+      loc = LocationStore.loadLocation();
+    }
 
-    const items = await fetchList({
+    const body = await fetchList({
       sido: selectedArea,
       sort: selectedSort,
       q: selectedQ,
+      cursor: paging.cursor,
+      lat: loc?.lat,
+      lng: loc?.lng,
     });
-    if (!items || items.length === 0) {
-      empty.style.display = 'block';
+
+    const items = body?.data ?? [];
+    const meta = body?.meta ?? {};
+
+    if (!paging.cursor && items.length === 0) {
+      if (empty) empty.style.display = 'block';
+      paging.hasMore = false;
+      paging.cursor = null;
       return;
     }
-    renderCards(grid, items);
+
+    if (items.length > 0) {
+      renderCards(grid, items);
+    }
+
+    paging.hasMore = Boolean(meta.hasMore);
+    paging.cursor = meta.nextCursor ?? null;
   } catch (e) {
     console.error(e);
-    clearEl(grid);
 
-    const div = document.createElement('div');
-    div.className = 'text-center text-danger my-4';
-    div.textContent = '목록을 불러오지 못했어요';
-    grid.appendChild(div);
+    if (!paging.cursor) {
+      clearEl(grid);
+      const div = document.createElement('div');
+      div.className = 'text-center text-danger my-4';
+      div.textContent = '목록을 불러오지 못했어요';
+      grid.appendChild(div);
+    }
+
+    paging.hasMore = false;
+  } finally {
+    paging.loading = false;
   }
 }
 
-async function fetchList({ sido, sort, q } = {}) {
+async function fetchList({ sido, sort, q, cursor, lat, lng } = {}) {
   const qs = new URLSearchParams();
   if (sido) qs.set('sido', sido);
   if (sort) qs.set('sort', sort);
   if (q) qs.set('q', q);
+  if (cursor) qs.set('cursor', cursor);
+
+  if (sort === 'distance') {
+    if (lat != null && lng != null) {
+      qs.set('lat', String(lat));
+      qs.set('lng', String(lng));
+    }
+  }
 
   const url = qs.toString()
     ? `${API_BASE}/restaurants?${qs.toString()}`
@@ -189,7 +253,7 @@ function renderCards(grid, items) {
       dot(),
       textSpan('stars', `★ ${avg.toFixed(1)}`),
       dot(),
-      textSpan('count', `리뷰 ${new Intl.NumberFormat().format(cnt)}`)
+      textSpan('count', `리뷰 ${new Intl.NumberFormat().format(cnt)}`),
     );
 
     // address
@@ -288,6 +352,13 @@ for (let i = 0; i < area_list.length; i++) {
     if (i === 0) filter_list[5].style.display = 'block';
     else filter_list[5].style.display = 'none';
 
+    const clickedArea = getText(this.querySelector('span')) || getText(this);
+    const isMyLocation = clickedArea === '내위치';
+
+    if (!isMyLocation && selectedSort === 'distance') {
+      forceDefaultSortUI();
+    }
+
     await applyFilters();
   });
 }
@@ -301,7 +372,19 @@ for (let i = 0; i < filter_list.length; i++) {
 
     const label = getText(this.querySelector('span')) || getText(this);
     if (label === '거리순') {
-      alert('거리순은 아직입니다.');
+      selectedSort = 'distance';
+      syncUrlQuery();
+      renderActiveMeta();
+
+      const saved = LocationStore.loadLocation();
+      if (!saved) {
+        alert('거리순을 사용하려면 지도에서 내 위치를 먼저 설정해 주세요.');
+        const back = `${location.pathname}${location.search}`;
+        location.href = `map.html?back=${encodeURIComponent(back)}`;
+        return;
+      }
+
+      await init();
       return;
     }
 
@@ -336,6 +419,7 @@ async function applyFilters() {
   selectedSort = readSelectedSortFromUI();
 
   syncUrlQuery();
+  renderActiveMeta();
   await init();
 }
 
@@ -357,8 +441,6 @@ function applyAreaUI(areaLabel) {
 function applySortUI(sortLabel) {
   filter_list.forEach((li) => li.classList.remove('on'));
 
-  if (sortLabel === '거리순') sortLabel = '추천순';
-
   let idx = 0;
   const spans = document.querySelectorAll('.filter_list1 span');
   spans.forEach((sp, i) => {
@@ -366,6 +448,11 @@ function applySortUI(sortLabel) {
   });
 
   filter_list[idx]?.classList.add('on');
+}
+
+function forceDefaultSortUI() {
+  selectedSort = 'default';
+  applySortUI('추천순');
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -394,6 +481,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   renderActiveMeta();
   syncUrlQuery();
 
+  setupInfiniteScroll();
   await init();
 });
 
@@ -521,3 +609,33 @@ document.addEventListener('click', (event) => {
     searchRecently.style.display = 'none';
   }
 });
+
+function setupInfiniteScroll() {
+  const grid = document.getElementById('grid');
+  if (!grid) return;
+
+  let sentinel = document.getElementById('sentinel');
+  if (!sentinel) {
+    sentinel = document.createElement('div');
+    sentinel.id = 'sentinel';
+    sentinel.style.height = '1px';
+    grid.parentElement?.appendChild(sentinel);
+  }
+
+  if (io) io.disconnect();
+
+  io = new IntersectionObserver(
+    (entries) => {
+      const entry = entries[0];
+      if (!entry?.isIntersecting) return;
+      loadNextPage();
+    },
+    {
+      root: null,
+      rootMargin: '300px',
+      threshold: 0,
+    },
+  );
+
+  io.observe(sentinel);
+}
