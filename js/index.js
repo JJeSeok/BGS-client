@@ -139,9 +139,15 @@ async function loadNextPage() {
   paging.loading = true;
 
   try {
-    let loc = null;
-    if (selectedSort === 'distance') {
-      loc = LocationStore.loadLocation();
+    const { needsLoc, loc, reason } = getLocationForRequest();
+
+    if (selectedSort === 'distance' && needsLoc && !loc) {
+      alert('거리순을 사용하려면 지도에서 내 위치를 먼저 설정해 주세요.');
+      const back = `${location.pathname}${location.search}`;
+      location.href = `map.html?back=${encodeURIComponent(back)}`;
+      paging.hasMore = false;
+      paging.cursor = null;
+      return;
     }
 
     const body = await fetchList({
@@ -157,9 +163,14 @@ async function loadNextPage() {
     const meta = body?.meta ?? {};
 
     if (!paging.cursor && items.length === 0) {
-      if (empty) empty.style.display = 'block';
+      if (empty) {
+        setEmptyMessage(empty);
+        empty.style.display = 'block';
+      }
       paging.hasMore = false;
       paging.cursor = null;
+
+      updateSetLocationButtonVisibility();
       return;
     }
 
@@ -193,7 +204,11 @@ async function fetchList({ sido, sort, q, cursor, lat, lng } = {}) {
   if (q) qs.set('q', q);
   if (cursor) qs.set('cursor', cursor);
 
-  if (sort === 'distance') {
+  const qOn = Boolean((q ?? '').trim());
+  const my = !sido;
+  const needsLoc = sort === 'distance' || (my && !qOn);
+
+  if (needsLoc) {
     if (lat != null && lng != null) {
       qs.set('lat', String(lat));
       qs.set('lng', String(lng));
@@ -480,6 +495,11 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   renderActiveMeta();
   syncUrlQuery();
+  setInterval(renderActiveMeta, 60 * 1000);
+
+  document
+    .getElementById('btn-set-location')
+    ?.addEventListener('click', goTOMapForLocation);
 
   setupInfiniteScroll();
   await init();
@@ -492,11 +512,26 @@ function renderActiveMeta() {
   const areaLabel = selectedArea ?? '내위치';
   const sortLabel = SORT_CODE[selectedSort] ?? '추천순';
 
-  if (!selectedQ) {
-    el.textContent = `지역: ${areaLabel} · 정렬: ${sortLabel}`;
-  } else {
-    el.textContent = `지역: ${areaLabel} · 정렬: ${sortLabel} · 검색: ${selectedQ}`;
+  const parts = [`지역: ${areaLabel}`, `정렬: ${sortLabel}`];
+  if (selectedQ) parts.push(`검색: ${selectedQ}`);
+
+  const showLocUpdated = !selectedArea || selectedSort === 'distance';
+  if (showLocUpdated) {
+    const loc = LocationStore.loadLocation();
+    if (loc?.ts) {
+      const t = LocationStore.formatLastUpdated(loc.ts);
+      parts.push(`마지막 위치 업데이트: ${t}`);
+    } else {
+      if (!selectedArea) {
+        parts.push('위치 미설정(서울시청 기준)');
+      } else {
+        parts.push('마지막 위치 업데이트: 미설정');
+      }
+    }
   }
+
+  el.textContent = parts.join(' · ');
+  updateSetLocationButtonVisibility();
 }
 
 function loadRecent() {
@@ -638,4 +673,72 @@ function setupInfiniteScroll() {
   );
 
   io.observe(sentinel);
+}
+
+function hasQuery() {
+  return Boolean((selectedQ ?? '').trim());
+}
+
+function isMyLocation() {
+  return !selectedArea;
+}
+
+function getLocationForRequest() {
+  const qOn = hasQuery();
+  const my = isMyLocation();
+  const distance = selectedSort === 'distance';
+
+  const needsLoc = distance || (my && !qOn);
+  if (!needsLoc) return { needsLoc: false, loc: null, reason: 'none' };
+
+  const saved = LocationStore.loadLocation();
+  if (saved) return { needsLoc: true, loc: saved, reason: 'saved' };
+
+  if (distance) return { needsLoc: true, loc: null, reason: 'missing' };
+
+  return { needsLoc: true, loc: LocationStore.SEOUL, reason: 'fallback' };
+}
+
+function goTOMapForLocation() {
+  const back = `${location.pathname}${location.search}`;
+  location.href = `map.html?back=${encodeURIComponent(back)}`;
+}
+
+function updateSetLocationButtonVisibility() {
+  const btn = document.getElementById('btn-set-location');
+  if (!btn) return;
+
+  const showContext = !selectedArea || selectedSort === 'distance';
+  const saved = LocationStore.loadLocation();
+  const shouldShow = showContext && !saved;
+
+  btn.style.display = shouldShow ? 'inline-flex' : 'none';
+}
+
+function setEmptyMessage(emptyEl) {
+  if (!emptyEl) return;
+
+  const qOn = Boolean((selectedQ ?? '').trim());
+  const my = !selectedArea;
+  const isDistance = selectedSort === 'distance';
+
+  if (isDistance) {
+    emptyEl.textContent =
+      '5km 이내에 식당이 없어요. 내 위치를 설정하거나 지도를 이동해 보세요.';
+    return;
+  }
+
+  if (my && !qOn) {
+    const saved = LocationStore.loadLocation();
+    if (!saved) {
+      emptyEl.textContent =
+        '서울시청 기준 10km 이내에 결과가 없어요. 내 위치를 설정하면 주변 맛집을 더 정확히 보여드릴게요.';
+    } else {
+      emptyEl.textContent =
+        '내 주변 10km 이내에 결과가 없어요. 내 위치를 바꾸거나 지역을 선택해 보세요.';
+    }
+    return;
+  }
+
+  emptyEl.textContent = '조건에 맞는 식당이 없어요.';
 }

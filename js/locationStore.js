@@ -1,7 +1,18 @@
 const STORAGE_KEY = 'app.currentLocation.v1';
 const SEOUL = { lat: 37.5666102, lng: 126.9783811 };
 
+const TTL_MS = {
+  geo: 12 * 60 * 60 * 1000,
+  user: 7 * 24 * 60 * 60 * 1000,
+};
+
 const round = (n, p = 6) => Math.round(n * 10 ** p) / 10 ** p;
+
+function isExpired(loc) {
+  if (!loc || !loc.ts) return true;
+  const ttl = TTL_MS[loc.source] ?? TTL_MS.user;
+  return Date.now() - loc.ts > ttl;
+}
 
 function saveLocation({ lat, lng, source = 'user' }) {
   const data = { lat: round(lat), lng: round(lng), source, ts: Date.now() };
@@ -9,9 +20,17 @@ function saveLocation({ lat, lng, source = 'user' }) {
   return data;
 }
 
-function loadLocation() {
+function loadLocation({ allowStale = false } = {}) {
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || null;
+    const loc = JSON.parse(localStorage.getItem(STORAGE_KEY)) || null;
+    if (!loc) return null;
+
+    if (!allowStale && isExpired(loc)) {
+      localStorage.removeItem(STORAGE_KEY);
+      return null;
+    }
+
+    return loc;
   } catch {
     return null;
   }
@@ -56,6 +75,25 @@ async function getPreferredLocation({
   return { loc: { ...SEOUL }, reason: 'fallback' };
 }
 
+function formatLastUpdated(ts) {
+  if (!ts) return null;
+
+  const diff = Date.now() - ts;
+  if (diff < 0) return '방금 전';
+
+  const sec = Math.floor(diff / 1000);
+  if (sec < 60) return '방금 전';
+
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}분 전`;
+
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}시간 전`;
+
+  const day = Math.floor(hr / 24);
+  return `${day}일 전`;
+}
+
 async function syncToServer(loc) {
   try {
     await fetch('/session/location', {
@@ -74,4 +112,5 @@ export const LocationStore = {
   geolocate,
   getPreferredLocation,
   syncToServer,
+  formatLastUpdated,
 };

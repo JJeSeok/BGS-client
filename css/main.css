@@ -19,6 +19,20 @@ input:focus {
   text-align: left;
 }
 
+.btn-set-location {
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 4px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.btn-set-location:hover {
+  background: rgba(255, 255, 255, 0.9);
+}
+
 ul {
   margin: 0;
   list-style: none;
@@ -318,7 +332,9 @@ ul {
   border-radius: 16px;
   overflow: hidden;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
   position: relative;
 }
 
