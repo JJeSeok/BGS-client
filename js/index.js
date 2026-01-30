@@ -24,6 +24,7 @@ if (mypageLink) {
 let selectedQ = '';
 let selectedArea = null;
 let selectedSort = null;
+let sortTouched = false;
 
 const SORT_LABEL = {
   추천순: 'default',
@@ -384,6 +385,7 @@ for (let i = 0; i < filter_list.length; i++) {
 
     filter_list.forEach((li) => li.classList.remove('on'));
     this.classList.add('on');
+    sortTouched = true;
 
     const label = getText(this.querySelector('span')) || getText(this);
     if (label === '거리순') {
@@ -425,6 +427,8 @@ function syncUrlQuery() {
   qs.set('area', selectedArea ?? '내위치');
   qs.set('sort', selectedSort ?? 'default');
   if (selectedQ) qs.set('q', selectedQ);
+
+  if (sortTouched) qs.set('st', '1');
 
   history.replaceState(null, '', `${location.pathname}?${qs.toString()}`);
 }
@@ -477,19 +481,17 @@ document.addEventListener('DOMContentLoaded', async function () {
   const areaLabel = params.get('area') || '내위치';
   const sortLabel = SORT_CODE[params.get('sort')] || '추천순';
   const q = params.get('q') || '';
+  const st = params.get('st');
 
   applyAreaUI(areaLabel);
 
   selectedArea = areaLabel === '내위치' ? null : areaLabel;
   selectedQ = q;
+  sortTouched = st === '1';
 
-  if (selectedQ) {
-    selectedSort = 'rating';
-    applySortUI('평점순');
-  } else {
-    selectedSort = SORT_LABEL[sortLabel] ?? null;
-    applySortUI(sortLabel);
-  }
+  selectedSort = SORT_LABEL[sortLabel] ?? null;
+  applySortUI(sortLabel);
+  console.log(sortTouched);
 
   if (searchInput) searchInput.value = selectedQ;
 
@@ -612,14 +614,16 @@ async function runSearch(term) {
   if (searchInput) searchInput.value = selectedQ;
 
   if (selectedQ) {
-    selectedSort = 'rating';
-    applySortUI('평점순');
-
+    if (!sortTouched) {
+      selectedSort = 'rating';
+      applySortUI('평점순');
+    }
     addRecent(selectedQ);
     renderRecentUI();
   } else {
     selectedSort = 'default';
     applySortUI('추천순');
+    sortTouched = false;
   }
 
   syncUrlQuery();
