@@ -16,7 +16,7 @@ let currentModalReview = null;
 let currentModalImageIndex = 0;
 const reviewItemTemplate = document.getElementById('review-item-template');
 const filterButtons = document.getElementsByClassName(
-  'restaurant_reviewList_filterButton'
+  'restaurant_reviewList_filterButton',
 );
 const reviewContainer = document.getElementById('review_content');
 if (reviewContainer) {
@@ -112,14 +112,16 @@ async function initAuthMenu() {
 }
 
 function updateTitle() {
-  const titleName = [data?.restaurant.name, data?.restaurant.branch_info].join(
-    ' '
-  );
+  const titleName = [data?.restaurant.name, data?.restaurant.branch_info]
+    .filter(Boolean)
+    .join(' ');
   document.title = titleName ? titleName : 'baegoba';
 }
 
 function updateImg() {
   const imgShow = document.getElementById('imgShow');
+  if (!imgShow) return;
+
   const photos = Array.isArray(data?.photos)
     ? [
         {
@@ -172,7 +174,7 @@ function updateInfo() {
   randerAddress(
     rows[0],
     data?.restaurant.road_address,
-    data?.restaurant.jibun_address
+    data?.restaurant.jibun_address,
   );
 
   // 전화
@@ -205,17 +207,8 @@ function initRestaurantMap() {
     return;
   }
 
-  const latFromData = data?.restaurant?.lat;
-  const lngFromData = data?.restaurant?.lng;
-
-  const lat =
-    typeof latFromData === 'number'
-      ? latFromData
-      : Number(mapContainer.dataset.lat);
-  const lng =
-    typeof lngFromData === 'number'
-      ? lngFromData
-      : Number(mapContainer.dataset.lng);
+  const lat = Number(data?.restaurant?.lat ?? mapContainer.dataset.lat);
+  const lng = Number(data?.restaurant?.lng ?? mapContainer.dataset.lng);
 
   const name =
     data?.restaurant?.name || mapContainer.dataset.name || '식당 위치';
@@ -247,7 +240,7 @@ function initRestaurantMap() {
       border:1px solid #e5e7eb;
       box-shadow:0 3px 8px rgba(0,0,0,0.18);
       font-size:12px;
-      font-weigth:600;
+      font-weight:600;
       color:#111827;
       white-space:nowrap;
       ">${name}</div>`;
@@ -273,27 +266,29 @@ function initRestaurantMap() {
   }
 }
 
-function applyReviewMeta(meta) {
-  if (!meta) return;
+function applyRestaurantReviewMeta(restaurant) {
+  if (!restaurant) return;
 
   const countEl = document.getElementById('reviewCount');
-  if (countEl) countEl.textContent = meta.totalCount ?? 0;
+  if (countEl) countEl.textContent = restaurant.review_count ?? 0;
 
   const avgEl = document.querySelector('.rate_point');
   if (avgEl) {
-    avgEl.textContent = meta.avgRating ?? 0;
-    avgEl.ariaLabel = `평점 ${meta.avgRating ?? 0}`;
+    avgEl.textContent = restaurant.rating_avg ?? 0;
+    avgEl.ariaLabel = `평점 ${restaurant.rating_avg ?? 0}`;
   }
 }
 
 function setupReviewFilterCounts(meta) {
+  if (!meta) return;
+
   const total = meta.totalCount ?? 0;
   const good = meta.ratingCounts.good ?? 0;
   const ok = meta.ratingCounts.ok ?? 0;
   const bad = meta.ratingCounts.bad ?? 0;
 
   const span = document.getElementById('review_total_count');
-  span.textContent = total;
+  if (span) span.textContent = total;
 
   Array.from(filterButtons).forEach((btn) => {
     const span = btn.querySelector('.restaurant_reviewList_count');
@@ -308,38 +303,17 @@ function setupReviewFilterCounts(meta) {
 }
 
 function parseReviewsResponse(body) {
-  if (Array.isArray(body)) return { meta: null, page: null, data: body };
+  if (Array.isArray(body)) return { page: null, data: body };
   if (body && Array.isArray(body.data))
     return {
-      meta: body.meta ?? null,
       page: body.page ?? null,
       data: body.data,
     };
-  return { meta: null, page: null, data: [] };
+  return { page: null, data: [] };
 }
 
 async function initReviews() {
   try {
-    const res = await fetch(`${API_BASE}/reviews?restaurantId=${id}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    });
-    if (!res.ok) {
-      console.warn('리뷰를 불러오지 못했습니다.', res.status);
-      return;
-    }
-
-    const body = await res.json();
-    const { meta, data } = parseReviewsResponse(body);
-
-    allReviews = data;
-
-    // 레스토랑 평점과 리뷰수 설정
-    applyReviewMeta(meta);
-
-    // 필터 버튼 숫자 설정
-    setupReviewFilterCounts(meta);
-
     // 필터 버튼 클릭 이벤트 세팅 + 기본 렌더링
     setupReviewFilterButtons();
 
@@ -353,6 +327,23 @@ async function initReviews() {
     await fetchReviewsPage({ reset: true });
   } catch (e) {
     console.error('리뷰 로딩 실패', e);
+  }
+}
+
+async function initReviewMeta() {
+  try {
+    const res = await fetch(`${API_BASE}/reviews/meta?restaurantId=${id}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+    if (!res.ok) return;
+
+    const body = await res.json();
+    const meta = body?.meta ?? null;
+
+    setupReviewFilterCounts(meta);
+  } catch (err) {
+    console.error('리뷰 메타 로딩 실패', err);
   }
 }
 
@@ -370,6 +361,9 @@ async function init() {
     throw e;
   }
 
+  applyRestaurantReviewMeta(data?.restaurant);
+
+  await initReviewMeta();
   await initReviews();
 
   updateTitle();
@@ -450,7 +444,7 @@ function setupReviewFilterButtons() {
   buttons.forEach((btn) => {
     btn.addEventListener('click', async () => {
       buttons.forEach((b) =>
-        b.classList.remove('restaurant_reviewList_filterButton-Selected')
+        b.classList.remove('restaurant_reviewList_filterButton-Selected'),
       );
       btn.classList.add('restaurant_reviewList_filterButton-Selected');
 
@@ -537,7 +531,7 @@ async function fetchReviewsPage({ reset = false } = {}) {
     }
 
     const body = await res.json();
-    const { meta, page, data } = parseReviewsResponse(body);
+    const { page, data } = parseReviewsResponse(body);
 
     hasMore = page?.hasMore ?? false;
     cursor = page?.nextCursor ?? null;
@@ -550,7 +544,7 @@ async function fetchReviewsPage({ reset = false } = {}) {
       renderReviewsAppend(data);
     }
   } catch (err) {
-    console.error('리뷰 로딩 실패', e);
+    console.error('리뷰 로딩 실패', err);
   } finally {
     isLoading = false;
     updateMoreButton();
@@ -577,7 +571,7 @@ function buildReviewItem(review) {
   const ratingTextEl = li.querySelector('.restaurant_reviewItem_RatingText');
   const blindBtn = li.querySelector('.restaurant_reviewItem_userBlind');
   const managementWrapEl = li.querySelector(
-    '.restaurant_reviewItem_managementWrap'
+    '.restaurant_reviewItem_managementWrap',
   );
 
   // 닉네임
@@ -606,7 +600,7 @@ function buildReviewItem(review) {
 
   // 날짜
   if (dateEl) {
-    const dStr = review.updateAt || review.createdAt;
+    const dStr = review.updatedAt || review.createdAt;
     if (dStr) {
       const d = new Date(dStr);
       const yyyy = d.getFullYear();
@@ -696,7 +690,7 @@ async function onReviewReactionClick(event) {
   const token = localStorage.getItem('token');
   if (!token) {
     location.href = `login.html?next=${encodeURIComponent(
-      location.pathname + location.search
+      location.pathname + location.search,
     )}`;
     return;
   }
@@ -750,7 +744,7 @@ function onReviewManagementClick(event) {
     if (!reviewId) return;
 
     const editUrl = `review_write.html?restaurant_id=${encodeURIComponent(
-      id
+      id,
     )}&review_id=${encodeURIComponent(reviewId)}`;
 
     location.href = editUrl;
@@ -776,7 +770,7 @@ function onReviewManagementClick(event) {
   }
 
   const managementBtn = event.target.closest(
-    '.restaurant_reviewItem_management'
+    '.restaurant_reviewItem_management',
   );
   if (!managementBtn) return;
 
@@ -831,8 +825,8 @@ async function deleteReview(reviewId, liElement) {
 
     liElement.remove();
 
-    applyReviewMeta(body.meta);
-    setupReviewFilterCounts(body.meta);
+    applyRestaurantReviewMeta(body);
+    await initReviewMeta();
 
     if (allReviews.length < 5 && hasMore) {
       await fetchReviewsPage({ reset: true });
@@ -865,7 +859,7 @@ async function onReviewBlindClick(event) {
   const token = localStorage.getItem('token');
   if (!token) {
     location.href = `login.html?next=${encodeURIComponent(
-      location.pathname + location.search
+      location.pathname + location.search,
     )}`;
     return;
   }
@@ -885,16 +879,8 @@ async function onReviewBlindClick(event) {
     return;
   }
 
-  allReviews = allReviews.filter(
-    (r) => Number(r.userId) !== Number(blockedUserId)
-  );
-
-  const items = document.querySelectorAll(
-    `.restaurant_reviewList_reviewItem[data-user-id="${blockedUserId}"]`
-  );
-  items.forEach((el) => el.remove());
-
-  setupReviewFilterCounts();
+  await fetchReviewsPage({ reset: true });
+  await initReviewMeta();
 }
 
 starButton.addEventListener('click', async function () {
@@ -936,7 +922,7 @@ starButton.addEventListener('click', async function () {
 const reviewImageModal = document.getElementById('reviewImageModal');
 const modalImg = reviewImageModal.querySelector('.reviewImageModal_img');
 const modalCounter = reviewImageModal.querySelector(
-  '.reviewImageModal_counter'
+  '.reviewImageModal_counter',
 );
 const modalPrevBtn = document.getElementById('review-image-prev');
 const modalNextBtn = document.getElementById('review-image-next');
@@ -1003,7 +989,7 @@ document.addEventListener('keydown', (e) => {
 
 function onReviewImageClick(event) {
   const pictureBtn = event.target.closest(
-    '.restaurant_reviewItem_PictureButton'
+    '.restaurant_reviewItem_PictureButton',
   );
 
   if (pictureBtn) {

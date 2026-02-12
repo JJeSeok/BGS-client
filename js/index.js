@@ -220,7 +220,7 @@ async function fetchList({ sido, sort, q, cursor, lat, lng } = {}) {
     ? `${API_BASE}/restaurants?${qs.toString()}`
     : `${API_BASE}/restaurants`;
 
-  const res = await fetch(url);
+  const res = await fetch(url, { headers: { ...authHeaders() } });
   if (!res.ok) throw new Error('목록 API 실패');
   return res.json();
 }
@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   selectedSort = SORT_LABEL[sortLabel] ?? null;
   applySortUI(sortLabel);
-  console.log(sortTouched);
 
   if (searchInput) searchInput.value = selectedQ;
 
