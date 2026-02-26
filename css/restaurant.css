@@ -874,15 +874,29 @@ ul li {
     display: none;
   }
 
+  .restaurant_reviewItem_user {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .restaurant_reviewItem_userNickname {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    word-break: break-word;
+  }
+
   .restaurant_reviewItem_Rating {
     margin-top: 10px;
   }
 
   .restaurant_reviewItem_userBlind {
-    position: absolute;
-    left: 8px;
-    top: 150px;
-    margin-top: 0;
+    position: static;
+    margin-top: 3px;
+    width: 100%;
+    max-width: 90px;
   }
 }
 

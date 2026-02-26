@@ -670,6 +670,15 @@ function buildReviewItem(review) {
     if (blindBtn) blindBtn.dataset.blockedUserId = review.userId;
   }
 
+  function moveBlindButtonToUserAreaIfDesktop(li) {
+    if (window.matchMedia('(min-width: 769px)').matches) {
+      const userArea = li.querySelector('.restaurant_reviewItem_user');
+      const blindBtn = li.querySelector('.restaurant_reviewItem_userBlind');
+      if (userArea && blindBtn) userArea.appendChild(blindBtn);
+    }
+  }
+
+  moveBlindButtonToUserAreaIfDesktop(li);
   return li;
 }
 
