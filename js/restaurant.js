@@ -200,6 +200,39 @@ function updateInfo() {
     : '식당 소개를 입력해주세요.';
 }
 
+function formatPrice(price) {
+  return `${Number(price).toLocaleString('ko-KR')}원`;
+}
+
+function updateMenus(menus = []) {
+  const menuListEl = document.getElementById('restaurant_MenuList');
+  if (!menuListEl) return;
+
+  if (!Array.isArray(menus) || menus.length === 0) {
+    const emptyItem = document.createElement('li');
+    emptyItem.className = 'restaurant_MenuItem restaurant_MenuItem--empty';
+    emptyItem.textContent = '등록된 메뉴가 없습니다.';
+    menuListEl.appendChild(emptyItem);
+    return;
+  }
+
+  menus.forEach((menu) => {
+    const item = document.createElement('li');
+    item.className = 'restaurant_MenuItem';
+
+    const nameEl = document.createElement('span');
+    nameEl.className = 'restaurant_Menu';
+    nameEl.textContent = menu.name ?? '';
+
+    const priceEl = document.createElement('span');
+    priceEl.className = 'restaurant_MenuPrice';
+    priceEl.textContent = formatPrice(menu.price ?? 0);
+
+    item.append(nameEl, priceEl);
+    menuListEl.appendChild(item);
+  });
+}
+
 function initRestaurantMap() {
   if (!mapContainer) return;
   if (!window.naver || !naver.maps) {
@@ -370,6 +403,7 @@ async function init() {
   updateImg();
   updateHeader();
   updateStatus();
+  updateMenus(data?.restaurant.menus);
   wireReviewLink();
   updateInfo();
   initRestaurantMap();

@@ -276,24 +276,34 @@ ul li {
 }
 
 .restaurant_MenuList {
-  display: flex;
-  flex-direction: column;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 260px;
 }
 
 .restaurant_MenuItem {
   display: flex;
-  flex-direction: row;
-  border-bottom: 1px solid #e9e9e9;
-  margin-bottom: 4px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 4px 0;
+  border-bottom: 1px solid #e5e5e5;
 }
 
 .restaurant_Menu {
-  margin-right: 30px;
-  white-space: normal;
+  color: #333;
+  word-break: keep-all;
 }
 
 .restaurant_MenuPrice {
-  margin-left: auto;
+  color: #333;
+  white-space: nowrap;
+}
+
+.restaurant_MenuItem--empty {
+  color: #888;
+  border-bottom: none;
 }
 
 .update {
