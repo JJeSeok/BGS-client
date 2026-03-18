@@ -275,6 +275,51 @@ ul li {
   list-style: none;
 }
 
+.restaurant_businessInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.restaurant_businessStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.restaurant_businessStatus.is-open {
+  background-color: #eaf8ee;
+  color: #1f8f4c;
+}
+
+.restaurant_businessStatus.is-closed {
+  background-color: #fff1f2;
+  color: #e11d48;
+}
+
+.restaurant_businessStatus.is-24hours {
+  background-color: #eef4ff;
+  color: #2563eb;
+}
+
+.restaurant_businessStatus.is-unknown {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.restaurant_businessHours {
+  font-size: 14px;
+  color: #555;
+  line-height: 1.4;
+}
+
 .restaurant_MenuList {
   list-style: none;
   margin: 0;

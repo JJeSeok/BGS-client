@@ -183,6 +183,9 @@ function updateInfo() {
   // 음식 종류
   rows[2].textContent = data?.restaurant.category ?? '';
 
+  // 영업시간
+  renderBusinessInfo(data?.restaurant);
+
   // 업데이트 일시
   const time = document.querySelector('.update time');
   if (time && data?.restaurant.updatedAt) {
@@ -198,6 +201,38 @@ function updateInfo() {
     ?.restaurant.description
     ? data.restaurant.description
     : '식당 소개를 입력해주세요.';
+}
+
+function renderBusinessInfo(restaurant) {
+  const statusEl = document.getElementById('restaurant_businessStatus');
+  const hoursEl = document.getElementById('restaurant_businessHours');
+  const infoWrapEl = document.getElementById('restaurant_businessInfo');
+
+  if (!statusEl || !hoursEl || !infoWrapEl) return;
+
+  if (restaurant.is_24_hours) {
+    statusEl.textContent = '24시간 영업';
+    statusEl.classList.add('is-24hours');
+    hoursEl.textContent = restaurant.businessHours ?? '';
+    return;
+  }
+
+  if (restaurant.isOpen === true) {
+    statusEl.textContent = '영업중';
+    statusEl.classList.add('is-open');
+    hoursEl.textContent = restaurant.businessHours ?? '';
+    return;
+  }
+
+  if (restaurant.isOpen === false) {
+    statusEl.textContent = '영업 종료';
+    statusEl.classList.add('is-closed');
+    hoursEl.textContent = restaurant.businessHours ?? '';
+    return;
+  }
+
+  statusEl.textContent = '영업시간 정보 없음';
+  statusEl.classList.add('is-unknown');
 }
 
 function formatPrice(price) {
