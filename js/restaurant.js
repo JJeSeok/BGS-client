@@ -185,6 +185,7 @@ function updateInfo() {
 
   // 영업시간
   renderBusinessInfo(data?.restaurant);
+  renderWeeklyBusinessHours(data?.restaurant.restaurantHours);
 
   // 업데이트 일시
   const time = document.querySelector('.update time');
@@ -204,35 +205,55 @@ function updateInfo() {
 }
 
 function renderBusinessInfo(restaurant) {
+  const business = restaurant.todayBusiness;
+
   const statusEl = document.getElementById('restaurant_businessStatus');
   const hoursEl = document.getElementById('restaurant_businessHours');
-  const infoWrapEl = document.getElementById('restaurant_businessInfo');
+  const subEl = document.getElementById('restaurant_businessSub');
 
-  if (!statusEl || !hoursEl || !infoWrapEl) return;
+  if (!statusEl || !hoursEl || !subEl) return;
 
-  if (restaurant.is_24_hours) {
-    statusEl.textContent = '24시간 영업';
-    statusEl.classList.add('is-24hours');
-    hoursEl.textContent = restaurant.businessHours ?? '';
+  if (!business) {
+    statusEl.textContent = '영업시간 정보 없음';
+    statusEl.classList.add('is-unknown');
     return;
   }
 
-  if (restaurant.isOpen === true) {
+  if (business.status === 'OPEN') {
     statusEl.textContent = '영업중';
     statusEl.classList.add('is-open');
-    hoursEl.textContent = restaurant.businessHours ?? '';
-    return;
-  }
-
-  if (restaurant.isOpen === false) {
+  } else if (business.status === 'CLOSED') {
     statusEl.textContent = '영업 종료';
     statusEl.classList.add('is-closed');
-    hoursEl.textContent = restaurant.businessHours ?? '';
-    return;
+  } else if (business.status === 'BREAK_TIME') {
+    statusEl.textContent = '브레이크타임';
+    statusEl.classList.add('is-break');
+  } else if (business.status === 'HOLIDAY') {
+    statusEl.textContent = '휴무일';
+    statusEl.classList.add('is-holiday');
+  } else if (business.status === 'OPEN_24_HOURS') {
+    statusEl.textContent = '24시간 영업';
+    statusEl.classList.add('is-24hours');
+  } else {
+    statusEl.textContent = '영업시간 정보 없음';
+    statusEl.classList.add('is-unknown');
   }
 
-  statusEl.textContent = '영업시간 정보 없음';
-  statusEl.classList.add('is-unknown');
+  if (business.businessHours) {
+    hoursEl.textContent = business.businessHours;
+  }
+
+  const subTexts = [];
+
+  if (business.breakTime) {
+    subTexts.push(`브레이크타임 ${business.breakTime}`);
+  }
+
+  if (business.lastOrder) {
+    subTexts.push(`라스트오더 ${business.lastOrder}`);
+  }
+
+  subEl.textContent = subTexts.join(' · ');
 }
 
 function formatPrice(price) {
@@ -1082,7 +1103,134 @@ function onReviewImageClick(event) {
   }
 }
 
+const DAY_NAMES = {
+  0: '일',
+  1: '월',
+  2: '화',
+  3: '수',
+  4: '목',
+  5: '금',
+  6: '토',
+};
+
+const DISPLAY_DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
+
+function formatHours(timeStr) {
+  if (!timeStr) return null;
+  return timeStr.slice(0, 5);
+}
+
+function formatTimeRange(startTime, endTime) {
+  if (!startTime || !endTime) return null;
+  return `${formatHours(startTime)} ~ ${formatHours(endTime)}`;
+}
+
+function getWeeklyHoursMainText(hour) {
+  if (hour.is_closed) return '휴무';
+  if (hour.is_24_hours) return '00:00 ~ 24:00';
+
+  const businessHours = formatTimeRange(hour.open_time, hour.close_time);
+  return businessHours ?? '영업시간 정보 없음';
+}
+
+function getWeeklyHoursSubText(hour) {
+  const subTexts = [];
+
+  if (hour.break_start_time && hour.break_end_time) {
+    subTexts.push(
+      `브레이크타임 ${formatTimeRange(hour.break_start_time, hour.break_end_time)}`,
+    );
+  }
+
+  if (hour.last_order_time) {
+    subTexts.push(`라스트오더 ${formatHours(hour.last_order_time)}`);
+  }
+
+  return subTexts.join(' · ');
+}
+
+function renderWeeklyBusinessHours(restaurantHours = []) {
+  const listEl = document.getElementById('restaurant_weeklyHours');
+  if (!listEl) return;
+
+  if (!Array.isArray(restaurantHours) || restaurantHours.length === 0) {
+    const item = document.createElement('li');
+    item.className = 'restaurant_weeklyHoursItem is-empty';
+    item.textContent = '주간 영업시간 정보가 없습니다.';
+    listEl.appendChild(item);
+    return;
+  }
+
+  const today = new Date().getDay();
+
+  const hourMap = new Map(
+    restaurantHours.map((hour) => [Number(hour.day_of_week), hour]),
+  );
+
+  DISPLAY_DAY_ORDER.forEach((day) => {
+    const hour = hourMap.get(day);
+
+    const item = document.createElement('li');
+    item.className = 'restaurant_weeklyHoursItem';
+
+    if (day === today) {
+      item.classList.add('is-today');
+    }
+
+    const dayEl = document.createElement('span');
+    dayEl.className = 'restaurant_weeklyHoursDay';
+    dayEl.textContent = DAY_NAMES[day];
+
+    const contentEl = document.createElement('div');
+    contentEl.className = 'restaurant_weeklyHoursContent';
+
+    const mainEl = document.createElement('span');
+    mainEl.className = 'restaurant_weeklyHoursMain';
+
+    if (!hour) {
+      mainEl.textContent = '영업시간 정보 없음';
+      contentEl.appendChild(mainEl);
+      item.append(dayEl, contentEl);
+      listEl.appendChild(item);
+      return;
+    }
+
+    mainEl.textContent = getWeeklyHoursMainText(hour);
+    contentEl.appendChild(mainEl);
+
+    const subText = getWeeklyHoursSubText(hour);
+    if (subText) {
+      const subEl = document.createElement('span');
+      subEl.className = 'restaurant_weeklyHoursSub';
+      subEl.textContent = subText;
+      contentEl.appendChild(subEl);
+    }
+
+    item.append(dayEl, contentEl);
+    listEl.appendChild(item);
+  });
+}
+
+function setupWeeklyHoursToggle() {
+  const toggleBtn = document.getElementById('restaurant_businessToggle');
+  const listEl = document.getElementById('restaurant_weeklyHours');
+
+  if (!toggleBtn || !listEl) return;
+
+  toggleBtn.addEventListener('click', () => {
+    const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+
+    toggleBtn.setAttribute('aria-expanded', String(!isExpanded));
+    toggleBtn.textContent = isExpanded
+      ? '주간 영업시간 보기'
+      : '주간 영업시간 닫기';
+
+    listEl.hidden = isExpanded;
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
   init();
+  setupWeeklyHoursToggle();
 });

@@ -277,6 +277,12 @@ ul li {
 
 .restaurant_businessInfo {
   display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.restaurant_businessMain {
+  display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
@@ -304,6 +310,16 @@ ul li {
   color: #e11d48;
 }
 
+.restaurant_businessStatus.is-break {
+  background-color: #fff7ed;
+  color: #ea580c;
+}
+
+.restaurant_businessStatus.is-holiday {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
 .restaurant_businessStatus.is-24hours {
   background-color: #eef4ff;
   color: #2563eb;
@@ -318,6 +334,111 @@ ul li {
   font-size: 14px;
   color: #555;
   line-height: 1.4;
+}
+
+.restaurant_businessSub {
+  font-size: 13px;
+  color: #777;
+  line-height: 1.4;
+}
+
+.restaurant_businessToggle {
+  width: fit-content;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: #555;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.restaurant_businessToggle:hover {
+  color: #222;
+}
+
+.restaurant_weeklyHours {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.restaurant_weeklyHoursItem {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid #f1f1f1;
+}
+
+.restaurant_weeklyHoursItem.is-today {
+  background-color: #f8fafc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-left: -12px;
+  margin-right: -12px;
+  border-top-color: transparent;
+}
+
+.restaurant_weeklyHoursItem.is-today::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 4px;
+  border-radius: 999px;
+  background-color: #2563eb;
+}
+
+.restaurant_weeklyHoursItem.is-empty {
+  border-top: 0;
+  padding: 4px 0 0;
+  color: #888;
+}
+
+.restaurant_weeklyHoursDay {
+  min-width: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #222;
+  flex-shrink: 0;
+}
+
+.restaurant_weeklyHoursItem.is-today .restaurant_weeklyHoursDay {
+  color: #2563eb;
+}
+
+.restaurant_weeklyHoursContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.restaurant_weeklyHoursMain {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+}
+
+.restaurant_weeklyHoursItem.is-today .restaurant_weeklyHoursMain {
+  font-weight: 700;
+  color: #111827;
+}
+
+.restaurant_weeklyHoursSub {
+  font-size: 13px;
+  color: #777;
+  line-height: 1.4;
+}
+
+.restaurant_weeklyHoursItem.is-today .restaurant_weeklyHoursSub {
+  color: #4b5563;
 }
 
 .restaurant_MenuList {

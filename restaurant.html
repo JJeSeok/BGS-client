@@ -172,14 +172,37 @@
                         class="restaurant_businessInfo"
                         id="restaurant_businessInfo"
                       >
-                        <span
-                          class="restaurant_businessStatus"
-                          id="restaurant_businessStatus"
-                        ></span>
-                        <span
-                          class="restaurant_businessHours"
-                          id="restaurant_businessHours"
-                        ></span>
+                        <div class="restaurant_businessMain">
+                          <span
+                            class="restaurant_businessStatus"
+                            id="restaurant_businessStatus"
+                          ></span>
+                          <span
+                            class="restaurant_businessHours"
+                            id="restaurant_businessHours"
+                          ></span>
+                        </div>
+
+                        <div
+                          class="restaurant_businessSub"
+                          id="restaurant_businessSub"
+                        ></div>
+
+                        <button
+                          type="button"
+                          class="restaurant_businessToggle"
+                          id="restaurant_businessToggle"
+                          aria-expanded="false"
+                          aria-controls="restaurant_weeklyHours"
+                        >
+                          주간 영업시간 보기
+                        </button>
+
+                        <ul
+                          class="restaurant_weeklyHours"
+                          id="restaurant_weeklyHours"
+                          hidden
+                        ></ul>
                       </div>
                     </td>
                   </tr>
