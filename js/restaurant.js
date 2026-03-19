@@ -1151,18 +1151,17 @@ function getWeeklyHoursSubText(hour) {
 
 function renderWeeklyBusinessHours(restaurantHours = []) {
   const listEl = document.getElementById('restaurant_weeklyHours');
-  if (!listEl) return;
+  const toggleBtn = document.getElementById('restaurant_businessToggle');
 
-  if (!Array.isArray(restaurantHours) || restaurantHours.length === 0) {
-    const item = document.createElement('li');
-    item.className = 'restaurant_weeklyHoursItem is-empty';
-    item.textContent = '주간 영업시간 정보가 없습니다.';
-    listEl.appendChild(item);
-    return;
-  }
+  if (!listEl || !toggleBtn) return;
+
+  const hasWeeklyHours =
+    Array.isArray(restaurantHours) && restaurantHours.length > 0;
+
+  toggleBtn.hidden = !hasWeeklyHours;
+  if (!hasWeeklyHours) return;
 
   const today = new Date().getDay();
-
   const hourMap = new Map(
     restaurantHours.map((hour) => [Number(hour.day_of_week), hour]),
   );
