@@ -178,10 +178,16 @@ function updateInfo() {
   );
 
   // 전화
-  rows[1].textContent = data?.restaurant.phone ?? '';
+  renderPhoneNumber(data?.restaurant.phone);
 
   // 음식 종류
   rows[2].textContent = data?.restaurant.category ?? '';
+
+  // 주차 정보
+  renderParkingInfo(data?.restaurant.parking_info);
+
+  //  편의정보
+  renderFeatures(data?.restaurant);
 
   // 영업시간
   renderBusinessInfo(data?.restaurant);
@@ -202,6 +208,60 @@ function updateInfo() {
     ?.restaurant.description
     ? data.restaurant.description
     : '식당 소개를 입력해주세요.';
+}
+
+function renderPhoneNumber(phone) {
+  const phoneLinkEl = document.getElementById('restaurant_phoneLink');
+  if (!phoneLinkEl) return;
+
+  if (!phone) {
+    phoneLinkEl.textContent = '정보 없음';
+    phoneLinkEl.removeAttribute('href');
+    return;
+  }
+
+  phoneLinkEl.textContent = phone;
+  phoneLinkEl.href = `tel:${phone}`;
+  phoneLinkEl.setAttribute('aria-label', `${phone}로 전화하기`);
+}
+
+function renderParkingInfo(parkingInfo) {
+  const parkingEl = document.getElementById('restaurant_parkingInfo');
+  if (!parkingEl) return;
+
+  if (!parkingInfo) {
+    parkingEl.textContent = '정보 없음';
+    return;
+  }
+
+  parkingEl.textContent = parkingInfo;
+}
+
+function renderFeatures(restaurant) {
+  const featureListEl = document.getElementById('restaurant_featureList');
+  if (!featureListEl) return;
+
+  const features = [
+    { key: 'takeout', label: '포장' },
+    { key: 'delivery', label: '배달' },
+    { key: 'reservation', label: '예약' },
+  ];
+
+  const availableFeatures = features.filter(
+    (feature) => restaurant[feature.key],
+  );
+
+  if (availableFeatures.length === 0) {
+    featureListEl.textContent = '정보 없음';
+    return;
+  }
+
+  availableFeatures.forEach((feature) => {
+    const badge = document.createElement('span');
+    badge.className = 'restaurant_featureBadge';
+    badge.textContent = feature.label;
+    featureListEl.appendChild(badge);
+  });
 }
 
 function renderBusinessInfo(restaurant) {

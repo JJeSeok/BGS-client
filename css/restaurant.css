@@ -275,6 +275,34 @@ ul li {
   list-style: none;
 }
 
+.restaurant_phoneLink {
+  color: inherit;
+  text-decoration: none;
+}
+
+.restaurant_phoneLink:hover {
+  text-decoration: underline;
+}
+
+.restaurant_featureList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.restaurant_featureBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
 .restaurant_businessInfo {
   display: flex;
   flex-direction: column;
