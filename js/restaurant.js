@@ -195,12 +195,15 @@ function updateInfo() {
 
   // 업데이트 일시
   const time = document.querySelector('.update time');
-  if (time && data?.restaurant.updatedAt) {
-    const d = new Date(data.restaurant.updatedAt);
+  if (time && data?.restaurant.info_updated_at) {
+    const d = new Date(data.restaurant.info_updated_at);
+
+    const formatter = new Intl.DateTimeFormat('ko-KR', {
+      timeZone: 'Asia/Seoul',
+    }).format(d);
+
     time.dateTime = d.toISOString();
-    time.textContent = `${d.getFullYear()}. ${
-      d.getMonth() + 1
-    }. ${d.getDate()}`;
+    time.textContent = formatter.slice(0, -1);
   }
 
   // 식당 소개
