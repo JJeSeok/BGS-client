@@ -142,7 +142,9 @@ input[type='radio'] {
   justify-content: center;
   opacity: 0;
   background: rgba(0, 0, 0, 0);
-  transition: opacity 0.15s ease, background 0.15 ease;
+  transition:
+    opacity 0.15s ease,
+    background 0.15 ease;
 }
 
 .user_photo:hover .user_photoOverlay,
@@ -188,7 +190,9 @@ input[type='radio'] {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: background 0.15s ease, border-color 0.15s ease color 0.15s ease,
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease color 0.15s ease,
     transform 0.05s ease;
 }
 
@@ -630,7 +634,9 @@ input[type='radio'] {
 .likeList_wrap,
 .blindList_wrap {
   gap: 16px;
-  transition: background-color 0.15s ease, transform 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    transform 0.15s ease;
   border-radius: 10px;
 }
 
@@ -736,6 +742,149 @@ input[type='radio'] {
   text-align: center;
   color: rgb(51, 51, 51);
   background-color: rgb(255, 255, 255);
+}
+
+.ownerRestaurant_content {
+  padding: 4px 0 0;
+}
+
+.ownerRestaurant_count {
+  display: inline-block;
+  margin-bottom: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ownerRestaurant_empty {
+  padding: 24px 22px;
+  border: 1px solid #eceff3;
+  border-radius: 18px;
+  background-color: #fafbfc;
+}
+
+.ownerRestaurant_emptyTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 800;
+  color: #1f2937;
+}
+
+.ownerRestaurant_emptyText {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #6b7280;
+}
+
+.ownerRestaurant_emptyButton {
+  margin-top: 18px;
+  padding: 11px 16px;
+  border: 1px solid #f3d56b;
+  border-radius: 12px;
+  background-color: #fff7d6;
+  font-size: 14px;
+  font-weight: 700;
+  color: #8a5a00;
+  cursor: pointer;
+}
+
+.ownerRestaurant_list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ownerRestaurant_card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #eceff3;
+  border-radius: 16px;
+  background-color: #fff;
+}
+
+.ownerRestaurant_thumbLink {
+  flex-shrink: 0;
+}
+
+.ownerRestaurant_thumb {
+  width: 84px;
+  height: 84px;
+  border-radius: 14px;
+  object-fit: cover;
+  background-color: #f4f6f8;
+  display: block;
+}
+
+.ownerRestaurant_body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ownerRestaurant_name {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  color: #1f2937;
+}
+
+.ownerRestaurant_info {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #5f6b7a;
+}
+
+.ownerRestaurant_subInfo {
+  margin: 4px 0 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #7a8699;
+}
+
+.ownerRestaurant_buttonWrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.ownerRestaurant_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.ownerRestaurant_button--light {
+  background-color: #f4f6f8;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.ownerRestaurant_button--light:hover {
+  background-color: #eceff3;
+}
+
+.ownerRestaurant_button--dark {
+  background-color: #fff7d6;
+  color: #8a5a00;
+  border: 1px solid #f3d56b;
+}
+
+.ownerRestaurant_button--dark:hover {
+  background-color: #fff1b8;
 }
 
 .pwCheck_content {
@@ -1127,8 +1276,11 @@ input[type='radio'] {
     background: #ffffff;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
     cursor: pointer;
-    transition: background 0.15s ease, box-shadow 0.15s ease,
-      transform 0.15s ease, border-color 0.15s ease;
+    transition:
+      background 0.15s ease,
+      box-shadow 0.15s ease,
+      transform 0.15s ease,
+      border-color 0.15s ease;
   }
 
   .inside_action_button1:hover,

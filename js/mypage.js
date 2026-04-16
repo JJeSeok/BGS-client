@@ -200,7 +200,7 @@ for (let i = 0; i < actionButton2.length; i++) {
 }
 
 const managementButton = document.querySelectorAll(
-  '.restaurant_reviewItem_management'
+  '.restaurant_reviewItem_management',
 );
 const managementDiv = document.querySelectorAll('.managementWrap');
 
@@ -367,7 +367,7 @@ async function onSubmitProfileForm(event) {
     if (newPassword !== newPasswordConfirm) {
       showError(
         'newPwConfirm',
-        '새 비밀번호와 비밀번호 확인이 일치하지 않습니다.'
+        '새 비밀번호와 비밀번호 확인이 일치하지 않습니다.',
       );
       newPwConfirmInput.focus();
       return;
@@ -438,7 +438,7 @@ async function onSubmitProfileForm(event) {
 
     if (!res.ok) {
       alert(
-        '회원정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.'
+        '회원정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
       );
       return;
     }
@@ -469,7 +469,7 @@ function applyHonorLevelBadge(el, reviewCount) {
     'level-bronze',
     'level-silver',
     'level-gold',
-    'level-platinum'
+    'level-platinum',
   );
   el.classList.add(getLevelByReviewCount(reviewCount));
 }
@@ -489,7 +489,7 @@ async function fetchMyReviews() {
       {
         method: 'GET',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      }
+      },
     );
 
     if (!res.ok) {
@@ -522,7 +522,7 @@ async function loadMyReviews() {
   const totalLikes = myReviews.reduce((sum, r) => sum + (r.likeCount || 0), 0);
   const totalDisLikes = myReviews.reduce(
     (sum, r) => sum + (r.dislikeCount || 0),
-    0
+    0,
   );
 
   const likeStatEl = document.getElementById('stat-reaction-like');
@@ -675,7 +675,7 @@ async function onReviewReactionClick(event) {
   const token = localStorage.getItem('token');
   if (!token) {
     location.href = `login.html?next=${encodeURIComponent(
-      location.pathname + location.search
+      location.pathname + location.search,
     )}`;
     return;
   }
@@ -730,9 +730,9 @@ function onReviewManagementClick(event) {
     if (!reviewId || !restaurantId) return;
 
     const editUrl = `review_write.html?restaurant_id=${encodeURIComponent(
-      restaurantId
+      restaurantId,
     )}&review_id=${encodeURIComponent(reviewId)}&next=${encodeURIComponent(
-      '/mypage.html'
+      '/mypage.html',
     )}`;
 
     location.href = editUrl;
@@ -758,7 +758,7 @@ function onReviewManagementClick(event) {
   }
 
   const managementBtn = event.target.closest(
-    '.restaurant_reviewItem_management'
+    '.restaurant_reviewItem_management',
   );
   if (!managementBtn) return;
 
@@ -814,11 +814,11 @@ async function deleteReview(reviewId, liElement) {
 
       const totalLikes = myReviews.reduce(
         (sum, r) => sum + (r.likeCount || 0),
-        0
+        0,
       );
       const totalDisLikes = myReviews.reduce(
         (sum, r) => sum + (r.dislikeCount || 0),
-        0
+        0,
       );
 
       const likeStatEl = document.getElementById('stat-reaction-like');
@@ -1067,7 +1067,7 @@ async function unlikeRestaurant(restaurantId) {
       {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      }
+      },
     );
 
     if (res.status === 401) return { ok: false, code: 401 };
@@ -1322,7 +1322,7 @@ async function unblockUser(blockedUserId) {
     {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
-    }
+    },
   );
 
   if (res.status === 401) return { ok: false, code: 401 };
@@ -1532,13 +1532,12 @@ function renderMyRequests(rows) {
 
     // 썸네일
     const img = document.createElement('img');
-    img.src = normalizeImgUrl(r.main_image_url);
+    img.src = normalizeImgUrl(r.main_image_url) || '/images/흠.png';
     img.alt = '요청 대표 이미지';
     img.style.width = '64px';
     img.style.height = '64px';
     img.style.objectFit = 'cover';
     img.style.borderRadius = '10px';
-    img.addEventListener('error', () => (img.src = '/images/흠.png'));
 
     const body = document.createElement('div');
     body.className = 'flex-grow-1';
@@ -1586,7 +1585,7 @@ function renderMyRequests(rows) {
     if (r.status === 'approved' && r.approved_restaurant_id) {
       const link = document.createElement('a');
       link.href = `/restaurant.html?id=${encodeURIComponent(
-        r.approved_restaurant_id
+        r.approved_restaurant_id,
       )}`;
       link.className = 'btn btn-sm btn-outline-success';
       link.textContent = '등록된 식당 보기';
@@ -1626,6 +1625,162 @@ async function initMyRestaurantRequests() {
   }
 }
 
+function buildOwnerRestaurant(restaurant) {
+  const card = document.createElement('div');
+  card.className = 'ownerRestaurant_card';
+
+  const thumbLink = document.createElement('a');
+  thumbLink.className = 'ownerRestaurant_thumbLink';
+  thumbLink.href = `/restaurant.html?id=${encodeURIComponent(restaurant.id)}`;
+
+  const thumb = document.createElement('img');
+  thumb.className = 'ownerRestaurant_thumb';
+  thumb.src = normalizeImgUrl(restaurant.main_image_url) || '/images/흠.png';
+  thumb.alt = `${restaurant.name} 대표 이미지`;
+
+  thumbLink.appendChild(thumb);
+
+  const body = document.createElement('div');
+  body.className = 'ownerRestaurant_body';
+
+  const title = document.createElement('h3');
+  title.className = 'ownerRestaurant_name';
+  title.textContent = restaurant.branch_info
+    ? `${restaurant.name} ${restaurant.branch_info}`
+    : restaurant.name;
+
+  const info = document.createElement('p');
+  info.className = 'ownerRestaurant_info';
+
+  const infoTexts = [];
+  infoTexts.push(restaurant.category);
+  if (restaurant.road_address) infoTexts.push(restaurant.road_address);
+  else if (restaurant.jibun_address) infoTexts.push(restaurant.jibun_address);
+
+  info.textContent = infoTexts.join(' · ');
+
+  const subInfo = document.createElement('p');
+  subInfo.className = 'ownerRestaurant_subInfo';
+
+  const subTexts = [];
+  if (restaurant.parking_info) subTexts.push(restaurant.parking_info);
+
+  const featureTexts = [];
+  if (restaurant.takeout === true || restaurant.takeout === 1)
+    featureTexts.push('포장');
+  if (restaurant.delivery === true || restaurant.delivery === 1)
+    featureTexts.push('배달');
+  if (restaurant.reservation === true || restaurant.reservation === 1)
+    featureTexts.push('예약');
+
+  if (featureTexts.length > 0) {
+    subTexts.push(featureTexts.join(' · '));
+  }
+
+  subInfo.textContent =
+    subTexts.length > 0
+      ? subTexts.join(' · ')
+      : '식당 정보를 관리할 수 있어요.';
+
+  const buttonWrap = document.createElement('div');
+  buttonWrap.className = 'ownerRestaurant_buttonWrap';
+
+  const detailLink = document.createElement('a');
+  detailLink.className = 'ownerRestaurant_button ownerRestaurant_button--light';
+  detailLink.href = `/restaurant.html?id=${encodeURIComponent(restaurant.id)}`;
+  detailLink.textContent = '상세 보기';
+
+  const editLink = document.createElement('a');
+  editLink.className = 'ownerRestaurant_button ownerRestaurant_button--dark';
+  editLink.href = `/restaurant_edit.html?id=${encodeURIComponent(restaurant.id)}`;
+  editLink.textContent = '수정하기';
+
+  buttonWrap.append(detailLink, editLink);
+  body.append(title, info, subInfo, buttonWrap);
+  card.append(thumbLink, body);
+
+  return card;
+}
+
+function renderOwnerRestaurants(restaurants = []) {
+  const countEl = document.getElementById('ownerRestaurantCount');
+  const emptyEl = document.getElementById('ownerRestaurantEmpty');
+  const listEl = document.getElementById('ownerRestaurantList');
+
+  if (!countEl || !emptyEl || !listEl) return;
+
+  const hasRestaurants = Array.isArray(restaurants) && restaurants.length > 0;
+
+  countEl.textContent = `총 ${hasRestaurants ? restaurants.length : 0}개`;
+  emptyEl.hidden = hasRestaurants;
+  listEl.hidden = !hasRestaurants;
+
+  if (!hasRestaurants) return;
+
+  const fragment = document.createDocumentFragment();
+
+  restaurants.forEach((restaurant) => {
+    fragment.appendChild(buildOwnerRestaurant(restaurant));
+  });
+
+  listEl.appendChild(fragment);
+}
+
+function renderOwnerRestaurantsError() {
+  const countEl = document.getElementById('ownerRestaurantCount');
+  const emptyEl = document.getElementById('ownerRestaurantEmpty');
+  const listEl = document.getElementById('ownerRestaurantList');
+
+  if (!countEl || !emptyEl || !listEl) return;
+
+  countEl.textContent = '총 0개';
+  listEl.hidden = true;
+  emptyEl.hidden = false;
+
+  const titleEl = emptyEl.querySelector('.ownerRestaurant_emptyTitle');
+  const textEl = emptyEl.querySelector('.ownerRestaurant_emptyText');
+
+  if (titleEl) titleEl.textContent = '내 식당 목록을 불러오지 못했습니다.';
+  if (textEl) textEl.textContent = '잠시 후 다시 시도해주세요.';
+}
+
+function setupOwnerRestaurantEmptyButton() {
+  const button = document.getElementById('goRestaurantRequestButton');
+  if (!button) return;
+
+  button.addEventListener('click', () => {
+    showSection('section-restaurant-requests');
+    setActiveSide('section-restaurant-requests');
+  });
+}
+
+async function fetchMyRestaurants() {
+  const res = await fetch(`${API_BASE}/users/me/restaurants`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+  });
+
+  if (res.status === 401) {
+    const back = '/mypage.html';
+    location.href = `login.html?next=${encodeURIComponent(back)}`;
+    return null;
+  }
+
+  if (!res.ok) throw new Error('내 식당 목록을 불러오지 못했습니다.');
+
+  return res.json();
+}
+
+async function loadOwnerRestaurants() {
+  try {
+    const restaurants = await fetchMyRestaurants();
+    renderOwnerRestaurants(restaurants);
+  } catch (err) {
+    console.error(err);
+    renderOwnerRestaurantsError();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   await initAuthMenu();
   await loadMyReviews();
@@ -1633,6 +1788,8 @@ document.addEventListener('DOMContentLoaded', async function () {
   await loadLikedRestaurants();
   await loadBlindList();
   await initMyRestaurantRequests();
+  setupOwnerRestaurantEmptyButton();
+  await loadOwnerRestaurants();
 
   // 초기 진입: 맛집 리뷰 탭 열기
   showSection('section-reviews');
