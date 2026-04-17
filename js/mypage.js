@@ -4,6 +4,13 @@ let currentUser = null;
 let myReviews = [];
 const reviewContainer = document.getElementById('review_content');
 const reviewItemTemplate = document.getElementById('review-item-template');
+const reviewMoreButton = document.getElementById('reviewMoreButton');
+
+const reviewPageState = {
+  cursor: null,
+  hasMore: true,
+  isLoading: false,
+};
 
 const RATING_CATEGORY_MAP = {
   good: { label: '맛있다', cssClass: 'Rating_Recommend' },
@@ -15,6 +22,8 @@ if (reviewContainer) {
   reviewContainer.addEventListener('click', onReviewReactionClick);
   reviewContainer.addEventListener('click', onReviewManagementClick);
 }
+
+reviewMoreButton?.addEventListener('click', () => loadMyReviews());
 
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
@@ -474,7 +483,29 @@ function applyHonorLevelBadge(el, reviewCount) {
   el.classList.add(getLevelByReviewCount(reviewCount));
 }
 
-async function fetchMyReviews() {
+function updateReviewMoreButton() {
+  if (!reviewMoreButton) return;
+
+  if (reviewPageState.isLoading) {
+    reviewMoreButton.hidden = false;
+    reviewMoreButton.disabled = true;
+    reviewMoreButton.textContent = '불러오는 중...';
+    return;
+  }
+
+  if (reviewPageState.hasMore) {
+    reviewMoreButton.hidden = false;
+    reviewMoreButton.disabled = false;
+    reviewMoreButton.textContent = '더보기';
+    return;
+  }
+
+  reviewMoreButton.hidden = true;
+  reviewMoreButton.disabled = false;
+  reviewMoreButton.textContent = '더보기';
+}
+
+async function fetchMyReviews(cursor = null) {
   if (!currentUser) {
     const profile = await fetchMyProfile();
     if (!profile) return null;
@@ -484,70 +515,82 @@ async function fetchMyReviews() {
   const userId = currentUser.id;
 
   try {
-    const res = await fetch(
-      `${API_BASE}/reviews?userId=${encodeURIComponent(userId)}`,
-      {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', ...authHeaders() },
-      },
-    );
+    const qs = new URLSearchParams();
+    qs.set('userId', userId);
+
+    if (cursor) {
+      qs.set('cursor', cursor);
+    }
+
+    const res = await fetch(`${API_BASE}/reviews?${qs.toString()}`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
 
     if (!res.ok) {
       console.error('failed to fetch my reviews', res.status);
       return null;
     }
 
-    const reviews = await res.json();
-    return reviews;
+    return await res.json();
   } catch (err) {
     console.error('failed to fetch my reviews', err);
     return null;
   }
 }
 
-async function loadMyReviews() {
-  const reviews = await fetchMyReviews();
-  if (!reviews) return;
+async function loadMyReviews({ reset = false } = {}) {
+  if (reviewPageState.isLoading) return;
+  if (!reset && !reviewPageState.hasMore) return;
 
-  myReviews = reviews;
+  reviewPageState.isLoading = true;
+  updateReviewMoreButton();
 
-  const reviewCountEl = document.getElementById('stat-review-count');
-  if (reviewCountEl) {
-    reviewCountEl.textContent = myReviews.length;
+  if (reset) {
+    myReviews = [];
+    reviewPageState.cursor = null;
+    reviewPageState.hasMore = true;
+
+    if (reviewContainer) reviewContainer.innerHTML = '';
   }
 
-  const badgeEl = document.querySelector('.honor_level');
-  applyHonorLevelBadge(badgeEl, myReviews.length);
+  const body = await fetchMyReviews(reviewPageState.cursor);
 
-  const totalLikes = myReviews.reduce((sum, r) => sum + (r.likeCount || 0), 0);
-  const totalDisLikes = myReviews.reduce(
-    (sum, r) => sum + (r.dislikeCount || 0),
-    0,
-  );
+  reviewPageState.isLoading = false;
 
-  const likeStatEl = document.getElementById('stat-reaction-like');
-  const dislikeStatEl = document.getElementById('stat-reaction-dislike');
+  if (!body) {
+    updateReviewMoreButton();
+    return;
+  }
 
-  if (likeStatEl) likeStatEl.textContent = totalLikes;
-  if (dislikeStatEl) dislikeStatEl.textContent = totalDisLikes;
+  const reviews = Array.isArray(body?.data) ? body.data : [];
+  const nextCursor = body?.page?.nextCursor ?? null;
+  const hasMore = body?.page?.hasMore ?? false;
 
-  if (!reviewContainer) return;
-  reviewContainer.innerHTML = '';
+  myReviews = myReviews.concat(reviews);
+  reviewPageState.cursor = nextCursor;
+  reviewPageState.hasMore = hasMore;
 
-  if (myReviews.length === 0) {
+  if (!reviewContainer) {
+    updateReviewMoreButton();
+    return;
+  }
+
+  if (reset && myReviews.length === 0) {
     const emptyLi = document.createElement('li');
     emptyLi.className = 'restaurant_reviewList_reviewItem';
     emptyLi.style.padding = '40px 0';
     emptyLi.style.textAlign = 'center';
     emptyLi.textContent = '작성한 리뷰가 없습니다.';
     reviewContainer.appendChild(emptyLi);
-    return;
+  } else {
+    reviews.forEach((review) => {
+      const li = buildReviewItem(review);
+      reviewContainer.appendChild(li);
+    });
   }
 
-  myReviews.forEach((review) => {
-    const li = buildReviewItem(review);
-    reviewContainer.appendChild(li);
-  });
+  updateReviewMoreButton();
 }
 
 // 리뷰 생성
@@ -807,26 +850,7 @@ async function deleteReview(reviewId, liElement) {
 
       liElement.remove();
 
-      const reviewCountEl = document.getElementById('stat-review-count');
-      if (reviewCountEl) {
-        reviewCountEl.textContent = myReviews.length;
-      }
-
-      const totalLikes = myReviews.reduce(
-        (sum, r) => sum + (r.likeCount || 0),
-        0,
-      );
-      const totalDisLikes = myReviews.reduce(
-        (sum, r) => sum + (r.dislikeCount || 0),
-        0,
-      );
-
-      const likeStatEl = document.getElementById('stat-reaction-like');
-      const dislikeStatEl = document.getElementById('stat-reaction-dislike');
-
-      if (likeStatEl) likeStatEl.textContent = totalLikes;
-      if (dislikeStatEl) dislikeStatEl.textContent = totalDisLikes;
-
+      await loadMyReviewMeta();
       await loadVisitedRestaurants();
       return;
     }
@@ -1781,9 +1805,56 @@ async function loadOwnerRestaurants() {
   }
 }
 
+async function fetchMyReviewMeta() {
+  try {
+    const res = await fetch(`${API_BASE}/users/me/reviews/meta`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    });
+
+    if (!res.ok) {
+      console.error('failed to fetch my review meta', res.status);
+      return null;
+    }
+
+    return await res.json();
+  } catch (err) {
+    console.error('failed to fetch my review meta', err);
+    return null;
+  }
+}
+
+function updateReviewStats({ totalCount, totalLikeCount, totalDislikeCount }) {
+  const reviewCountEl = document.getElementById('stat-review-count');
+  if (reviewCountEl) reviewCountEl.textContent = totalCount;
+
+  const badgeEl = document.querySelector('.honor_level');
+  applyHonorLevelBadge(badgeEl, totalCount);
+
+  const likeStatEl = document.getElementById('stat-reaction-like');
+  const dislikeStatEl = document.getElementById('stat-reaction-dislike');
+
+  if (likeStatEl) likeStatEl.textContent = totalLikeCount;
+  if (dislikeStatEl) dislikeStatEl.textContent = totalDislikeCount;
+}
+
+async function loadMyReviewMeta() {
+  const body = await fetchMyReviewMeta();
+  const data = body?.data;
+
+  if (!data) return;
+
+  updateReviewStats({
+    totalCount: data.totalCount ?? 0,
+    totalLikeCount: data.totalLikeCount ?? 0,
+    totalDislikeCount: data.totalDislikeCount ?? 0,
+  });
+}
+
 document.addEventListener('DOMContentLoaded', async function () {
   await initAuthMenu();
-  await loadMyReviews();
+  await loadMyReviewMeta();
+  await loadMyReviews({ reset: true });
   await loadVisitedRestaurants();
   await loadLikedRestaurants();
   await loadBlindList();

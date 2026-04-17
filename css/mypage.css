@@ -596,6 +596,33 @@ input[type='radio'] {
   background-image: url(/assets/trash.svg);
 }
 
+.mypage_more_wrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.mypage_more_button {
+  min-width: 140px;
+  height: 44px;
+  padding: 0 20px;
+  border: 1px solid #d7dce3;
+  border-radius: 999px;
+  background: #fff;
+  color: #2f3438;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.mypage_more_button:hover:not(:disabled) {
+  background: #f8fafb;
+}
+
+.mypage_more_button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 .likeList_content,
 .visitList_content,
 .blindList_content {
