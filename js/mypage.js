@@ -21,6 +21,15 @@ const visitPageState = {
   isLoading: false,
 };
 
+const likeMoreButton = document.getElementById('likeMoreButton');
+
+const likePageState = {
+  items: [],
+  cursor: null,
+  hasMore: true,
+  isLoading: false,
+};
+
 const RATING_CATEGORY_MAP = {
   good: { label: '맛있다', cssClass: 'Rating_Recommend' },
   ok: { label: '괜찮다', cssClass: 'Rating_Ok' },
@@ -34,6 +43,7 @@ if (reviewContainer) {
 
 reviewMoreButton?.addEventListener('click', () => loadMyReviews());
 visitMoreButton?.addEventListener('click', () => loadVisitedRestaurants());
+likeMoreButton?.addEventListener('click', () => loadLikedRestaurants());
 
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
@@ -989,7 +999,6 @@ async function loadVisitedRestaurants({ reset = false } = {}) {
     visitPageState.items = [];
     visitPageState.cursor = null;
     visitPageState.hasMore = true;
-    visitPageState.totalCount = null;
   }
 
   const body = await fetchVisitedRestaurants(visitPageState.cursor);
@@ -1014,36 +1023,44 @@ async function loadVisitedRestaurants({ reset = false } = {}) {
   updateSectionMoreButton(visitMoreButton, visitPageState);
 }
 
-async function fetchLikedRestaurants() {
+async function fetchLikedRestaurants(cursor = null) {
   try {
-    const res = await fetch(`${API_BASE}/users/me/liked-restaurants`, {
+    const qs = new URLSearchParams();
+
+    if (cursor) qs.set('cursor', cursor);
+
+    const query = qs.toString();
+    const url = query
+      ? `${API_BASE}/users/me/liked-restaurants?${query}`
+      : `${API_BASE}/users/me/liked-restaurants`;
+
+    const res = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
 
     if (res.status === 401) return null;
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.error('failed to fetch liked restaurants', res.status);
+      return null;
+    }
 
     return await res.json();
   } catch (err) {
-    console.error(err);
+    console.error('failed to fetch liked restaurants', err);
     return null;
   }
 }
 
-function renderLikedRestaurants(restaurants) {
-  const statEl = document.getElementById('stat-bookmark-count');
-  if (statEl) statEl.textContent = restaurants.length;
-
-  const countEl = document.getElementById('likeListCount');
-  if (countEl) countEl.textContent = `총 ${restaurants.length}개`;
-
+function renderLikedRestaurants(restaurants, { reset = false } = {}) {
   const container = document.querySelector('.likeList_content');
   if (!container) return;
 
-  container.querySelectorAll('.likeList_wrap').forEach((el) => el.remove());
+  if (reset) {
+    container.querySelectorAll('.likeList_wrap').forEach((el) => el.remove());
+  }
 
-  if (restaurants.length === 0) {
+  if (reset && likePageState.items.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'likeList_wrap';
     empty.style.justifyContent = 'center';
@@ -1125,11 +1142,41 @@ function buildLikedRestaurantItem({ id, name, address, imageUrl }) {
   return wrap;
 }
 
-async function loadLikedRestaurants() {
+async function loadLikedRestaurants({ reset = false } = {}) {
   initLikedRestaurantEvents();
-  const data = await fetchLikedRestaurants();
-  if (!data) return;
-  renderLikedRestaurants(data);
+
+  if (likePageState.isLoading) return;
+  if (!reset && !likePageState.hasMore) return;
+
+  likePageState.isLoading = true;
+  updateSectionMoreButton(likeMoreButton, likePageState);
+
+  if (reset) {
+    likePageState.items = [];
+    likePageState.cursor = null;
+    likePageState.hasMore = true;
+  }
+
+  const body = await fetchLikedRestaurants(likePageState.cursor);
+
+  likePageState.isLoading = false;
+
+  if (!body) {
+    likePageState.hasMore = false;
+    updateSectionMoreButton(likeMoreButton, likePageState);
+    return;
+  }
+
+  const restaurants = Array.isArray(body?.data) ? body.data : [];
+  const nextCursor = body?.page?.nextCursor ?? null;
+  const hasMore = body?.page?.hasMore ?? false;
+
+  likePageState.items.push(...restaurants);
+  likePageState.cursor = nextCursor;
+  likePageState.hasMore = hasMore;
+
+  renderLikedRestaurants(restaurants, { reset });
+  updateSectionMoreButton(likeMoreButton, likePageState);
 }
 
 async function unlikeRestaurant(restaurantId) {
@@ -1185,16 +1232,16 @@ function initLikedRestaurantEvents() {
         return;
       }
 
-      await refreshlikedRestaurants();
+      await refreshLikedRestaurants();
     } finally {
       starBtn.disabled = false;
     }
   });
 }
 
-async function refreshlikedRestaurants() {
-  const restaurants = await fetchLikedRestaurants();
-  renderLikedRestaurants(restaurants || []);
+async function refreshLikedRestaurants() {
+  await loadMyPageMeta();
+  await loadLikedRestaurants({ reset: true });
 }
 
 async function uploadMyProfileImage(file) {
@@ -1898,6 +1945,16 @@ function updateVisitedRestaurantStats({ totalCount }) {
   if (countEl) countEl.textContent = `총 ${count}개`;
 }
 
+function updateLikedRestaurantStats({ totalCount }) {
+  const count = totalCount ?? 0;
+
+  const statEl = document.getElementById('stat-bookmark-count');
+  if (statEl) statEl.textContent = count;
+
+  const countEl = document.getElementById('likeListCount');
+  if (countEl) countEl.textContent = `총 ${count}개`;
+}
+
 async function loadMyPageMeta() {
   const body = await fetchMyPageMeta();
   const data = body?.data;
@@ -1906,6 +1963,7 @@ async function loadMyPageMeta() {
 
   const reviews = data.reviews ?? {};
   const visitedRestaurants = data.visitedRestaurants ?? {};
+  const likedRestaurants = data.likedRestaurants ?? {};
 
   updateReviewStats({
     totalCount: reviews.totalCount ?? 0,
@@ -1916,6 +1974,10 @@ async function loadMyPageMeta() {
   updateVisitedRestaurantStats({
     totalCount: visitedRestaurants.totalCount ?? 0,
   });
+
+  updateLikedRestaurantStats({
+    totalCount: likedRestaurants.totalCount ?? 0,
+  });
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -1923,7 +1985,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   await loadMyPageMeta();
   await loadMyReviews({ reset: true });
   await loadVisitedRestaurants({ reset: true });
-  await loadLikedRestaurants();
+  await loadLikedRestaurants({ reset: true });
   await loadBlindList();
   await initMyRestaurantRequests();
   setupOwnerRestaurantEmptyButton();
