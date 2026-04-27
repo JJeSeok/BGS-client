@@ -30,6 +30,17 @@ const likePageState = {
   isLoading: false,
 };
 
+const blindMoreButton = document.getElementById('blindMoreButton');
+
+const blindPageState = {
+  items: [],
+  cursor: null,
+  hasMore: true,
+  isLoading: false,
+};
+
+let isBlindListEventsBound = false;
+
 const RATING_CATEGORY_MAP = {
   good: { label: '맛있다', cssClass: 'Rating_Recommend' },
   ok: { label: '괜찮다', cssClass: 'Rating_Ok' },
@@ -44,6 +55,7 @@ if (reviewContainer) {
 reviewMoreButton?.addEventListener('click', () => loadMyReviews());
 visitMoreButton?.addEventListener('click', () => loadVisitedRestaurants());
 likeMoreButton?.addEventListener('click', () => loadLikedRestaurants());
+blindMoreButton?.addEventListener('click', () => loadBlindList());
 
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
@@ -1413,9 +1425,18 @@ function initProfileImageUploader() {
   });
 }
 
-async function fetchMyBlocks() {
+async function fetchMyBlocks(cursor = null) {
   try {
-    const res = await fetch(`${API_BASE}/users/me/blocks`, {
+    const qs = new URLSearchParams();
+
+    if (cursor) qs.set('cursor', cursor);
+
+    const query = qs.toString();
+    const url = query
+      ? `${API_BASE}/users/me/blocks?${query}`
+      : `${API_BASE}/users/me/blocks`;
+
+    const res = await fetch(url, {
       method: 'GET',
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
@@ -1451,25 +1472,6 @@ async function unblockUser(blockedUserId) {
   }
 
   return { ok: true, data: body };
-}
-
-function setBlindCount(container, count) {
-  const countEl = document.getElementById('blindListCount');
-  if (countEl) countEl.textContent = `총 ${count}개`;
-
-  let emptyEl = container.querySelector('.blindList_empty');
-  if (count === 0) {
-    if (!emptyEl) {
-      emptyEl = document.createElement('div');
-      emptyEl.className = 'blindList_wrap blindList_empty';
-      emptyEl.style.justifyContent = 'center';
-      emptyEl.style.color = '#999';
-      emptyEl.textContent = '블라인드한 사용자가 없습니다.';
-      container.appendChild(emptyEl);
-    }
-  } else {
-    if (emptyEl) emptyEl.remove();
-  }
 }
 
 function buildBlindUserItem(user) {
@@ -1508,26 +1510,32 @@ function buildBlindUserItem(user) {
   return wrap;
 }
 
-function renderBlindList(users) {
+function renderBlindList(users, { reset = false } = {}) {
   const container = document.querySelector('.blindList_content');
   if (!container) return;
 
-  container.querySelectorAll('.blindList_wrap').forEach((el) => el.remove());
+  if (reset) {
+    container.querySelectorAll('.blindList_wrap').forEach((el) => el.remove());
+  }
 
-  if (!Array.isArray(users) || users.length === 0) {
-    setBlindCount(container, 0);
-    return;
+  if (reset && blindPageState.items.length === 0) {
+    const emptyEl = document.createElement('div');
+    emptyEl.className = 'blindList_wrap blindList_empty';
+    emptyEl.style.justifyContent = 'center';
+    emptyEl.style.color = '#999';
+    emptyEl.textContent = '블라인드한 사용자가 없습니다.';
+    container.appendChild(emptyEl);
   }
 
   users.forEach((u) => {
     const item = buildBlindUserItem(u);
     container.appendChild(item);
   });
-
-  setBlindCount(container, users.length);
 }
 
 function initBlindListEvents() {
+  if (isBlindListEventsBound) return;
+
   const container = document.querySelector('.blindList_content');
   if (!container) return;
 
@@ -1563,8 +1571,7 @@ function initBlindListEvents() {
 
       row.remove();
 
-      const remainCount = container.querySelectorAll('.blindList_wrap').length;
-      setBlindCount(container, remainCount);
+      await refreshBlindList();
     } catch (err) {
       console.error(err);
       alert('서버와 통신 중 오류가 발생했습니다.');
@@ -1572,23 +1579,56 @@ function initBlindListEvents() {
       btn.disabled = false;
     }
   });
+
+  isBlindListEventsBound = true;
 }
 
-async function loadBlindList() {
+async function refreshBlindList() {
+  await loadMyPageMeta();
+  await loadBlindList({ reset: true });
+}
+
+async function loadBlindList({ reset = false } = {}) {
   initBlindListEvents();
 
-  const result = await fetchMyBlocks();
+  if (blindPageState.isLoading) return;
+  if (!reset && !blindPageState.hasMore) return;
+
+  blindPageState.isLoading = true;
+  updateSectionMoreButton(blindMoreButton, blindPageState);
+
+  if (reset) {
+    blindPageState.items = [];
+    blindPageState.cursor = null;
+    blindPageState.hasMore = true;
+  }
+
+  const result = await fetchMyBlocks(blindPageState.cursor);
+
+  blindPageState.isLoading = false;
+
   if (!result.ok) {
     if (result.code === 401) {
       const back = location.pathname + location.search;
       location.href = `login.html?next=${encodeURIComponent(back)}`;
       return;
     }
-    renderBlindList([]);
+
+    updateSectionMoreButton(blindMoreButton, blindPageState);
     return;
   }
 
-  renderBlindList(result.data);
+  const body = result?.data ?? {};
+  const blocked = Array.isArray(body?.data) ? body.data : [];
+  const nextCursor = body?.page?.nextCursor ?? null;
+  const hasMore = body?.page?.hasMore ?? false;
+
+  blindPageState.items.push(...blocked);
+  blindPageState.cursor = nextCursor;
+  blindPageState.hasMore = hasMore;
+
+  renderBlindList(blocked, { reset });
+  updateSectionMoreButton(blindMoreButton, blindPageState);
 }
 
 function formatDate(dStr) {
@@ -1955,6 +1995,13 @@ function updateLikedRestaurantStats({ totalCount }) {
   if (countEl) countEl.textContent = `총 ${count}개`;
 }
 
+function updateBlockStats({ totalCount }) {
+  const count = totalCount ?? 0;
+
+  const countEl = document.getElementById('blindListCount');
+  if (countEl) countEl.textContent = `총 ${count}개`;
+}
+
 async function loadMyPageMeta() {
   const body = await fetchMyPageMeta();
   const data = body?.data;
@@ -1964,6 +2011,7 @@ async function loadMyPageMeta() {
   const reviews = data.reviews ?? {};
   const visitedRestaurants = data.visitedRestaurants ?? {};
   const likedRestaurants = data.likedRestaurants ?? {};
+  const blocks = data.blocks ?? {};
 
   updateReviewStats({
     totalCount: reviews.totalCount ?? 0,
@@ -1978,6 +2026,10 @@ async function loadMyPageMeta() {
   updateLikedRestaurantStats({
     totalCount: likedRestaurants.totalCount ?? 0,
   });
+
+  updateBlockStats({
+    totalCount: blocks.totalCount ?? 0,
+  });
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -1986,7 +2038,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   await loadMyReviews({ reset: true });
   await loadVisitedRestaurants({ reset: true });
   await loadLikedRestaurants({ reset: true });
-  await loadBlindList();
+  await loadBlindList({ reset: true });
   await initMyRestaurantRequests();
   setupOwnerRestaurantEmptyButton();
   await loadOwnerRestaurants();
