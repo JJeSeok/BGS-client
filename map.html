@@ -20,6 +20,37 @@
         <button id="btnHere">내 위치</button>
       </div>
       <div id="map"></div>
+      <button id="btn-search-area" class="search-area-btn hidden" type="button">
+        이 지역에서 다시 검색
+      </button>
+      <div
+        id="restaurant-card"
+        class="restaurant-card hidden"
+        aria-live="polite"
+      >
+        <div class="restaurant-card-header">
+          <div>
+            <div
+              id="restaurant-card-category"
+              class="restaurant-card-category"
+            ></div>
+            <div id="restaurant-card-name" class="restaurant-card-name"></div>
+          </div>
+          <button
+            id="restaurant-card-close"
+            class="restaurant-card-close"
+            type="button"
+            aria-label="닫기"
+          >
+            닫기
+          </button>
+        </div>
+        <div id="restaurant-card-meta" class="restaurant-card-meta"></div>
+        <div id="restaurant-card-address" class="restaurant-card-address"></div>
+        <button id="restaurant-card-detail" class="btn btn-primary" type="button">
+          상세보기
+        </button>
+      </div>
       <div id="confirm-panel" class="confirm-panel hidden" aria-live="polite">
         <div class="cp-body">
           <div class="cp-title">이 위치를 현재 위치로 지정할까요?</div>

@@ -59,6 +59,7 @@ async function getPreferredLocation({
   askGeo = true,
   geoOptions,
   forceRefresh = false,
+  saveGeo = true,
 } = {}) {
   if (!forceRefresh) {
     const saved = loadLocation();
@@ -69,7 +70,10 @@ async function getPreferredLocation({
   if (askGeo) {
     const g = await geolocate(geoOptions);
     if (g) {
-      return { loc: saveLocation({ ...g, source: 'geo' }), reason: 'geo' };
+      const loc = saveGeo
+        ? saveLocation({ ...g, source: 'geo' })
+        : { ...g, source: 'geo' };
+      return { loc, reason: 'geo' };
     }
   }
   return { loc: { ...SEOUL }, reason: 'fallback' };

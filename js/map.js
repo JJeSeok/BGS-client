@@ -1,14 +1,33 @@
 import { LocationStore } from './locationStore.js';
 
+const API_BASE = 'http://localhost:8080';
+
 let map;
-let marker = null;
+let userMarker = null;
+let restaurantMarkers = [];
 let candidate = null;
 let candidateSource = 'manual';
+let selectedRestaurant = null;
+let ignoreNextMapClick = false;
+let mapReady = false;
+let restaurantMarkerRequestId = 0;
 
 const panel = document.getElementById('confirm-panel');
 const address = document.getElementById('cp-address');
 const btnConfirm = document.getElementById('cp-confirm');
 const btnCancel = document.getElementById('cp-cancel');
+const btnSearchArea = document.getElementById('btn-search-area');
+const restaurantCard = document.getElementById('restaurant-card');
+const restaurantCardCategory = document.getElementById(
+  'restaurant-card-category',
+);
+const restaurantCardName = document.getElementById('restaurant-card-name');
+const restaurantCardMeta = document.getElementById('restaurant-card-meta');
+const restaurantCardAddress = document.getElementById(
+  'restaurant-card-address',
+);
+const restaurantCardDetail = document.getElementById('restaurant-card-detail');
+const restaurantCardClose = document.getElementById('restaurant-card-close');
 
 function toLatLng(p) {
   if (!p) return null;
@@ -24,8 +43,8 @@ function fmtLatLng(latlng) {
 }
 
 function placeMarker(latlng) {
-  if (!marker) {
-    marker = new naver.maps.Marker({
+  if (!userMarker) {
+    userMarker = new naver.maps.Marker({
       position: latlng,
       map,
       icon: {
@@ -34,7 +53,7 @@ function placeMarker(latlng) {
       },
     });
   } else {
-    marker.setPosition(latlng);
+    userMarker.setPosition(latlng);
   }
 }
 
@@ -48,6 +67,114 @@ function iconDotPulse() {
   const content = '<div class="icon-dot"></div>';
   const anchor = new naver.maps.Point(10, 20);
   return { content, anchor };
+}
+
+function clearRestaurantMarkers() {
+  restaurantMarkers.forEach((restaurantMarker) =>
+    restaurantMarker.setMap(null),
+  );
+  restaurantMarkers = [];
+}
+
+function formatDistance(distance) {
+  const n = Number(distance);
+  if (!Number.isFinite(n)) return '거리 정보 없음';
+  if (n < 1) return `${Math.round(n * 1000)}m`;
+  return `${n.toFixed(1)}km`;
+}
+
+function showRestaurantCard(restaurant) {
+  selectedRestaurant = restaurant;
+
+  restaurantCardCategory.textContent = restaurant.category || '기타';
+  restaurantCardName.textContent = restaurant.name || '이름 없는 식당';
+
+  const ratingAvg = Number(restaurant.rating_avg || 0);
+  const rating = ratingAvg === 0 ? '0' : ratingAvg.toFixed(1);
+  const reviewCount = Number(restaurant.review_count || 0);
+  const distance = formatDistance(restaurant.distance);
+
+  restaurantCardMeta.textContent = `평점 ${rating} · 리뷰 ${reviewCount}개 · ${distance}`;
+  restaurantCardAddress.textContent = restaurant.address || '주소 정보 없음';
+
+  hidePanel();
+  restaurantCard.classList.remove('hidden');
+}
+
+function hideRestaurantCard() {
+  selectedRestaurant = null;
+  restaurantCard.classList.add('hidden');
+}
+
+function isRestaurantCardOpen() {
+  return !restaurantCard.classList.contains('hidden');
+}
+
+function showSearchAreaButton() {
+  btnSearchArea.classList.remove('hidden');
+}
+
+function hideSearchAreaButton() {
+  btnSearchArea.classList.add('hidden');
+}
+
+function handleMapChanged() {
+  if (!mapReady) return;
+  showSearchAreaButton();
+}
+
+async function loadRestaurantMarkers(lat, lng) {
+  const requestId = ++restaurantMarkerRequestId;
+
+  const qs = new URLSearchParams({
+    lat: String(lat),
+    lng: String(lng),
+  });
+
+  try {
+    const res = await fetch(`${API_BASE}/restaurants/map?${qs.toString()}`);
+    if (!res.ok) throw new Error('Restaurant marker API failed');
+
+    const restaurants = await res.json();
+    if (!Array.isArray(restaurants)) return;
+    if (requestId !== restaurantMarkerRequestId) return;
+
+    hideRestaurantCard();
+    clearRestaurantMarkers();
+    restaurantMarkers = restaurants
+      .filter((restaurant) => restaurant.lat != null && restaurant.lng != null)
+      .map((restaurant) => {
+        const restaurantMarker = new naver.maps.Marker({
+          position: new naver.maps.LatLng(restaurant.lat, restaurant.lng),
+          map,
+          title: restaurant.name,
+        });
+
+        naver.maps.Event.addListener(restaurantMarker, 'click', () => {
+          ignoreNextMapClick = true;
+          showRestaurantCard(restaurant);
+          setTimeout(() => {
+            ignoreNextMapClick = false;
+          }, 0);
+        });
+
+        return restaurantMarker;
+      });
+    return true;
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+async function searchCurrentMapArea() {
+  const center = map.getCenter();
+  const { lat, lng } = fmtLatLng(center);
+
+  const loaded = await loadRestaurantMarkers(lat, lng);
+  if (loaded) {
+    hideSearchAreaButton();
+  }
 }
 
 function showPanel(text) {
@@ -128,7 +255,6 @@ function hasData(data) {
 
 function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
   if (!naver.maps.Service || !naver.maps.Service.reverseGeocode) {
-    console.log('reverseGeocode 함수 실행 안됨!');
     return Promise.resolve(fallbackText);
   }
   return new Promise((resolve) => {
@@ -142,7 +268,6 @@ function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
       },
       (status, res) => {
         if (status !== naver.maps.Service.Status.OK) {
-          console.log('geocode 서버 이상!');
           return resolve(fallbackText);
         }
         const r = new Object();
@@ -162,6 +287,7 @@ function reverseGeocode(latlng, fallbackText = '좌표 선택됨') {
 async function setCandidate(latlng, source = 'manual') {
   candidate = latlng;
   candidateSource = source;
+  hideRestaurantCard();
   placeMarker(latlng);
   map.setCenter(latlng);
 
@@ -194,7 +320,9 @@ function confirmCurrentLocation() {
 }
 
 async function initMap() {
-  const { loc, reason } = await LocationStore.getPreferredLocation();
+  const { loc, reason } = await LocationStore.getPreferredLocation({
+    saveGeo: false,
+  });
   const center = new naver.maps.LatLng(loc.lat, loc.lng);
   map = new naver.maps.Map('map', {
     center,
@@ -202,20 +330,43 @@ async function initMap() {
   });
 
   placeMarker(center);
+  loadRestaurantMarkers(loc.lat, loc.lng);
 
   if (loc.source !== 'geo') {
-    marker.setIcon(iconPinNeo());
+    userMarker.setIcon(iconPinNeo());
   }
 
   naver.maps.Event.addListener(map, 'click', (e) => {
+    if (ignoreNextMapClick) {
+      ignoreNextMapClick = false;
+      return;
+    }
+
+    if (isRestaurantCardOpen()) {
+      hideRestaurantCard();
+      return;
+    }
+
     const latlng = toLatLng(e.coord || e.latlng);
     if (!latlng) return;
     setCandidate(latlng);
-    marker.setIcon(iconPinNeo());
+    userMarker.setIcon(iconPinNeo());
   });
+  naver.maps.Event.addListener(map, 'dragend', handleMapChanged);
+  naver.maps.Event.addListener(map, 'zoom_changed', handleMapChanged);
 
   btnConfirm.addEventListener('click', confirmCurrentLocation);
   btnCancel.addEventListener('click', hidePanel);
+  btnSearchArea.addEventListener('click', searchCurrentMapArea);
+  restaurantCardClose.addEventListener('click', hideRestaurantCard);
+  restaurantCardDetail.addEventListener('click', () => {
+    if (!selectedRestaurant) return;
+    location.href = `/restaurant.html?id=${selectedRestaurant.id}`;
+  });
+
+  setTimeout(() => {
+    mapReady = true;
+  }, 0);
 }
 
 function goMyLocation() {
@@ -227,7 +378,7 @@ function goMyLocation() {
       const { latitude, longitude } = pos.coords;
       const latlng = new naver.maps.LatLng(latitude, longitude);
       setCandidate(latlng, 'geo');
-      marker.setIcon(iconDotPulse());
+      userMarker.setIcon(iconDotPulse());
       map.setZoom(17);
     },
     () => alert('위치 접근이 거부되었어요.'),
