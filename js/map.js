@@ -8,6 +8,7 @@ let restaurantMarkers = [];
 let candidate = null;
 let candidateSource = 'manual';
 let selectedRestaurant = null;
+let selectedRestaurantMarker = null;
 let ignoreNextMapClick = false;
 let mapReady = false;
 let restaurantMarkerRequestId = 0;
@@ -69,6 +70,18 @@ function iconDotPulse() {
   return { content, anchor };
 }
 
+function iconRestaurantMarker() {
+  const content = '<div class="icon-restaurant-marker"></div>';
+  const anchor = new naver.maps.Point(14, 32);
+  return { content, anchor };
+}
+
+function iconRestaurantMarkerActive() {
+  const content = '<div class="icon-restaurant-marker is-active"></div>';
+  const anchor = new naver.maps.Point(16, 36);
+  return { content, anchor };
+}
+
 function clearRestaurantMarkers() {
   restaurantMarkers.forEach((restaurantMarker) =>
     restaurantMarker.setMap(null),
@@ -103,11 +116,28 @@ function showRestaurantCard(restaurant) {
 
 function hideRestaurantCard() {
   selectedRestaurant = null;
+  clearActiveRestaurantMarker();
   restaurantCard.classList.add('hidden');
 }
 
 function isRestaurantCardOpen() {
   return !restaurantCard.classList.contains('hidden');
+}
+
+function setActiveRestaurantMarker(restaurantMarker) {
+  if (selectedRestaurantMarker && selectedRestaurantMarker !== restaurantMarker) {
+    selectedRestaurantMarker.setIcon(iconRestaurantMarker());
+  }
+
+  selectedRestaurantMarker = restaurantMarker;
+  selectedRestaurantMarker.setIcon(iconRestaurantMarkerActive());
+}
+
+function clearActiveRestaurantMarker() {
+  if (!selectedRestaurantMarker) return;
+
+  selectedRestaurantMarker.setIcon(iconRestaurantMarker());
+  selectedRestaurantMarker = null;
 }
 
 function showSearchAreaButton() {
@@ -139,7 +169,9 @@ async function loadRestaurantMarkers(lat, lng) {
     if (!Array.isArray(restaurants)) return;
     if (requestId !== restaurantMarkerRequestId) return;
 
-    hideRestaurantCard();
+    selectedRestaurant = null;
+    restaurantCard.classList.add('hidden');
+    selectedRestaurantMarker = null;
     clearRestaurantMarkers();
     restaurantMarkers = restaurants
       .filter((restaurant) => restaurant.lat != null && restaurant.lng != null)
@@ -148,10 +180,12 @@ async function loadRestaurantMarkers(lat, lng) {
           position: new naver.maps.LatLng(restaurant.lat, restaurant.lng),
           map,
           title: restaurant.name,
+          icon: iconRestaurantMarker(),
         });
 
         naver.maps.Event.addListener(restaurantMarker, 'click', () => {
           ignoreNextMapClick = true;
+          setActiveRestaurantMarker(restaurantMarker);
           showRestaurantCard(restaurant);
           setTimeout(() => {
             ignoreNextMapClick = false;

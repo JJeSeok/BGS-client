@@ -262,6 +262,37 @@ button:hover {
   animation: pulse 1.8s ease-out infinite;
 }
 
+.icon-restaurant-marker {
+  width: 26px;
+  height: 26px;
+  position: relative;
+  border: 2px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  background: #f97316;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.24);
+  transform: rotate(-45deg);
+}
+
+.icon-restaurant-marker::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.icon-restaurant-marker.is-active {
+  background: #ea580c;
+  box-shadow:
+    0 6px 18px rgba(249, 115, 22, 0.42),
+    0 0 0 6px rgba(249, 115, 22, 0.18);
+  transform: rotate(-45deg) scale(1.16);
+}
+
 @keyframes pulse {
   0% {
     transform: translate(-50%, -50%) scale(1);
