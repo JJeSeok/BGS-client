@@ -5,6 +5,7 @@ body {
 }
 
 .map-wrap {
+  --map-overlay-top: 78px;
   height: 100%;
   display: grid;
   grid-template-rows: auto 1fr;
@@ -12,9 +13,18 @@ body {
 
 .toolbar {
   display: flex;
-  gap: 8px;
-  padding: 10px;
-  border-bottom: 1px solid #eee;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.9);
+  margin: 0;
+  box-sizing: border-box;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(249, 250, 251, 0.96)),
+    #fff;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+  position: relative;
+  z-index: 10;
 }
 
 #map {
@@ -23,10 +33,79 @@ body {
 }
 
 input[type='text'] {
+  min-width: 0;
   flex: 1;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
+  height: 44px;
+  padding: 0 14px;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #fff;
+  color: #111827;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-sizing: border-box;
+  font-size: 15px;
+  outline: none;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+input[type='text']::placeholder {
+  color: #94a3b8;
+}
+
+input[type='text']:focus {
+  border-color: #2563eb;
+  background: #fff;
+  box-shadow:
+    0 0 0 4px rgba(37, 99, 235, 0.12),
+    inset 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.toolbar button {
+  flex: 0 0 auto;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 999px;
+  font-weight: 800;
+  line-height: 1;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+#btnSearch {
+  min-width: 68px;
+  border: 1px solid #2563eb;
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.24);
+}
+
+#btnSearch:hover {
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.3);
+}
+
+#btnHome {
+  min-width: 54px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  color: #374151;
+  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+}
+
+#btnHome:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+.toolbar button:active {
+  transform: translateY(1px);
 }
 
 .hidden {
@@ -46,7 +125,7 @@ input[type='text'] {
 .search-area-btn {
   position: fixed;
   left: 50%;
-  top: 64px;
+  top: var(--map-overlay-top);
   transform: translateX(-50%);
   z-index: 800;
   display: inline-flex;
@@ -83,6 +162,68 @@ input[type='text'] {
 .search-area-btn:active {
   transform: translateX(-50%) translateY(1px);
   box-shadow: 0 8px 18px rgba(37, 99, 235, 0.28);
+}
+
+.map-search-notice {
+  position: fixed;
+  left: 50%;
+  top: var(--map-overlay-top);
+  transform: translateX(-50%);
+  z-index: 820;
+  max-width: calc(100% - 24px);
+  padding: 9px 14px;
+  border: 1px solid rgba(17, 24, 39, 0.08);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #111827;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.14);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.my-location-btn {
+  position: fixed;
+  right: 16px;
+  bottom: 88px;
+  z-index: 850;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  border: 1px solid rgba(37, 99, 235, 0.14);
+  border-radius: 50%;
+  background: #fff;
+  color: #2563eb;
+  box-shadow:
+    0 10px 22px rgba(15, 23, 42, 0.14),
+    0 2px 6px rgba(15, 23, 42, 0.08);
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.my-location-btn:hover {
+  background: #eff6ff;
+  box-shadow:
+    0 12px 26px rgba(37, 99, 235, 0.18),
+    0 3px 8px rgba(15, 23, 42, 0.08);
+}
+
+.my-location-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+}
+
+.my-location-icon {
+  width: 20px;
+  height: 20px;
+  display: block;
 }
 
 .restaurant-card {
@@ -299,7 +440,7 @@ button:hover {
     opacity: 0.75;
   }
   70% {
-    transform: translate((-50%, -50%) scale(2.6));
+    transform: translate(-50%, -50%) scale(2.6);
     opacity: 0;
   }
   100% {

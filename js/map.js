@@ -1,6 +1,8 @@
 import { LocationStore } from './locationStore.js';
 
 const API_BASE = 'http://localhost:8080';
+const SEARCH_NOTICE_DURATION = 3500;
+const EMPTY_SEARCH_NOTICE_DURATION = 5000;
 
 let map;
 let userMarker = null;
@@ -12,12 +14,20 @@ let selectedRestaurantMarker = null;
 let ignoreNextMapClick = false;
 let mapReady = false;
 let restaurantMarkerRequestId = 0;
+let currentQuery = '';
+let suppressSearchAreaButton = false;
+let searchNoticeTimer = null;
 
 const panel = document.getElementById('confirm-panel');
 const address = document.getElementById('cp-address');
 const btnConfirm = document.getElementById('cp-confirm');
 const btnCancel = document.getElementById('cp-cancel');
+const btnHome = document.getElementById('btnHome');
+const btnMyLocation = document.getElementById('btnMyLocation');
 const btnSearchArea = document.getElementById('btn-search-area');
+const mapSearchForm = document.getElementById('map-search-form');
+const searchInput = document.getElementById('q');
+const mapSearchNotice = document.getElementById('map-search-notice');
 const restaurantCard = document.getElementById('restaurant-card');
 const restaurantCardCategory = document.getElementById(
   'restaurant-card-category',
@@ -89,6 +99,17 @@ function clearRestaurantMarkers() {
   restaurantMarkers = [];
 }
 
+function normalizeMapResponse(data) {
+  if (Array.isArray(data)) {
+    return { restaurants: data, meta: null };
+  }
+
+  return {
+    restaurants: Array.isArray(data?.restaurants) ? data.restaurants : [],
+    meta: data?.meta ?? null,
+  };
+}
+
 function formatDistance(distance) {
   const n = Number(distance);
   if (!Number.isFinite(n)) return '거리 정보 없음';
@@ -112,16 +133,31 @@ function showRestaurantCard(restaurant) {
 
   hidePanel();
   restaurantCard.classList.remove('hidden');
+  updateMyLocationButtonVisibility();
 }
 
 function hideRestaurantCard() {
   selectedRestaurant = null;
   clearActiveRestaurantMarker();
   restaurantCard.classList.add('hidden');
+  updateMyLocationButtonVisibility();
 }
 
 function isRestaurantCardOpen() {
   return !restaurantCard.classList.contains('hidden');
+}
+
+function isPanelOpen() {
+  return !panel.classList.contains('hidden');
+}
+
+function updateMyLocationButtonVisibility() {
+  if (!btnMyLocation) return;
+
+  btnMyLocation.classList.toggle(
+    'hidden',
+    isRestaurantCardOpen() || isPanelOpen(),
+  );
 }
 
 function setActiveRestaurantMarker(restaurantMarker) {
@@ -140,6 +176,13 @@ function clearActiveRestaurantMarker() {
   selectedRestaurantMarker = null;
 }
 
+function resetRestaurantSelection() {
+  selectedRestaurant = null;
+  selectedRestaurantMarker = null;
+  restaurantCard.classList.add('hidden');
+  updateMyLocationButtonVisibility();
+}
+
 function showSearchAreaButton() {
   btnSearchArea.classList.remove('hidden');
 }
@@ -148,30 +191,61 @@ function hideSearchAreaButton() {
   btnSearchArea.classList.add('hidden');
 }
 
+function showSearchNotice(message, duration = SEARCH_NOTICE_DURATION) {
+  if (!mapSearchNotice) return;
+  clearTimeout(searchNoticeTimer);
+  mapSearchNotice.textContent = message;
+  mapSearchNotice.classList.remove('hidden');
+
+  searchNoticeTimer = setTimeout(() => {
+    hideSearchNotice();
+  }, duration);
+}
+
+function hideSearchNotice() {
+  if (!mapSearchNotice) return;
+  clearTimeout(searchNoticeTimer);
+  searchNoticeTimer = null;
+  mapSearchNotice.classList.add('hidden');
+  mapSearchNotice.textContent = '';
+}
+
 function handleMapChanged() {
   if (!mapReady) return;
+  if (suppressSearchAreaButton) return;
+  hideSearchNotice();
   showSearchAreaButton();
 }
 
-async function loadRestaurantMarkers(lat, lng) {
+function setSearchAreaSuppressed() {
+  suppressSearchAreaButton = true;
+  setTimeout(() => {
+    suppressSearchAreaButton = false;
+  }, 200);
+}
+
+async function loadRestaurantMarkers(lat, lng, q = '') {
   const requestId = ++restaurantMarkerRequestId;
 
   const qs = new URLSearchParams({
     lat: String(lat),
     lng: String(lng),
   });
+  const keyword = q.trim();
+  if (keyword) {
+    qs.set('q', keyword);
+  }
 
   try {
     const res = await fetch(`${API_BASE}/restaurants/map?${qs.toString()}`);
     if (!res.ok) throw new Error('Restaurant marker API failed');
 
-    const restaurants = await res.json();
-    if (!Array.isArray(restaurants)) return;
-    if (requestId !== restaurantMarkerRequestId) return;
+    const data = await res.json();
+    const { restaurants, meta } = normalizeMapResponse(data);
+    if (requestId !== restaurantMarkerRequestId) return null;
 
-    selectedRestaurant = null;
-    restaurantCard.classList.add('hidden');
-    selectedRestaurantMarker = null;
+    resetRestaurantSelection();
+    hidePanel();
     clearRestaurantMarkers();
     restaurantMarkers = restaurants
       .filter((restaurant) => restaurant.lat != null && restaurant.lng != null)
@@ -182,6 +256,7 @@ async function loadRestaurantMarkers(lat, lng) {
           title: restaurant.name,
           icon: iconRestaurantMarker(),
         });
+        restaurantMarker.restaurantId = restaurant.id;
 
         naver.maps.Event.addListener(restaurantMarker, 'click', () => {
           ignoreNextMapClick = true;
@@ -194,7 +269,7 @@ async function loadRestaurantMarkers(lat, lng) {
 
         return restaurantMarker;
       });
-    return true;
+    return { restaurants, meta };
   } catch (err) {
     console.error(err);
     return false;
@@ -205,19 +280,95 @@ async function searchCurrentMapArea() {
   const center = map.getCenter();
   const { lat, lng } = fmtLatLng(center);
 
-  const loaded = await loadRestaurantMarkers(lat, lng);
+  resetRestaurantSelection();
+  hidePanel();
+  const loaded = await loadRestaurantMarkers(lat, lng, currentQuery);
+  if (loaded === null) return;
   if (loaded) {
     hideSearchAreaButton();
+    renderSearchResult(loaded, currentQuery);
+    focusSingleSearchResult(loaded.restaurants);
   }
+}
+
+function getResultCount(restaurants, meta) {
+  const count = Number(meta?.count);
+  return Number.isFinite(count) ? count : restaurants.length;
+}
+
+function renderSearchResult(result, keyword) {
+  const q = keyword.trim();
+  if (!q) {
+    hideSearchNotice();
+    return;
+  }
+
+  const { restaurants, meta } = result;
+  const count = getResultCount(restaurants, meta);
+
+  if (restaurants.length === 0) {
+    showSearchNotice(
+      '현재 지도 주변의 등록 식당 중 검색 결과가 없습니다.',
+      EMPTY_SEARCH_NOTICE_DURATION,
+    );
+    return;
+  }
+
+  showSearchNotice(`등록된 식당 ${count}개를 찾았습니다.`);
+}
+
+function focusSingleSearchResult(restaurants) {
+  if (!currentQuery || restaurants.length !== 1) return;
+
+  const restaurant = restaurants[0];
+  if (restaurant.lat == null || restaurant.lng == null) return;
+
+  const latlng = new naver.maps.LatLng(restaurant.lat, restaurant.lng);
+  if (Number(map.getZoom()) < 16) {
+    setSearchAreaSuppressed();
+    map.setZoom(16);
+  }
+  map.setCenter(latlng);
+
+  const restaurantMarker = restaurantMarkers.find(
+    (marker) => marker.restaurantId === restaurant.id,
+  );
+  if (restaurantMarker) {
+    setActiveRestaurantMarker(restaurantMarker);
+  }
+  showRestaurantCard(restaurant);
+}
+
+async function runMapSearch() {
+  currentQuery = searchInput?.value.trim() ?? '';
+  const center = map.getCenter();
+  const { lat, lng } = fmtLatLng(center);
+
+  resetRestaurantSelection();
+  hidePanel();
+  const result = await loadRestaurantMarkers(lat, lng, currentQuery);
+  hideSearchAreaButton();
+
+  if (result === null) return;
+  if (!result) {
+    showSearchNotice('검색 결과를 불러오지 못했어요.');
+    return;
+  }
+
+  renderSearchResult(result, currentQuery);
+
+  focusSingleSearchResult(result.restaurants);
 }
 
 function showPanel(text) {
   if (text) address.textContent = text;
   panel.classList.remove('hidden');
+  updateMyLocationButtonVisibility();
 }
 
 function hidePanel() {
   panel.classList.add('hidden');
+  updateMyLocationButtonVisibility();
 }
 
 function makeAddress(addr) {
@@ -397,6 +548,13 @@ async function initMap() {
     if (!selectedRestaurant) return;
     location.href = `/restaurant.html?id=${selectedRestaurant.id}`;
   });
+  mapSearchForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    runMapSearch();
+  });
+  btnHome.addEventListener('click', () => {
+    location.href = '/index.html';
+  });
 
   setTimeout(() => {
     mapReady = true;
@@ -428,5 +586,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   initMap();
 
-  document.getElementById('btnHere').addEventListener('click', goMyLocation);
+  btnMyLocation.addEventListener('click', goMyLocation);
+  updateMyLocationButtonVisibility();
 });
