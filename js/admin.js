@@ -91,6 +91,14 @@ const reviewState = {
   loadedOnce: false,
 };
 
+const userState = {
+  q: '',
+  cursor: null,
+  hasMore: false,
+  loading: false,
+  loadedOnce: false,
+};
+
 async function apiGetAdminRequests(status, cursor) {
   const url = new URL(`${API_BASE}/admin/restaurant-requests`);
   if (status) url.searchParams.set('status', status);
@@ -177,6 +185,46 @@ async function apiDeleteReview(reviewId) {
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
     throw new Error(body?.message || '리뷰 삭제에 실패했습니다.');
+  }
+
+  return true;
+}
+
+async function apiGetAdminUsers(q, cursor) {
+  const url = new URL(`${API_BASE}/admin/users`);
+  if (q) url.searchParams.set('q', q);
+  if (cursor) url.searchParams.set('cursor', cursor);
+
+  const res = await fetch(url.href, {
+    method: 'GET',
+    headers: { ...authHeaders() },
+  });
+
+  if (handleAuthError(res)) return null;
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    setToast('err', body?.message || '사용자 목록 조회에 실패했습니다.');
+    return null;
+  }
+
+  const data = Array.isArray(body?.data) ? body.data : [];
+  const meta = body?.meta || {};
+  return { data, meta };
+}
+
+async function apiUpdateUserStatus(userId, status) {
+  const res = await fetch(`${API_BASE}/admin/users/${userId}/status`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+    body: JSON.stringify({ status }),
+  });
+
+  if (handleAuthError(res)) return false;
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || '사용자 상태 변경에 실패했습니다.');
   }
 
   return true;
@@ -463,7 +511,31 @@ function renderReviewRowsAppend(rows) {
 
     const tdUser = document.createElement('td');
     tdUser.className = 'td-tight';
-    tdUser.textContent = review.user?.name || String(review.user?.id ?? '');
+    const userName = review.user?.name || '';
+    const username = review.user?.username || '';
+
+    if (userName || username) {
+      const userWrap = document.createElement('div');
+      userWrap.className = 'admin-user-cell';
+
+      if (userName) {
+        const name = document.createElement('div');
+        name.className = 'admin-name';
+        name.textContent = userName;
+        userWrap.appendChild(name);
+      }
+
+      if (username) {
+        const loginId = document.createElement('div');
+        loginId.className = 'admin-meta admin-username';
+        loginId.textContent = `@${username}`;
+        userWrap.appendChild(loginId);
+      }
+
+      tdUser.appendChild(userWrap);
+    } else {
+      tdUser.textContent = review.user?.id ? `ID: ${review.user.id}` : '';
+    }
     tr.appendChild(tdUser);
 
     const tdRating = document.createElement('td');
@@ -624,6 +696,185 @@ async function loadReviewMore() {
   }
 }
 
+function userStatusBadge(status) {
+  if (status === 'active')
+    return { cls: 'badge bg-success', label: 'active' };
+  if (status === 'suspended')
+    return { cls: 'badge bg-danger', label: 'suspended' };
+  return { cls: 'badge bg-dark', label: status || 'unknown' };
+}
+
+function clearUserTbody() {
+  const tbody = document.getElementById('userTbody');
+  if (tbody) tbody.textContent = '';
+}
+
+function updateUserLoadMoreUI() {
+  const wrap = document.getElementById('userLoadMoreWrap');
+  const btn = document.getElementById('userLoadMoreBtn');
+  if (!wrap || !btn) return;
+
+  btn.disabled = userState.loading;
+  wrap.style.display = userState.hasMore ? 'flex' : 'none';
+}
+
+function renderUserRowsAppend(rows) {
+  const tbody = document.getElementById('userTbody');
+  const empty = document.getElementById('userEmpty');
+  if (!tbody || !empty) return;
+
+  if (!rows || rows.length === 0) {
+    if (tbody.children.length === 0) empty.style.display = 'block';
+    updateUserLoadMoreUI();
+    return;
+  }
+  empty.style.display = 'none';
+
+  const frag = document.createDocumentFragment();
+
+  rows.forEach((user) => {
+    const tr = document.createElement('tr');
+
+    const tdId = document.createElement('td');
+    tdId.className = 'td-tight';
+    tdId.textContent = user.id ?? '';
+    tr.appendChild(tdId);
+
+    const tdAccount = document.createElement('td');
+    const userWrap = document.createElement('div');
+    userWrap.className = 'admin-user-cell';
+
+    const name = document.createElement('div');
+    name.className = 'admin-name';
+    name.textContent = user.name || '(이름 없음)';
+    userWrap.appendChild(name);
+
+    const username = document.createElement('div');
+    username.className = 'admin-meta admin-username';
+    username.textContent = user.username ? `@${user.username}` : 'username 없음';
+    userWrap.appendChild(username);
+
+    tdAccount.appendChild(userWrap);
+    tr.appendChild(tdAccount);
+
+    const tdStatus = document.createElement('td');
+    tdStatus.className = 'td-tight';
+    const status = userStatusBadge(user.status);
+    const badge = document.createElement('span');
+    badge.className = status.cls;
+    badge.textContent = status.label;
+    tdStatus.appendChild(badge);
+    tr.appendChild(tdStatus);
+
+    const tdSuspendedAt = document.createElement('td');
+    tdSuspendedAt.className = 'td-tight';
+    tdSuspendedAt.textContent = user.suspendedAt
+      ? formatDate(user.suspendedAt)
+      : '-';
+    tr.appendChild(tdSuspendedAt);
+
+    const tdAction = document.createElement('td');
+    tdAction.className = 'td-tight admin-action-cell';
+
+    if (user.isMe === true) {
+      tdAction.textContent = '본인';
+    } else if (user.status === 'active' || user.status === 'suspended') {
+      const nextStatus = user.status === 'active' ? 'suspended' : 'active';
+      const actionLabel = user.status === 'active' ? '비활성화' : '복구';
+      const confirmMessage =
+        user.status === 'active'
+          ? '이 사용자를 비활성화하시겠습니까?'
+          : '이 사용자를 복구하시겠습니까?';
+
+      const actionBtn = document.createElement('button');
+      actionBtn.type = 'button';
+      actionBtn.className =
+        user.status === 'active'
+          ? 'btn btn-sm btn-outline-danger'
+          : 'btn btn-sm btn-outline-success';
+      actionBtn.textContent = actionLabel;
+
+      actionBtn.addEventListener('click', async () => {
+        if (!confirm(confirmMessage)) return;
+
+        actionBtn.disabled = true;
+
+        try {
+          const updated = await apiUpdateUserStatus(user.id, nextStatus);
+          if (!updated) {
+            actionBtn.disabled = false;
+            return;
+          }
+          setToast('ok', '사용자 상태가 변경되었습니다.');
+          await loadUserFirstPage();
+        } catch (e) {
+          console.error(e);
+          setToast('err', e.message || '사용자 상태 변경에 실패했습니다.');
+          actionBtn.disabled = false;
+        }
+      });
+
+      tdAction.appendChild(actionBtn);
+    } else {
+      tdAction.textContent = '-';
+    }
+
+    tr.appendChild(tdAction);
+    frag.appendChild(tr);
+  });
+
+  tbody.appendChild(frag);
+  updateUserLoadMoreUI();
+}
+
+async function loadUserFirstPage() {
+  if (userState.loading) return;
+  userState.loading = true;
+  userState.loadedOnce = true;
+  updateUserLoadMoreUI();
+
+  clearUserTbody();
+
+  const input = document.getElementById('userSearchInput');
+  userState.q = String(input?.value || '').trim();
+  userState.cursor = null;
+  userState.hasMore = false;
+
+  try {
+    const result = await apiGetAdminUsers(userState.q, null);
+    if (!result) return;
+
+    userState.hasMore = Boolean(result.meta?.hasMore);
+    userState.cursor = result.meta?.nextCursor || null;
+
+    renderUserRowsAppend(result.data);
+  } finally {
+    userState.loading = false;
+    updateUserLoadMoreUI();
+  }
+}
+
+async function loadUserMore() {
+  if (userState.loading) return;
+  if (!userState.hasMore) return;
+
+  userState.loading = true;
+  updateUserLoadMoreUI();
+
+  try {
+    const result = await apiGetAdminUsers(userState.q, userState.cursor);
+    if (!result) return;
+
+    userState.hasMore = Boolean(result.meta?.hasMore);
+    userState.cursor = result.meta?.nextCursor || null;
+
+    renderUserRowsAppend(result.data);
+  } finally {
+    userState.loading = false;
+    updateUserLoadMoreUI();
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const requestStatusSelect = document.getElementById('requestStatusSelect');
   const requestReloadBtn = document.getElementById('requestReloadBtn');
@@ -633,6 +884,11 @@ document.addEventListener('DOMContentLoaded', async () => {
   const reviewReloadBtn = document.getElementById('reviewReloadBtn');
   const reviewLoadMoreBtn = document.getElementById('reviewLoadMoreBtn');
   const reviewsTab = document.getElementById('reviews-tab');
+
+  const userSearchForm = document.getElementById('userSearchForm');
+  const userReloadBtn = document.getElementById('userReloadBtn');
+  const userLoadMoreBtn = document.getElementById('userLoadMoreBtn');
+  const usersTab = document.getElementById('users-tab');
 
   const urlStatus = qsGet('status') || 'pending';
   if (requestStatusSelect) requestStatusSelect.value = urlStatus;
@@ -649,6 +905,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   reviewLoadMoreBtn?.addEventListener('click', loadReviewMore);
   reviewsTab?.addEventListener('shown.bs.tab', async () => {
     if (!reviewState.loadedOnce) await loadReviewFirstPage();
+  });
+
+  userSearchForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await loadUserFirstPage();
+  });
+  userReloadBtn?.addEventListener('click', loadUserFirstPage);
+  userLoadMoreBtn?.addEventListener('click', loadUserMore);
+  usersTab?.addEventListener('shown.bs.tab', async () => {
+    if (!userState.loadedOnce) await loadUserFirstPage();
   });
 
   await loadRequestFirstPage();

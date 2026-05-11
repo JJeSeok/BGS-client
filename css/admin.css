@@ -111,6 +111,18 @@
   font-size: 13px;
 }
 
+.admin-user-cell {
+  min-width: 120px;
+}
+
+.admin-username {
+  font-family: var(--bs-font-monospace);
+}
+
+.admin-action-cell {
+  min-width: 92px;
+}
+
 .admin-review-content {
   display: -webkit-box;
   max-width: 320px;

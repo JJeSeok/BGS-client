@@ -237,10 +237,72 @@
           role="tabpanel"
           aria-labelledby="users-tab"
         >
+          <div class="card mb-3">
+            <div class="card-body admin-control-bar">
+              <form id="userSearchForm" class="admin-search-form">
+                <label for="userSearchInput" class="visually-hidden">
+                  사용자 검색
+                </label>
+                <input
+                  id="userSearchInput"
+                  class="form-control form-control-sm"
+                  type="search"
+                  placeholder="username, 닉네임 검색"
+                  autocomplete="off"
+                />
+                <button class="btn btn-sm btn-primary" type="submit">
+                  검색
+                </button>
+              </form>
+
+              <button
+                id="userReloadBtn"
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+              >
+                새로고침
+              </button>
+            </div>
+          </div>
+
           <div class="card">
-            <div class="card-body admin-placeholder">
-              <h5 class="mb-2">사용자 관리</h5>
-              <p class="muted mb-0">사용자 관리 기능은 다음 단계에서 추가됩니다.</p>
+            <div class="card-body">
+              <div
+                id="userEmpty"
+                class="muted admin-empty"
+                style="display: none"
+              >
+                사용자가 없습니다.
+              </div>
+
+              <div class="table-responsive">
+                <table class="table align-middle admin-table user-table">
+                  <thead>
+                    <tr>
+                      <th class="td-tight">ID</th>
+                      <th>계정</th>
+                      <th class="td-tight">상태</th>
+                      <th class="td-tight">정지일</th>
+                      <th class="td-tight">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody id="userTbody"></tbody>
+                </table>
+              </div>
+
+              <div
+                id="userLoadMoreWrap"
+                class="admin-load-more"
+                style="display: none"
+              >
+                <button
+                  id="userLoadMoreBtn"
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                >
+                  더보기
+                </button>
+              </div>
             </div>
           </div>
         </section>
