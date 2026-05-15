@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8080';
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 const ENDPOINTS = {
   request: '/users/forgotPassword/request',
   verify: '/users/forgotPassword/verify',
@@ -17,9 +17,17 @@ const resultBox = document.getElementById('pwfind_result');
 
 function showAlert(msg, type = 'success') {
   if (!resultBox) return alert(msg);
-  resultBox.innerHTML = `<div class="custom-alert alert ${
+
+  resultBox.textContent = '';
+
+  const alertBox = document.createElement('div');
+  alertBox.className = `custom-alert alert ${
     type === 'error' ? 'alert-danger' : 'alert-success'
-  }" role="alert"> ${msg}</div>`;
+  }`;
+  alertBox.setAttribute('role', 'alert');
+  alertBox.textContent = msg;
+
+  resultBox.appendChild(alertBox);
 }
 
 async function postJSON(url, body) {

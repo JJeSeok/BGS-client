@@ -1,6 +1,6 @@
 import { LocationStore } from './locationStore.js';
 
-const API_BASE = 'http://localhost:8080';
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 const SEARCH_NOTICE_DURATION = 3500;
 const EMPTY_SEARCH_NOTICE_DURATION = 5000;
 

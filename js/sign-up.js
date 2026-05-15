@@ -1,3 +1,5 @@
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
+
 document
   .getElementById('join_form')
   .addEventListener('submit', async function (e) {
@@ -78,7 +80,7 @@ document
     };
 
     try {
-      const res = await fetch('http://localhost:8080/users/signup', {
+      const res = await fetch(`${API_BASE}/users/signup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

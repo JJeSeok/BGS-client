@@ -1,3 +1,5 @@
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
+
 const phoneForm = document.getElementById('idfind_form_phone');
 const emailForm = document.getElementById('idfind_form_email');
 const resultBox = document.getElementById('idfind_result');
@@ -16,9 +18,17 @@ function show_email() {
 
 function showAlert(msg, type = 'success') {
   if (!resultBox) return alert(msg);
-  resultBox.innerHTML = `<div class="custom-alert alert ${
+
+  resultBox.textContent = '';
+
+  const alertBox = document.createElement('div');
+  alertBox.className = `custom-alert alert ${
     type === 'error' ? 'alert-danger' : 'alert-success'
-  }" role="alert"> ${type === 'error' ? msg : '아이디: ' + msg}</div>`;
+  }`;
+  alertBox.setAttribute('role', 'alert');
+  alertBox.textContent = type === 'error' ? msg : `아이디: ${msg}`;
+
+  resultBox.appendChild(alertBox);
 }
 
 async function postJson(url, body) {
@@ -61,7 +71,7 @@ phoneForm.addEventListener('submit', async (e) => {
   const btn = phoneForm.querySelector('button[type="submit"]');
   btn?.setAttribute('disabled', 'disabled');
 
-  await postJson('http://localhost:8080/users/forgotId-phone', { name, phone });
+  await postJson(`${API_BASE}/users/forgotId-phone`, { name, phone });
 
   btn?.removeAttribute('disabled');
 });
@@ -82,10 +92,10 @@ emailForm.addEventListener('submit', async (e) => {
     return;
   }
 
-  const btn = phoneForm.querySelector('button[type="submit"]');
+  const btn = emailForm.querySelector('button[type="submit"]');
   btn?.setAttribute('disabled', 'disabled');
 
-  await postJson('http://localhost:8080/users/forgotId-email', { name, email });
+  await postJson(`${API_BASE}/users/forgotId-email`, { name, email });
 
   btn?.removeAttribute('disabled');
 });

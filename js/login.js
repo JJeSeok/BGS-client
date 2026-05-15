@@ -1,6 +1,9 @@
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
+
 const form = document.getElementById('loginForm');
 const errorBox = document.getElementById('login_error');
-const next = new URLSearchParams(location.search).get('next') || 'index.html';
+const next = new URLSearchParams(location.search).get('next');
+const safeNext = window.AppRedirect.getSafeRedirect(next, '/index.html');
 
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
@@ -43,7 +46,7 @@ form.addEventListener('submit', async (e) => {
   }
 
   try {
-    const res = await fetch('http://localhost:8080/users/login', {
+    const res = await fetch(`${API_BASE}/users/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
@@ -58,7 +61,7 @@ form.addEventListener('submit', async (e) => {
     }
 
     localStorage.setItem('token', data.token);
-    location.href = next;
+    location.href = safeNext;
   } catch (err) {
     errorBox.innerText = '서버 오류가 발생했습니다.';
     errorBox.style.display = 'block';

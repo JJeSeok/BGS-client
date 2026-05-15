@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8080';
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 
 const restaurantId = new URLSearchParams(location.search).get('restaurant_id');
 const reviewId = new URLSearchParams(location.search).get('review_id');
@@ -447,12 +447,13 @@ async function onSubmitReview(e) {
 
     alert(isEdit ? '리뷰가 수정되었습니다!' : '리뷰가 등록되었습니다!');
 
-    let redirectUrl;
-    if (next) {
-      redirectUrl = decodeURIComponent(next);
-    } else {
-      redirectUrl = `restaurant.html?id=${encodeURIComponent(restaurantId)}`;
-    }
+    const defaultRedirectUrl = `restaurant.html?id=${encodeURIComponent(
+      restaurantId,
+    )}`;
+    const redirectUrl = window.AppRedirect.getSafeRedirect(
+      next,
+      defaultRedirectUrl,
+    );
 
     location.href = redirectUrl;
   } catch (err) {

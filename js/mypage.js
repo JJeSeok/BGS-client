@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8080';
+const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 
 let currentUser = null;
 let myReviews = [];
@@ -876,7 +876,7 @@ async function deleteReview(reviewId, liElement) {
       headers: { ...authHeaders() },
     });
 
-    if (res.status === 204) {
+    if (res.status === 200) {
       const idNum = Number(reviewId);
       myReviews = myReviews.filter((r) => r.id !== idNum);
 
