@@ -203,9 +203,7 @@ function ensureDefaultBusinessHours(hours) {
 }
 
 function getImageUrl(url) {
-  if (!url) return '';
-  if (url.startsWith('http://') || url.startsWith('https://')) return url;
-  return `${API_BASE}${url}`;
+  return window.AppImage.resolveImageUrl(url);
 }
 
 /* ---------------------------
@@ -392,6 +390,7 @@ function setCurrentMainImage(url) {
 
   if (url) {
     img.src = getImageUrl(url);
+    window.AppImage.applyImageFallback(img);
     img.style.display = 'block';
     empty.style.display = 'none';
   } else {
@@ -505,6 +504,7 @@ function createSubImageCard({
   img.className = 'sub-image-thumb';
   img.alt = '추가 이미지';
   img.src = imageUrl;
+  window.AppImage.applyImageFallback(img);
 
   const body = document.createElement('div');
   body.className = 'sub-image-body';

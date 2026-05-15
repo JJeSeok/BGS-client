@@ -138,8 +138,8 @@ function fillProfile(me) {
   }
 
   if (profileImageEl) {
-    profileImageEl.src =
-      normalizeImgUrl(me.profile_image_url) || '/images/흠.png';
+    profileImageEl.src = normalizeImgUrl(me.profile_image_url);
+    window.AppImage.applyImageFallback(profileImageEl);
   }
 }
 
@@ -649,9 +649,9 @@ function buildReviewItem(review) {
 
   // 프로필 이미지
   if (profilImgEl) {
-    profilImgEl.src =
-      normalizeImgUrl(review.userProfileImage) || '/images/흠.png';
+    profilImgEl.src = normalizeImgUrl(review.userProfileImage);
     profilImgEl.alt = 'user profile picture';
+    window.AppImage.applyImageFallback(profilImgEl);
   }
 
   // 좋아요/싫어요
@@ -697,6 +697,7 @@ function buildReviewItem(review) {
       const imgEl = document.createElement('img');
       imgEl.className = 'restaurant_reviewItem_Picture';
       imgEl.src = normalizeImgUrl(img.url);
+      window.AppImage.applyImageFallback(imgEl);
 
       btn.appendChild(imgEl);
       item.appendChild(btn);
@@ -721,16 +722,7 @@ function buildReviewItem(review) {
 }
 
 function normalizeImgUrl(url) {
-  if (!url) return '';
-  try {
-    const u = new URL(url, API_BASE);
-    if (!['http:', 'https:'].includes(u.protocol)) {
-      throw new Error('bad url');
-    }
-    return u.href;
-  } catch (error) {
-    return '';
-  }
+  return window.AppImage.resolveImageUrl(url);
 }
 
 async function onReviewReactionClick(event) {
@@ -973,6 +965,7 @@ function buildVisitRestaurantItem({ id, name, address, imageUrl }) {
   img.className = 'restaurant_img';
   img.src = normalizeImgUrl(imageUrl);
   img.alt = String(name);
+  window.AppImage.applyImageFallback(img);
 
   aImg.appendChild(img);
 
@@ -1117,6 +1110,7 @@ function buildLikedRestaurantItem({ id, name, address, imageUrl }) {
   img.className = 'restaurant_img';
   img.src = normalizeImgUrl(imageUrl);
   img.alt = String(name);
+  window.AppImage.applyImageFallback(img);
 
   aImg.appendChild(img);
 
@@ -1350,7 +1344,7 @@ function initProfileImageUploader() {
         return;
       }
 
-      img.src = '/images/흠.png';
+      img.src = window.AppImage.DEFAULT_IMAGE_PATH;
       prevSrc = img.src;
       setRemoveVisible(false);
     } catch (err) {
@@ -1394,24 +1388,24 @@ function initProfileImageUploader() {
           location.href = `login.html?next=${encodeURIComponent(back)}`;
           return;
         }
-        img.src = prevSrc || '/images/흠.png';
+        img.src = prevSrc || window.AppImage.DEFAULT_IMAGE_PATH;
         alert(result.message || '프로필 이미지 업로드에 실패했습니다.');
         return;
       }
 
       const url = result.data?.profileImageUrl;
       if (!url) {
-        img.src = prevSrc || '/images/흠.png';
+        img.src = prevSrc || window.AppImage.DEFAULT_IMAGE_PATH;
         alert('업로드 응답이 올바르지 않습니다.');
         return;
       }
 
-      img.src = normalizeImgUrl(url) || '/images/흠.png';
+      img.src = normalizeImgUrl(url);
       prevSrc = img.src;
       setRemoveVisible(true);
     } catch (err) {
       console.error(err);
-      img.src = prevSrc || '/images/흠.png';
+      img.src = prevSrc || window.AppImage.DEFAULT_IMAGE_PATH;
       alert('서버와 통신 중 오류가 발생했습니다.');
     } finally {
       if (previewUrl) {
@@ -1483,7 +1477,8 @@ function buildBlindUserItem(user) {
   const img = document.createElement('img');
   img.className = 'blind_userPicture';
   img.alt = user.name ?? '';
-  img.src = normalizeImgUrl(user.profileImageUrl) || '/images/흠.png';
+  img.src = normalizeImgUrl(user.profileImageUrl);
+  window.AppImage.applyImageFallback(img);
 
   aImg.appendChild(img);
 
@@ -1691,8 +1686,9 @@ function renderMyRequests(rows) {
 
     // 썸네일
     const img = document.createElement('img');
-    img.src = normalizeImgUrl(r.main_image_url) || '/images/흠.png';
+    img.src = normalizeImgUrl(r.main_image_url);
     img.alt = '요청 대표 이미지';
+    window.AppImage.applyImageFallback(img);
     img.style.width = '64px';
     img.style.height = '64px';
     img.style.objectFit = 'cover';
@@ -1794,8 +1790,9 @@ function buildOwnerRestaurant(restaurant) {
 
   const thumb = document.createElement('img');
   thumb.className = 'ownerRestaurant_thumb';
-  thumb.src = normalizeImgUrl(restaurant.main_image_url) || '/images/흠.png';
+  thumb.src = normalizeImgUrl(restaurant.main_image_url);
   thumb.alt = `${restaurant.name} 대표 이미지`;
+  window.AppImage.applyImageFallback(thumb);
 
   thumbLink.appendChild(thumb);
 

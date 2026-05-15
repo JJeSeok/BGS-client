@@ -19,14 +19,7 @@ function setToast(type, text) {
 }
 
 function normalizeImgUrl(url) {
-  if (!url) return '/images/흠.png';
-  try {
-    const u = new URL(url, API_BASE);
-    if (!['http:', 'https:'].includes(u.protocol)) throw new Error('bad');
-    return u.href;
-  } catch {
-    return '/images/흠.png';
-  }
+  return window.AppImage.resolveImageUrl(url);
 }
 
 function formatDate(dStr) {
@@ -274,7 +267,7 @@ function renderRequestRowsAppend(rows) {
     img.className = 'thumb';
     img.src = normalizeImgUrl(r.main_image_url);
     img.alt = 'thumb';
-    img.addEventListener('error', () => (img.src = '/images/흠.png'));
+    window.AppImage.applyImageFallback(img);
 
     const info = document.createElement('div');
 
@@ -580,8 +573,9 @@ function renderReviewRowsAppend(rows) {
         img.src = imageUrl;
         img.alt = '리뷰 이미지';
         img.addEventListener('error', () => {
-          img.src = '/images/흠.png';
-          link.href = '/images/흠.png';
+          img.onerror = null;
+          img.src = window.AppImage.DEFAULT_IMAGE_PATH;
+          link.href = window.AppImage.DEFAULT_IMAGE_PATH;
         });
 
         link.appendChild(img);

@@ -141,6 +141,7 @@ function updateImg() {
     img.alt = p.alt ?? '';
     img.loading = 'lazy';
     img.decoding = 'async';
+    window.AppImage.applyImageFallback(img);
 
     figure.appendChild(img);
     imgShow.appendChild(figure);
@@ -529,16 +530,7 @@ async function init() {
 }
 
 function normalizeImgUrl(url) {
-  if (!url) return '';
-  try {
-    const u = new URL(url, API_BASE);
-    if (!['http:', 'https:'].includes(u.protocol)) {
-      throw new Error('bad url');
-    }
-    return u.href;
-  } catch (error) {
-    return '';
-  }
+  return window.AppImage.resolveImageUrl(url);
 }
 
 function randerAddress(td, road, jibun) {
@@ -732,9 +724,9 @@ function buildReviewItem(review) {
 
   // 프로필 이미지
   if (profilImgEl) {
-    profilImgEl.src =
-      normalizeImgUrl(review.userProfileImage) || '/images/흠.png';
+    profilImgEl.src = normalizeImgUrl(review.userProfileImage);
     profilImgEl.alt = 'user profile picture';
+    window.AppImage.applyImageFallback(profilImgEl);
   }
 
   // 좋아요/싫어요
@@ -784,6 +776,7 @@ function buildReviewItem(review) {
         const imgEl = document.createElement('img');
         imgEl.className = 'restaurant_reviewItem_Picture';
         imgEl.src = normalizeImgUrl(img.url);
+        window.AppImage.applyImageFallback(imgEl);
 
         btn.appendChild(imgEl);
 
@@ -1120,6 +1113,7 @@ function updateReviewImageModal() {
 
   const img = images[currentModalImageIndex];
   modalImg.src = normalizeImgUrl(img.url);
+  window.AppImage.applyImageFallback(modalImg);
 
   if (modalCounter) {
     modalCounter.textContent = `${currentModalImageIndex + 1} / ${len}`;

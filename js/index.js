@@ -250,9 +250,7 @@ function renderCards(grid, items) {
     img.className = 'card-img-top';
     img.src = normalizeImgUrl(it?.mainImageUrl);
     img.alt = name;
-    img.addEventListener('error', () => {
-      img.src = '/images/흠.png';
-    });
+    window.AppImage.applyImageFallback(img);
 
     //body
     const body = div('card-body p-3 text-center');
@@ -318,17 +316,7 @@ function renderCards(grid, items) {
 }
 
 function normalizeImgUrl(url) {
-  if (!url) return '/images/흠.png';
-
-  try {
-    const u = new URL(url, API_BASE);
-    if (!['http:', 'https:'].includes(u.protocol)) {
-      throw new Error('bad url');
-    }
-    return u.href;
-  } catch (error) {
-    return '/images/흠.png';
-  }
+  return window.AppImage.resolveImageUrl(url);
 }
 
 function num(v, d = 0) {

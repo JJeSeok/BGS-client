@@ -136,15 +136,7 @@ function renderExistingImages() {
 }
 
 function normalizeImgUrl(url) {
-  try {
-    const u = new URL(url, API_BASE);
-    if (!['http:', 'https:'].includes(u.protocol)) {
-      throw new Error('bad url');
-    }
-    return u.href;
-  } catch (error) {
-    return '';
-  }
+  return window.AppImage.resolveImageUrl(url);
 }
 
 const textarea = document.querySelector('.ReviewEditor_write');
