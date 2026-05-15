@@ -3,6 +3,7 @@ import { LocationStore } from './locationStore.js';
 const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 const SEARCH_NOTICE_DURATION = 3500;
 const EMPTY_SEARCH_NOTICE_DURATION = 5000;
+const DETAIL_RESTAURANT_NAME_MAX_LENGTH = 20;
 
 let map;
 let userMarker = null;
@@ -92,6 +93,52 @@ function iconRestaurantMarkerActive() {
   return { content, anchor };
 }
 
+function isValidCoordinate(value, min, max) {
+  return Number.isFinite(value) && value >= min && value <= max;
+}
+
+function getDetailRestaurantFromParams() {
+  const params = new URLSearchParams(location.search);
+  const lat = Number(params.get('lat'));
+  const lng = Number(params.get('lng'));
+  const id = (params.get('id') || '').trim();
+  const name = (params.get('name') || '').trim();
+
+  if (!isValidCoordinate(lat, -90, 90)) return null;
+  if (!isValidCoordinate(lng, -180, 180)) return null;
+  if (!/^\d+$/.test(id)) return null;
+  if (!name) return null;
+
+  return {
+    id,
+    lat,
+    lng,
+    name: name.slice(0, DETAIL_RESTAURANT_NAME_MAX_LENGTH),
+    isDetailPreview: true,
+  };
+}
+
+function createRestaurantMarker(restaurant) {
+  const restaurantMarker = new naver.maps.Marker({
+    position: new naver.maps.LatLng(restaurant.lat, restaurant.lng),
+    map,
+    title: restaurant.name,
+    icon: iconRestaurantMarker(),
+  });
+  restaurantMarker.restaurantId = restaurant.id;
+
+  naver.maps.Event.addListener(restaurantMarker, 'click', () => {
+    ignoreNextMapClick = true;
+    setActiveRestaurantMarker(restaurantMarker);
+    showRestaurantCard(restaurant);
+    setTimeout(() => {
+      ignoreNextMapClick = false;
+    }, 0);
+  });
+
+  return restaurantMarker;
+}
+
 function clearRestaurantMarkers() {
   restaurantMarkers.forEach((restaurantMarker) =>
     restaurantMarker.setMap(null),
@@ -119,6 +166,19 @@ function formatDistance(distance) {
 
 function showRestaurantCard(restaurant) {
   selectedRestaurant = restaurant;
+
+  if (restaurant.isDetailPreview) {
+    restaurantCardCategory.textContent = '식당 위치';
+    restaurantCardName.textContent = restaurant.name || '이름 없는 식당';
+    restaurantCardMeta.textContent = '상세 페이지에서 선택한 식당입니다.';
+    restaurantCardAddress.textContent =
+      '상세보기에서 주소와 평점을 확인할 수 있습니다.';
+
+    hidePanel();
+    restaurantCard.classList.remove('hidden');
+    updateMyLocationButtonVisibility();
+    return;
+  }
 
   restaurantCardCategory.textContent = restaurant.category || '기타';
   restaurantCardName.textContent = restaurant.name || '이름 없는 식당';
@@ -161,7 +221,10 @@ function updateMyLocationButtonVisibility() {
 }
 
 function setActiveRestaurantMarker(restaurantMarker) {
-  if (selectedRestaurantMarker && selectedRestaurantMarker !== restaurantMarker) {
+  if (
+    selectedRestaurantMarker &&
+    selectedRestaurantMarker !== restaurantMarker
+  ) {
     selectedRestaurantMarker.setIcon(iconRestaurantMarker());
   }
 
@@ -249,26 +312,7 @@ async function loadRestaurantMarkers(lat, lng, q = '') {
     clearRestaurantMarkers();
     restaurantMarkers = restaurants
       .filter((restaurant) => restaurant.lat != null && restaurant.lng != null)
-      .map((restaurant) => {
-        const restaurantMarker = new naver.maps.Marker({
-          position: new naver.maps.LatLng(restaurant.lat, restaurant.lng),
-          map,
-          title: restaurant.name,
-          icon: iconRestaurantMarker(),
-        });
-        restaurantMarker.restaurantId = restaurant.id;
-
-        naver.maps.Event.addListener(restaurantMarker, 'click', () => {
-          ignoreNextMapClick = true;
-          setActiveRestaurantMarker(restaurantMarker);
-          showRestaurantCard(restaurant);
-          setTimeout(() => {
-            ignoreNextMapClick = false;
-          }, 0);
-        });
-
-        return restaurantMarker;
-      });
+      .map((restaurant) => createRestaurantMarker(restaurant));
     return { restaurants, meta };
   } catch (err) {
     console.error(err);
@@ -504,20 +548,40 @@ function confirmCurrentLocation() {
   window.location.href = getBackUrl();
 }
 
+function showDetailRestaurantOnMap(restaurant) {
+  const restaurantMarker = createRestaurantMarker(restaurant);
+  restaurantMarkers = [restaurantMarker];
+  setActiveRestaurantMarker(restaurantMarker);
+  showRestaurantCard(restaurant);
+}
+
 async function initMap() {
-  const { loc, reason } = await LocationStore.getPreferredLocation({
-    saveGeo: false,
-  });
+  const detailRestaurant = getDetailRestaurantFromParams();
+  let loc = detailRestaurant;
+  let reason = 'detail';
+
+  if (!detailRestaurant) {
+    const preferred = await LocationStore.getPreferredLocation({
+      saveGeo: false,
+    });
+    loc = preferred.loc;
+    reason = preferred.reason;
+  }
+
   const center = new naver.maps.LatLng(loc.lat, loc.lng);
   map = new naver.maps.Map('map', {
     center,
     zoom: reason === 'fallback' ? 14 : 17,
   });
 
-  placeMarker(center);
-  loadRestaurantMarkers(loc.lat, loc.lng);
+  if (detailRestaurant) {
+    showDetailRestaurantOnMap(detailRestaurant);
+  } else {
+    placeMarker(center);
+    loadRestaurantMarkers(loc.lat, loc.lng);
+  }
 
-  if (loc.source !== 'geo') {
+  if (!detailRestaurant && loc.source !== 'geo') {
     userMarker.setIcon(iconPinNeo());
   }
 

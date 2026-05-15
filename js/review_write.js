@@ -374,7 +374,21 @@ window.addEventListener('keydown', (e) => {
 });
 ligthboxImg.addEventListener('click', (e) => e.stopPropagation());
 
+const cancelBtn = document.getElementById('cancelBtn');
 const submitBtn = document.getElementById('submitBtn');
+
+function getRestaurantRedirectUrl() {
+  const defaultRedirectUrl = `restaurant.html?id=${encodeURIComponent(
+    restaurantId,
+  )}`;
+
+  return window.AppRedirect.getSafeRedirect(next, defaultRedirectUrl);
+}
+
+cancelBtn.addEventListener('click', () => {
+  location.href = getRestaurantRedirectUrl();
+});
+
 submitBtn.addEventListener('click', onSubmitReview);
 
 async function onSubmitReview(e) {
@@ -439,15 +453,7 @@ async function onSubmitReview(e) {
 
     alert(isEdit ? '리뷰가 수정되었습니다!' : '리뷰가 등록되었습니다!');
 
-    const defaultRedirectUrl = `restaurant.html?id=${encodeURIComponent(
-      restaurantId,
-    )}`;
-    const redirectUrl = window.AppRedirect.getSafeRedirect(
-      next,
-      defaultRedirectUrl,
-    );
-
-    location.href = redirectUrl;
+    location.href = getRestaurantRedirectUrl();
   } catch (err) {
     console.error(err);
     alert('서버와 통신 중 오류가 발생했습니다.');
