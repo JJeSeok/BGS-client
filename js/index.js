@@ -10,7 +10,7 @@ let closeButton = document.querySelector('.btn_layer_close');
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
   mypageLink.addEventListener('click', (e) => {
-    const token = localStorage.getItem('token');
+    const token = window.AppAuth.getToken();
 
     if (!token) {
       e.preventDefault();
@@ -62,7 +62,7 @@ function clearEl(el) {
 }
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -73,7 +73,7 @@ async function fetchMe() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
     if (res.status === 401) {
-      localStorage.removeItem('token');
+      window.AppAuth.clearToken();
       return null;
     }
     if (!res.ok) return null;
@@ -90,28 +90,57 @@ async function logout() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
   } catch {}
-  localStorage.removeItem('token');
+  window.AppAuth.clearToken();
   location.reload();
 }
 
-async function initAuthMenu() {
+function getAuthMenuElements() {
   const loginBtn = document.getElementById('login-link');
   const userMenu = document.getElementById('user-menu');
   const userNameEl = document.getElementById('user-name');
   const logoutBtn = document.getElementById('logout-btn');
 
+  return { loginBtn, userMenu, userNameEl, logoutBtn };
+}
+
+function setAuthMenuState(state, user = null) {
+  const { loginBtn, userMenu, userNameEl } = getAuthMenuElements();
+
+  if (state === 'pending') {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'none';
+    return;
+  }
+
+  if (state === 'logged-in') {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'block';
+    if (userNameEl) userNameEl.textContent = user?.username ?? '';
+    return;
+  }
+
+  if (loginBtn) loginBtn.style.display = 'block';
+  if (userMenu) userMenu.style.display = 'none';
+  if (userNameEl) userNameEl.textContent = '';
+}
+
+async function initAuthMenu() {
+  const { logoutBtn } = getAuthMenuElements();
+  if (logoutBtn) logoutBtn.onclick = logout;
+
+  if (!window.AppAuth.getToken()) {
+    setAuthMenuState('logged-out');
+    return;
+  }
+
+  setAuthMenuState('pending');
   const me = await fetchMe();
 
   if (me && me.username) {
-    loginBtn.style.display = 'none';
-    userMenu.style.display = 'block';
-    userNameEl.textContent = me.username;
+    setAuthMenuState('logged-in', me);
   } else {
-    loginBtn.style.display = 'block';
-    userMenu.style.display = 'none';
+    setAuthMenuState('logged-out');
   }
-
-  logoutBtn?.addEventListener('click', logout);
 }
 
 async function init() {
@@ -492,6 +521,12 @@ document.addEventListener('DOMContentLoaded', async function () {
 
   setupInfiniteScroll();
   await init();
+});
+
+window.addEventListener('pageshow', () => {
+  if (!window.AppAuth.getToken()) {
+    setAuthMenuState('logged-out');
+  }
 });
 
 function renderActiveMeta() {

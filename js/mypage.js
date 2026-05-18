@@ -60,7 +60,7 @@ blindMoreButton?.addEventListener('click', () => loadBlindList());
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
   mypageLink.addEventListener('click', (e) => {
-    const token = localStorage.getItem('token');
+    const token = window.AppAuth.getToken();
 
     if (!token) {
       e.preventDefault();
@@ -72,7 +72,7 @@ if (mypageLink) {
 }
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -84,7 +84,7 @@ async function fetchMyProfile() {
     });
 
     if (res.status === 401) {
-      localStorage.removeItem('token');
+      window.AppAuth.clearToken();
       return null;
     }
     if (!res.ok) return null;
@@ -101,7 +101,7 @@ async function logout() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
   } catch {}
-  localStorage.removeItem('token');
+  window.AppAuth.clearToken();
   currentUser = null;
   location.reload();
 }
@@ -739,7 +739,7 @@ async function onReviewReactionClick(event) {
 
   const type = likeEl ? 'like' : 'dislike';
 
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   if (!token) {
     location.href = `login.html?next=${encodeURIComponent(
       location.pathname + location.search,

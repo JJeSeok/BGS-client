@@ -1,7 +1,7 @@
 const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -12,7 +12,7 @@ async function fetchMe() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
     if (res.status === 401) {
-      localStorage.removeItem('token');
+      window.AppAuth.clearToken();
       return null;
     }
     if (!res.ok) return null;
@@ -29,7 +29,7 @@ async function logout() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
   } catch {}
-  localStorage.removeItem('token');
+  window.AppAuth.clearToken();
   location.reload();
 }
 

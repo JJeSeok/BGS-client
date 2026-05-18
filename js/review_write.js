@@ -16,7 +16,7 @@ const newImages = [];
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
   mypageLink.addEventListener('click', (e) => {
-    const token = localStorage.getItem('token');
+    const token = window.AppAuth.getToken();
 
     if (!token) {
       e.preventDefault();
@@ -28,7 +28,7 @@ if (mypageLink) {
 }
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -39,7 +39,7 @@ async function fetchMe() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
     if (res.status === 401) {
-      localStorage.removeItem('token');
+      window.AppAuth.clearToken();
       return null;
     }
     if (!res.ok) return null;
@@ -56,7 +56,7 @@ async function logout() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
   } catch {}
-  localStorage.removeItem('token');
+  window.AppAuth.clearToken();
   location.reload();
 }
 
@@ -394,7 +394,7 @@ submitBtn.addEventListener('click', onSubmitReview);
 async function onSubmitReview(e) {
   e.preventDefault();
 
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   if (!token) {
     alert('로그인이 필요합니다.');
     const back = location.pathname + location.search;

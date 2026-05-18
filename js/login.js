@@ -8,7 +8,7 @@ const safeNext = window.AppRedirect.getSafeRedirect(next, '/index.html');
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
   mypageLink.addEventListener('click', (e) => {
-    const token = localStorage.getItem('token');
+    const token = window.AppAuth.getToken();
 
     if (!token) {
       e.preventDefault();
@@ -60,7 +60,8 @@ form.addEventListener('submit', async (e) => {
       return;
     }
 
-    localStorage.setItem('token', data.token);
+    const remember = document.getElementById('rememberMe')?.checked === true;
+    window.AppAuth.setToken(data.token, { remember });
     location.href = safeNext;
   } catch (err) {
     errorBox.innerText = '서버 오류가 발생했습니다.';

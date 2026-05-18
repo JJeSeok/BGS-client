@@ -36,7 +36,7 @@ const RATING_CATEGORY_MAP = {
 const mypageLink = document.querySelector('a[href="/mypage.html"]');
 if (mypageLink) {
   mypageLink.addEventListener('click', (e) => {
-    const token = localStorage.getItem('token');
+    const token = window.AppAuth.getToken();
 
     if (!token) {
       e.preventDefault();
@@ -55,7 +55,7 @@ const starButtonIcon = document.getElementById('star_icon');
 let isClicked = false;
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -66,7 +66,7 @@ async function fetchMe() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
     if (res.status === 401) {
-      localStorage.removeItem('token');
+      window.AppAuth.clearToken();
       return null;
     }
     if (!res.ok) return null;
@@ -83,32 +83,63 @@ async function logout() {
       headers: { 'Content-Type': 'application/json', ...authHeaders() },
     });
   } catch {}
-  localStorage.removeItem('token');
+  window.AppAuth.clearToken();
   location.reload();
 }
 
-async function initAuthMenu() {
+function getAuthMenuElements() {
   const loginBtn = document.getElementById('login-link');
   const userMenu = document.getElementById('user-menu');
   const userNameEl = document.getElementById('user-name');
   const logoutBtn = document.getElementById('logout-btn');
 
+  return { loginBtn, userMenu, userNameEl, logoutBtn };
+}
+
+function setAuthMenuState(state, user = null) {
+  const { loginBtn, userMenu, userNameEl } = getAuthMenuElements();
+  const back = location.pathname + location.search;
+
+  if (state === 'pending') {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'none';
+    return;
+  }
+
+  if (state === 'logged-in') {
+    if (loginBtn) loginBtn.style.display = 'none';
+    if (userMenu) userMenu.style.display = 'block';
+    if (userNameEl) userNameEl.textContent = user?.username ?? '';
+    return;
+  }
+
+  if (loginBtn) {
+    loginBtn.href = `login.html?next=${encodeURIComponent(back)}`;
+    loginBtn.style.display = 'block';
+  }
+  if (userMenu) userMenu.style.display = 'none';
+  if (userNameEl) userNameEl.textContent = '';
+}
+
+async function initAuthMenu() {
+  const { logoutBtn } = getAuthMenuElements();
+  if (logoutBtn) logoutBtn.onclick = logout;
+
+  if (!window.AppAuth.getToken()) {
+    currentUser = null;
+    setAuthMenuState('logged-out');
+    return;
+  }
+
+  setAuthMenuState('pending');
   const me = await fetchMe();
   currentUser = me;
 
   if (me && me.username) {
-    loginBtn.style.display = 'none';
-    userMenu.style.display = 'block';
-    userNameEl.textContent = me.username;
+    setAuthMenuState('logged-in', me);
   } else {
-    const back = location.pathname + location.search;
-    loginBtn.href = `login.html?next=${encodeURIComponent(back)}`;
-
-    loginBtn.style.display = 'block';
-    userMenu.style.display = 'none';
+    setAuthMenuState('logged-out');
   }
-
-  logoutBtn?.addEventListener('click', logout);
 }
 
 function updateTitle() {
@@ -842,7 +873,7 @@ async function onReviewReactionClick(event) {
 
   const type = likeEl ? 'like' : 'dislike';
 
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   if (!token) {
     location.href = `login.html?next=${encodeURIComponent(
       location.pathname + location.search,
@@ -1011,7 +1042,7 @@ async function onReviewBlindClick(event) {
   event.preventDefault();
   event.stopPropagation();
 
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   if (!token) {
     location.href = `login.html?next=${encodeURIComponent(
       location.pathname + location.search,
@@ -1039,7 +1070,7 @@ async function onReviewBlindClick(event) {
 }
 
 starButton.addEventListener('click', async function () {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   if (!token) {
     const back = location.pathname + location.search;
     location.href = `login.html?next=${encodeURIComponent(back)}`;
@@ -1289,4 +1320,11 @@ document.addEventListener('DOMContentLoaded', function () {
   initAuthMenu();
   init();
   setupWeeklyHoursToggle();
+});
+
+window.addEventListener('pageshow', () => {
+  if (!window.AppAuth.getToken()) {
+    currentUser = null;
+    setAuthMenuState('logged-out');
+  }
 });

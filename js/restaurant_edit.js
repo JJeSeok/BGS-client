@@ -29,7 +29,7 @@ const editState = {
 };
 
 function authHeaders() {
-  const token = localStorage.getItem('token');
+  const token = window.AppAuth.getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
@@ -41,7 +41,7 @@ async function fetchMe() {
     });
 
     if (res.status === 401) {
-      localStorage.removeItem('token');
+      window.AppAuth.clearToken();
       return null;
     }
 
@@ -60,7 +60,7 @@ async function logout() {
     });
   } catch {}
 
-  localStorage.removeItem('token');
+  window.AppAuth.clearToken();
   location.reload();
 }
 

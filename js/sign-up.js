@@ -92,7 +92,7 @@ document
         const msg = document.getElementById('successMessage');
         msg.style.display = 'block';
 
-        localStorage.setItem('token', data.token);
+        window.AppAuth.setToken(data.token, { remember: false });
         setTimeout(() => {
           msg.style.display = 'none';
           window.location.href = '/index.html';
