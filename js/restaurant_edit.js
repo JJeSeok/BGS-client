@@ -15,6 +15,8 @@ const MAX_SUB_IMAGE_COUNT = 5;
 const editState = {
   restaurantId: null,
   initialData: null,
+  status: null,
+  closedAt: null,
 
   existingMainImageUrl: '',
   newMainImageFile: null,
@@ -26,6 +28,7 @@ const editState = {
   menus: [], // [{ id, name, price, isNew, isDeleted }]
 
   isSubmitting: false,
+  isClosing: false,
 };
 
 function authHeaders() {
@@ -153,6 +156,91 @@ function getBackToMyPageUrl() {
   return '/mypage.html';
 }
 
+function formatClosedAt(value) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul',
+  }).format(date);
+}
+
+function renderRestaurantStatus(status, closedAt) {
+  const normalizedStatus = String(status || '').toLowerCase();
+  const badge = document.getElementById('restaurantStatusBadge');
+  const description = document.getElementById(
+    'restaurantStatusDescription',
+  );
+  const closedAtEl = document.getElementById('restaurantClosedAt');
+  const closeBtn = document.getElementById('closeRestaurantBtn');
+
+  editState.status = normalizedStatus;
+  editState.closedAt = closedAt || null;
+
+  badge?.classList.remove('is-active', 'is-closed');
+
+  if (normalizedStatus === 'active') {
+    if (badge) {
+      badge.textContent = '운영 중';
+      badge.classList.add('is-active');
+    }
+    if (description) {
+      description.textContent = '현재 정상적으로 운영 중인 식당입니다.';
+    }
+    if (closedAtEl) {
+      closedAtEl.hidden = true;
+      closedAtEl.textContent = '';
+    }
+    if (closeBtn) {
+      closeBtn.disabled = editState.isClosing;
+      closeBtn.textContent = editState.isClosing
+        ? '처리 중...'
+        : '식당 삭제';
+    }
+    return;
+  }
+
+  if (normalizedStatus === 'closed') {
+    const formattedClosedAt = formatClosedAt(closedAt);
+
+    if (badge) {
+      badge.textContent = '폐업';
+      badge.classList.add('is-closed');
+    }
+    if (description) {
+      description.textContent = '폐업 처리된 식당입니다.';
+    }
+    if (closedAtEl) {
+      closedAtEl.hidden = !formattedClosedAt;
+      closedAtEl.textContent = formattedClosedAt
+        ? `${formattedClosedAt}에 폐업 처리되었습니다.`
+        : '';
+    }
+    if (closeBtn) {
+      closeBtn.disabled = true;
+      closeBtn.textContent = '폐업 처리됨';
+    }
+    return;
+  }
+
+  if (badge) badge.textContent = '상태 확인 불가';
+  if (description) {
+    description.textContent = '식당 운영 상태를 확인할 수 없습니다.';
+  }
+  if (closedAtEl) {
+    closedAtEl.hidden = true;
+    closedAtEl.textContent = '';
+  }
+  if (closeBtn) {
+    closeBtn.disabled = true;
+    closeBtn.textContent = '식당 삭제';
+  }
+}
+
 function setSubmitting(isSubmitting) {
   editState.isSubmitting = isSubmitting;
 
@@ -204,6 +292,11 @@ function ensureDefaultBusinessHours(hours) {
 
 function getImageUrl(url) {
   return window.AppImage.resolveImageUrl(url);
+}
+
+function setClosing(isClosing) {
+  editState.isClosing = isClosing;
+  renderRestaurantStatus(editState.status, editState.closedAt);
 }
 
 /* ---------------------------
@@ -402,6 +495,7 @@ function setCurrentMainImage(url) {
 
 function fillEditState(data) {
   editState.initialData = data;
+  renderRestaurantStatus(data.status, data.closedAt);
 
   editState.existingSubImages = Array.isArray(data.subImages)
     ? data.subImages.map((img) => ({
@@ -1278,6 +1372,77 @@ async function submitEdit() {
 /* ---------------------------
    이벤트
 --------------------------- */
+async function closeRestaurant() {
+  if (editState.status !== 'active' || editState.isClosing) return;
+
+  const ok = confirm(
+    '이 식당을 삭제하시겠습니까? 실제 데이터는 삭제되지 않고 폐업 상태로 변경됩니다.',
+  );
+  if (!ok) return;
+
+  setToast('', '');
+  setClosing(true);
+
+  try {
+    const res = await fetch(
+      `${API_BASE}/restaurants/owner/${editState.restaurantId}/status`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+        },
+      },
+    );
+
+    if (res.status === 401) {
+      window.AppAuth.clearToken();
+      const back = window.location.pathname + window.location.search;
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+      return;
+    }
+
+    const body = await res.json().catch(() => ({}));
+
+    if (res.status === 403) {
+      setToast('err', body?.message || '식당을 삭제할 권한이 없습니다.');
+      return;
+    }
+
+    if (res.status === 404) {
+      setToast('err', body?.message || '식당 정보를 찾을 수 없습니다.');
+      return;
+    }
+
+    if (!res.ok) {
+      setToast('err', body?.message || '식당 삭제에 실패했습니다.');
+      return;
+    }
+
+    let updatedRestaurant = body?.data ?? body;
+
+    if (!updatedRestaurant?.status) {
+      try {
+        const refreshed = await fetchRestaurantForEdit(editState.restaurantId);
+        updatedRestaurant = refreshed?.data ?? refreshed;
+      } catch (refreshErr) {
+        console.warn('폐업 처리 후 식당 상태 재조회 실패', refreshErr);
+      }
+    }
+
+    renderRestaurantStatus(
+      updatedRestaurant?.status || 'closed',
+      updatedRestaurant?.closedAt || null,
+    );
+    setToast('ok', '식당이 폐업 상태로 변경되었습니다.');
+  } catch (err) {
+    console.error(err);
+    setToast('err', '식당 삭제 중 오류가 발생했습니다.');
+  } finally {
+    setClosing(false);
+  }
+}
+
 function initFormEvents() {
   const form = document.getElementById('editForm');
 
@@ -1290,6 +1455,10 @@ function initFormEvents() {
   document
     .getElementById('addrSearchBtn')
     ?.addEventListener('click', openDaumPostcode);
+
+  document
+    .getElementById('closeRestaurantBtn')
+    ?.addEventListener('click', closeRestaurant);
 }
 
 /* ---------------------------

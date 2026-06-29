@@ -135,6 +135,29 @@ button {
   font-size: 100%;
 }
 
+.restaurant-closure-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+  color: #991b1b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.restaurant-closure-notice[hidden] {
+  display: none;
+}
+
+.restaurant-closure-notice strong {
+  display: inline-flex;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #fee2e2;
+  font-size: 12px;
+}
+
 .rate_point {
   color: #ff792a;
   margin-left: 5px;
@@ -180,6 +203,12 @@ button {
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.review_writing_button:disabled,
+.star_button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .star_button_icon {

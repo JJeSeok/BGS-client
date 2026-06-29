@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
@@ -23,7 +23,9 @@
         </div>
         <div class="admin-header-actions">
           <a class="btn btn-outline-secondary" href="/">홈</a>
-          <a class="btn btn-outline-secondary" href="/mypage.html">마이페이지</a>
+          <a class="btn btn-outline-secondary" href="/mypage.html"
+            >마이페이지</a
+          >
         </div>
       </div>
 
@@ -42,6 +44,20 @@
             aria-selected="true"
           >
             식당 등록 요청
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button
+            class="nav-link"
+            id="restaurants-tab"
+            data-bs-toggle="tab"
+            data-bs-target="#restaurantsPanel"
+            type="button"
+            role="tab"
+            aria-controls="restaurantsPanel"
+            aria-selected="false"
+          >
+            레스토랑 관리
           </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -141,6 +157,127 @@
               >
                 <button
                   id="requestLoadMoreBtn"
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                >
+                  더보기
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="tab-pane fade"
+          id="restaurantsPanel"
+          role="tabpanel"
+          aria-labelledby="restaurants-tab"
+        >
+          <div class="card mb-3">
+            <div class="card-body admin-control-bar">
+              <form id="restaurantSearchForm" class="admin-search-form">
+                <label for="restaurantSearchInput" class="visually-hidden">
+                  레스토랑 검색
+                </label>
+                <input
+                  id="restaurantSearchInput"
+                  class="form-control form-control-sm"
+                  type="search"
+                  placeholder="식당명, 지점명, 주소, 소유자 검색"
+                  autocomplete="off"
+                />
+                <button class="btn btn-sm btn-primary" type="submit">
+                  검색
+                </button>
+              </form>
+
+              <div class="admin-field-inline">
+                <label for="restaurantStatusSelect" class="form-label mb-0">
+                  상태
+                </label>
+                <select
+                  id="restaurantStatusSelect"
+                  class="form-select form-select-sm admin-select"
+                >
+                  <option value="all">전체</option>
+                  <option value="active">운영 중</option>
+                  <option value="closed">폐업</option>
+                </select>
+              </div>
+
+              <div class="admin-field-inline">
+                <label for="restaurantSidoSelect" class="form-label mb-0">
+                  지역
+                </label>
+                <select
+                  id="restaurantSidoSelect"
+                  class="form-select form-select-sm admin-select"
+                >
+                  <option value="">전체</option>
+                  <option value="서울">서울</option>
+                  <option value="경기">경기</option>
+                  <option value="인천">인천</option>
+                  <option value="부산">부산</option>
+                  <option value="대구">대구</option>
+                  <option value="광주">광주</option>
+                  <option value="대전">대전</option>
+                  <option value="울산">울산</option>
+                  <option value="강원">강원</option>
+                  <option value="경남">경남</option>
+                  <option value="경북">경북</option>
+                  <option value="전남">전남</option>
+                  <option value="전북">전북</option>
+                  <option value="충남">충남</option>
+                  <option value="충북">충북</option>
+                  <option value="제주">제주</option>
+                </select>
+              </div>
+
+              <button
+                id="restaurantReloadBtn"
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+              >
+                새로고침
+              </button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-body">
+              <div
+                id="restaurantEmpty"
+                class="muted admin-empty"
+                style="display: none"
+              >
+                조건에 맞는 레스토랑이 없습니다.
+              </div>
+
+              <div class="table-responsive">
+                <table class="table align-middle admin-table restaurant-table">
+                  <thead>
+                    <tr>
+                      <th class="td-tight">ID</th>
+                      <th>레스토랑</th>
+                      <th>소유자</th>
+                      <th class="td-tight">상태</th>
+                      <th class="td-tight">리뷰 / 찜</th>
+                      <th class="td-tight">등록일</th>
+                      <th class="td-tight">폐업일</th>
+                      <th class="td-tight">관리</th>
+                    </tr>
+                  </thead>
+                  <tbody id="restaurantTbody"></tbody>
+                </table>
+              </div>
+
+              <div
+                id="restaurantLoadMoreWrap"
+                class="admin-load-more"
+                style="display: none"
+              >
+                <button
+                  id="restaurantLoadMoreBtn"
                   type="button"
                   class="btn btn-outline-secondary btn-sm"
                 >

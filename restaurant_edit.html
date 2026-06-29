@@ -116,6 +116,34 @@
           </div>
         </section>
 
+        <section class="restaurant-status-panel" aria-labelledby="restaurantStatusTitle">
+          <div class="restaurant-status-content">
+            <div class="restaurant-status-heading">
+              <h2 class="restaurant-status-title" id="restaurantStatusTitle">
+                운영 상태
+              </h2>
+              <span
+                class="restaurant-status-badge"
+                id="restaurantStatusBadge"
+              >
+                확인 중
+              </span>
+            </div>
+            <p class="restaurant-status-description" id="restaurantStatusDescription">
+              식당 운영 상태를 불러오고 있습니다.
+            </p>
+            <p class="restaurant-closed-at" id="restaurantClosedAt" hidden></p>
+          </div>
+          <button
+            class="btn btn-outline-danger"
+            type="button"
+            id="closeRestaurantBtn"
+            disabled
+          >
+            식당 삭제
+          </button>
+        </section>
+
         <section class="edit-notice-card">
           <div class="edit-notice-title">안내</div>
           <p class="edit-notice-text mb-0">

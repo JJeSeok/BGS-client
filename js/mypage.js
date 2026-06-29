@@ -325,8 +325,22 @@ pwCheckBtn.addEventListener('click', async function () {
       body: JSON.stringify({ password }),
     });
 
+    const body = await res.json().catch(() => null);
+
+    if (res.status === 401) {
+      window.AppAuth.clearToken();
+      const back = location.pathname + location.search;
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+      return;
+    }
+
+    if (res.status === 403) {
+      showError('pwCheck', body?.message || '비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
     if (!res.ok) {
-      showError('pwCheck', '비밀번호가 일치하지 않습니다.');
+      showError('pwCheck', body?.message || '잠시 후 다시 시도해 주세요.');
       return;
     }
 
@@ -367,6 +381,69 @@ genderWoman.addEventListener('click', function () {
 const infoForm = document.querySelector('#section-info-form form');
 if (infoForm) {
   infoForm.addEventListener('submit', onSubmitProfileForm);
+}
+
+const infoDeleteBtn = document.querySelector('.infoDelete_button');
+infoDeleteBtn?.addEventListener('click', onDeleteAccount);
+
+async function onDeleteAccount() {
+  clearError();
+
+  const currentPwInput = document.getElementById('originalPassword');
+  const password = currentPwInput?.value.trim() ?? '';
+
+  if (!password) {
+    showError('currentPw', '회원탈퇴를 위해 현재 비밀번호를 입력해 주세요.');
+    currentPwInput?.focus();
+    return;
+  }
+
+  const ok = confirm(
+    '정말 탈퇴하시겠습니까? 탈퇴 후에는 계정을 복구할 수 없습니다.',
+  );
+  if (!ok) return;
+
+  if (infoDeleteBtn.disabled) return;
+  infoDeleteBtn.disabled = true;
+
+  try {
+    const res = await fetch(`${API_BASE}/users/me`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ password }),
+    });
+
+    const body = await res.json().catch(() => null);
+
+    if (res.status === 401) {
+      window.AppAuth.clearToken();
+      const back = location.pathname + location.search;
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+      return;
+    }
+
+    if (!res.ok) {
+      if (res.status === 403) {
+        showError(
+          'currentPw',
+          body?.message || '현재 비밀번호가 일치하지 않습니다.',
+        );
+        currentPwInput?.focus();
+        return;
+      }
+      alert(body?.message || '회원탈퇴에 실패했습니다. 잠시 후 다시 시도해 주세요.');
+      return;
+    }
+
+    window.AppAuth.clearToken();
+    alert('회원탈퇴가 완료되었습니다.');
+    location.href = '/index.html';
+  } catch (err) {
+    console.error(err);
+    alert('서버와 통신 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+  } finally {
+    infoDeleteBtn.disabled = false;
+  }
 }
 
 async function onSubmitProfileForm(event) {
@@ -471,15 +548,28 @@ async function onSubmitProfileForm(event) {
       body: JSON.stringify(payload),
     });
 
+    const body = await res.json().catch(() => null);
+
     if (res.status === 401) {
-      showError('currentPw', '현재 비밀번호가 일치하지 않습니다.');
+      window.AppAuth.clearToken();
+      const back = location.pathname + location.search;
+      location.href = `login.html?next=${encodeURIComponent(back)}`;
+      return;
+    }
+
+    if (res.status === 403) {
+      showError(
+        'currentPw',
+        body?.message || '현재 비밀번호가 일치하지 않습니다.',
+      );
       currentPwInput.focus();
       return;
     }
 
     if (!res.ok) {
       alert(
-        '회원정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
+        body?.message ||
+          '회원정보 수정 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.',
       );
       return;
     }
@@ -1738,13 +1828,23 @@ function renderMyRequests(rows) {
 
     // 승인된 경우 restaurant 상세로 이동 링크(approved_restaurant_id 있으면)
     if (r.status === 'approved' && r.approved_restaurant_id) {
-      const link = document.createElement('a');
-      link.href = `/restaurant.html?id=${encodeURIComponent(
-        r.approved_restaurant_id,
-      )}`;
-      link.className = 'btn btn-sm btn-outline-success';
-      link.textContent = '등록된 식당 보기';
-      bottom.appendChild(link);
+      const isRestaurantDeleted =
+        r.restaurant_deleted === true || r.restaurantDeleted === true;
+
+      if (isRestaurantDeleted) {
+        const deletedBadge = document.createElement('span');
+        deletedBadge.className = 'badge bg-secondary';
+        deletedBadge.textContent = '삭제된 식당';
+        bottom.appendChild(deletedBadge);
+      } else {
+        const link = document.createElement('a');
+        link.href = `/restaurant.html?id=${encodeURIComponent(
+          r.approved_restaurant_id,
+        )}`;
+        link.className = 'btn btn-sm btn-outline-success';
+        link.textContent = '등록된 식당 보기';
+        bottom.appendChild(link);
+      }
     }
 
     // 반려 사유

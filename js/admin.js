@@ -84,6 +84,16 @@ const reviewState = {
   loadedOnce: false,
 };
 
+const restaurantState = {
+  q: '',
+  status: 'all',
+  sido: '',
+  cursor: null,
+  hasMore: false,
+  loading: false,
+  loadedOnce: false,
+};
+
 const userState = {
   q: '',
   cursor: null,
@@ -223,6 +233,68 @@ async function apiUpdateUserStatus(userId, status) {
   return true;
 }
 
+async function apiGetAdminRestaurants({ q, status, sido, cursor }) {
+  const url = new URL(`${API_BASE}/admin/restaurants`);
+  if (q) url.searchParams.set('q', q);
+  if (status && status !== 'all') url.searchParams.set('status', status);
+  if (sido) url.searchParams.set('sido', sido);
+  if (cursor) url.searchParams.set('cursor', cursor);
+
+  const res = await fetch(url.href, {
+    method: 'GET',
+    headers: { ...authHeaders() },
+  });
+
+  if (handleAuthError(res)) return null;
+
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    setToast('err', body?.message || '레스토랑 목록 조회에 실패했습니다.');
+    return null;
+  }
+
+  return {
+    data: Array.isArray(body?.data) ? body.data : [],
+    meta: body?.meta || {},
+  };
+}
+
+async function apiUpdateRestaurantStatus(restaurantId, status) {
+  const res = await fetch(
+    `${API_BASE}/admin/restaurants/${restaurantId}/status`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ status }),
+    },
+  );
+
+  if (handleAuthError(res)) return false;
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || '레스토랑 상태 변경에 실패했습니다.');
+  }
+
+  return true;
+}
+
+async function apiDeleteRestaurant(restaurantId) {
+  const res = await fetch(`${API_BASE}/admin/restaurants/${restaurantId}`, {
+    method: 'DELETE',
+    headers: { ...authHeaders() },
+  });
+
+  if (handleAuthError(res)) return false;
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body?.message || '레스토랑 삭제에 실패했습니다.');
+  }
+
+  return true;
+}
+
 function clearRequestTbody() {
   const tbody = document.getElementById('requestTbody');
   if (tbody) tbody.textContent = '';
@@ -323,13 +395,23 @@ function renderRequestRowsAppend(rows) {
     tdStatus.appendChild(badge);
 
     if (r.status === 'approved' && r.approved_restaurant_id) {
-      const a = document.createElement('a');
-      a.href = `/restaurant.html?id=${encodeURIComponent(
-        r.approved_restaurant_id,
-      )}`;
-      a.className = 'btn btn-sm btn-outline-success ms-2';
-      a.textContent = '보기';
-      tdStatus.appendChild(a);
+      const isRestaurantDeleted =
+        r.restaurant_deleted === true || r.restaurantDeleted === true;
+
+      if (isRestaurantDeleted) {
+        const deletedBadge = document.createElement('span');
+        deletedBadge.className = 'badge bg-secondary ms-2';
+        deletedBadge.textContent = '삭제된 식당';
+        tdStatus.appendChild(deletedBadge);
+      } else {
+        const a = document.createElement('a');
+        a.href = `/restaurant.html?id=${encodeURIComponent(
+          r.approved_restaurant_id,
+        )}`;
+        a.className = 'btn btn-sm btn-outline-success ms-2';
+        a.textContent = '보기';
+        tdStatus.appendChild(a);
+      }
     }
 
     tr.appendChild(tdStatus);
@@ -690,6 +772,278 @@ async function loadReviewMore() {
   }
 }
 
+function restaurantStatusBadge(status) {
+  if (status === 'active') {
+    return { cls: 'badge bg-success', label: '운영 중' };
+  }
+  if (status === 'closed') {
+    return { cls: 'badge bg-danger', label: '폐업' };
+  }
+  return { cls: 'badge bg-dark', label: status || 'unknown' };
+}
+
+function clearRestaurantTbody() {
+  const tbody = document.getElementById('restaurantTbody');
+  if (tbody) tbody.textContent = '';
+}
+
+function updateRestaurantLoadMoreUI() {
+  const wrap = document.getElementById('restaurantLoadMoreWrap');
+  const btn = document.getElementById('restaurantLoadMoreBtn');
+  if (!wrap || !btn) return;
+
+  btn.disabled = restaurantState.loading;
+  wrap.style.display = restaurantState.hasMore ? 'flex' : 'none';
+}
+
+function renderRestaurantRowsAppend(restaurants) {
+  const tbody = document.getElementById('restaurantTbody');
+  const empty = document.getElementById('restaurantEmpty');
+  if (!tbody || !empty) return;
+
+  if (!restaurants || restaurants.length === 0) {
+    if (tbody.children.length === 0) empty.style.display = 'block';
+    updateRestaurantLoadMoreUI();
+    return;
+  }
+
+  empty.style.display = 'none';
+  const fragment = document.createDocumentFragment();
+
+  restaurants.forEach((restaurant) => {
+    const tr = document.createElement('tr');
+
+    const tdId = document.createElement('td');
+    tdId.className = 'td-tight';
+    tdId.textContent = restaurant.id ?? '';
+    tr.appendChild(tdId);
+
+    const tdRestaurant = document.createElement('td');
+    tdRestaurant.className = 'admin-restaurant-cell';
+
+    const detailLink = document.createElement('a');
+    detailLink.className = 'admin-name admin-restaurant-link';
+    detailLink.href = `/restaurant.html?id=${encodeURIComponent(
+      restaurant.id,
+    )}`;
+    detailLink.textContent = restaurant.branchInfo
+      ? `${restaurant.name || '(이름 없음)'} ${restaurant.branchInfo}`
+      : restaurant.name || '(이름 없음)';
+
+    const restaurantMeta = document.createElement('div');
+    restaurantMeta.className = 'admin-meta';
+    restaurantMeta.textContent = `ID ${restaurant.id}`;
+    tdRestaurant.append(detailLink, restaurantMeta);
+    tr.appendChild(tdRestaurant);
+
+    const tdOwner = document.createElement('td');
+    const ownerWrap = document.createElement('div');
+    ownerWrap.className = 'admin-user-cell';
+
+    const ownerName = document.createElement('div');
+    ownerName.className = 'admin-name';
+    ownerName.textContent =
+      restaurant.owner?.name || restaurant.owner?.username || '(소유자 없음)';
+
+    const ownerUsername = document.createElement('div');
+    ownerUsername.className = 'admin-meta admin-username';
+    ownerUsername.textContent = restaurant.owner?.username
+      ? `@${restaurant.owner.username}`
+      : restaurant.owner?.id
+        ? `ID: ${restaurant.owner.id}`
+        : '';
+
+    ownerWrap.append(ownerName, ownerUsername);
+    tdOwner.appendChild(ownerWrap);
+    tr.appendChild(tdOwner);
+
+    const tdStatus = document.createElement('td');
+    tdStatus.className = 'td-tight';
+    const status = restaurantStatusBadge(restaurant.status);
+    const badge = document.createElement('span');
+    badge.className = status.cls;
+    badge.textContent = status.label;
+    tdStatus.appendChild(badge);
+    tr.appendChild(tdStatus);
+
+    const tdStats = document.createElement('td');
+    tdStats.className = 'td-tight';
+    tdStats.textContent = `${restaurant.reviewCount ?? 0} / ${
+      restaurant.likeCount ?? 0
+    }`;
+    tr.appendChild(tdStats);
+
+    const tdCreatedAt = document.createElement('td');
+    tdCreatedAt.className = 'td-tight';
+    tdCreatedAt.textContent = formatDate(restaurant.createdAt) || '-';
+    tr.appendChild(tdCreatedAt);
+
+    const tdClosedAt = document.createElement('td');
+    tdClosedAt.className = 'td-tight';
+    tdClosedAt.textContent = formatDate(restaurant.closedAt) || '-';
+    tr.appendChild(tdClosedAt);
+
+    const tdAction = document.createElement('td');
+    tdAction.className = 'td-tight admin-action-cell';
+
+    const actionWrap = document.createElement('div');
+    actionWrap.className = 'admin-restaurant-actions';
+
+    if (restaurant.status === 'active' || restaurant.status === 'closed') {
+      const nextStatus =
+        restaurant.status === 'active' ? 'closed' : 'active';
+      const statusBtn = document.createElement('button');
+      statusBtn.type = 'button';
+      statusBtn.className =
+        restaurant.status === 'active'
+          ? 'btn btn-sm btn-outline-warning'
+          : 'btn btn-sm btn-outline-success';
+      statusBtn.textContent =
+        restaurant.status === 'active' ? '폐업 처리' : '운영 복구';
+
+      statusBtn.addEventListener('click', async () => {
+        const actionLabel = nextStatus === 'closed' ? '폐업 처리' : '운영 복구';
+        if (
+          !confirm(
+            `${restaurant.name || '이 레스토랑'}을(를) ${actionLabel}하시겠습니까?`,
+          )
+        ) {
+          return;
+        }
+
+        statusBtn.disabled = true;
+        deleteBtn.disabled = true;
+
+        try {
+          const updated = await apiUpdateRestaurantStatus(
+            restaurant.id,
+            nextStatus,
+          );
+          if (!updated) return;
+          setToast('ok', `레스토랑이 ${actionLabel}되었습니다.`);
+          await loadRestaurantFirstPage();
+        } catch (error) {
+          console.error(error);
+          setToast('err', error.message || '레스토랑 상태 변경에 실패했습니다.');
+          statusBtn.disabled = false;
+          deleteBtn.disabled = false;
+        }
+      });
+
+      actionWrap.appendChild(statusBtn);
+    }
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'btn btn-sm btn-outline-danger';
+    deleteBtn.textContent = '영구 삭제';
+
+    deleteBtn.addEventListener('click', async () => {
+      const expectedName = String(restaurant.name || '').trim();
+      const typedName = prompt(
+        `이 작업은 되돌릴 수 없습니다.\n삭제하려면 레스토랑 이름 "${expectedName}"을(를) 입력하세요.`,
+      );
+      if (typedName === null) return;
+
+      if (typedName.trim() !== expectedName) {
+        setToast('err', '레스토랑 이름이 일치하지 않아 삭제하지 않았습니다.');
+        return;
+      }
+
+      deleteBtn.disabled = true;
+      actionWrap
+        .querySelectorAll('button')
+        .forEach((button) => (button.disabled = true));
+
+      try {
+        const deleted = await apiDeleteRestaurant(restaurant.id);
+        if (!deleted) return;
+        setToast('ok', '레스토랑이 영구 삭제되었습니다.');
+        await loadRestaurantFirstPage();
+      } catch (error) {
+        console.error(error);
+        setToast('err', error.message || '레스토랑 삭제에 실패했습니다.');
+        actionWrap
+          .querySelectorAll('button')
+          .forEach((button) => (button.disabled = false));
+      }
+    });
+
+    actionWrap.appendChild(deleteBtn);
+    tdAction.appendChild(actionWrap);
+    tr.appendChild(tdAction);
+    fragment.appendChild(tr);
+  });
+
+  tbody.appendChild(fragment);
+  updateRestaurantLoadMoreUI();
+}
+
+function readRestaurantFilters() {
+  return {
+    q: String(
+      document.getElementById('restaurantSearchInput')?.value || '',
+    ).trim(),
+    status:
+      document.getElementById('restaurantStatusSelect')?.value || 'all',
+    sido: document.getElementById('restaurantSidoSelect')?.value || '',
+  };
+}
+
+async function loadRestaurantFirstPage() {
+  if (restaurantState.loading) return;
+
+  restaurantState.loading = true;
+  restaurantState.loadedOnce = true;
+  restaurantState.cursor = null;
+  restaurantState.hasMore = false;
+  Object.assign(restaurantState, readRestaurantFilters());
+
+  clearRestaurantTbody();
+  updateRestaurantLoadMoreUI();
+
+  try {
+    const result = await apiGetAdminRestaurants({
+      q: restaurantState.q,
+      status: restaurantState.status,
+      sido: restaurantState.sido,
+      cursor: null,
+    });
+    if (!result) return;
+
+    restaurantState.hasMore = Boolean(result.meta?.hasMore);
+    restaurantState.cursor = result.meta?.nextCursor || null;
+    renderRestaurantRowsAppend(result.data);
+  } finally {
+    restaurantState.loading = false;
+    updateRestaurantLoadMoreUI();
+  }
+}
+
+async function loadRestaurantMore() {
+  if (restaurantState.loading || !restaurantState.hasMore) return;
+
+  restaurantState.loading = true;
+  updateRestaurantLoadMoreUI();
+
+  try {
+    const result = await apiGetAdminRestaurants({
+      q: restaurantState.q,
+      status: restaurantState.status,
+      sido: restaurantState.sido,
+      cursor: restaurantState.cursor,
+    });
+    if (!result) return;
+
+    restaurantState.hasMore = Boolean(result.meta?.hasMore);
+    restaurantState.cursor = result.meta?.nextCursor || null;
+    renderRestaurantRowsAppend(result.data);
+  } finally {
+    restaurantState.loading = false;
+    updateRestaurantLoadMoreUI();
+  }
+}
+
 function userStatusBadge(status) {
   if (status === 'active')
     return { cls: 'badge bg-success', label: 'active' };
@@ -879,6 +1233,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   const reviewLoadMoreBtn = document.getElementById('reviewLoadMoreBtn');
   const reviewsTab = document.getElementById('reviews-tab');
 
+  const restaurantSearchForm = document.getElementById(
+    'restaurantSearchForm',
+  );
+  const restaurantStatusSelect = document.getElementById(
+    'restaurantStatusSelect',
+  );
+  const restaurantSidoSelect = document.getElementById(
+    'restaurantSidoSelect',
+  );
+  const restaurantReloadBtn = document.getElementById('restaurantReloadBtn');
+  const restaurantLoadMoreBtn = document.getElementById(
+    'restaurantLoadMoreBtn',
+  );
+  const restaurantsTab = document.getElementById('restaurants-tab');
+
   const userSearchForm = document.getElementById('userSearchForm');
   const userReloadBtn = document.getElementById('userReloadBtn');
   const userLoadMoreBtn = document.getElementById('userLoadMoreBtn');
@@ -899,6 +1268,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   reviewLoadMoreBtn?.addEventListener('click', loadReviewMore);
   reviewsTab?.addEventListener('shown.bs.tab', async () => {
     if (!reviewState.loadedOnce) await loadReviewFirstPage();
+  });
+
+  restaurantSearchForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    await loadRestaurantFirstPage();
+  });
+  restaurantStatusSelect?.addEventListener(
+    'change',
+    loadRestaurantFirstPage,
+  );
+  restaurantSidoSelect?.addEventListener('change', loadRestaurantFirstPage);
+  restaurantReloadBtn?.addEventListener('click', loadRestaurantFirstPage);
+  restaurantLoadMoreBtn?.addEventListener('click', loadRestaurantMore);
+  restaurantsTab?.addEventListener('shown.bs.tab', async () => {
+    if (!restaurantState.loadedOnce) await loadRestaurantFirstPage();
   });
 
   userSearchForm?.addEventListener('submit', async (event) => {

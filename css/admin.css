@@ -123,6 +123,27 @@
   min-width: 92px;
 }
 
+.admin-restaurant-cell {
+  min-width: 180px;
+}
+
+.admin-restaurant-link {
+  color: #212529;
+  text-decoration: none;
+}
+
+.admin-restaurant-link:hover {
+  color: #0d6efd;
+  text-decoration: underline;
+}
+
+.admin-restaurant-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 170px;
+}
+
 .admin-review-content {
   display: -webkit-box;
   max-width: 320px;
@@ -201,6 +222,10 @@
   .admin-search-form {
     flex-basis: 100%;
     max-width: none;
+  }
+
+  .admin-restaurant-actions {
+    min-width: 150px;
   }
 
   .admin-review-content {

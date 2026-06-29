@@ -179,17 +179,72 @@ function updateImg() {
   });
 }
 
+function isRestaurantClosed() {
+  return String(data?.restaurant?.status || '').toLowerCase() === 'closed';
+}
+
+function formatClosedAt(value) {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'long',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul',
+  }).format(date);
+}
+
+function updateClosureState() {
+  const closed = isRestaurantClosed();
+  const closureNotice = document.getElementById('restaurantClosureNotice');
+  const closedAtEl = document.getElementById('restaurantClosedAt');
+  const reviewBtn = document.getElementById('reviewWriteButton');
+  const closedAt =
+    data?.restaurant?.closedAt ?? data?.restaurant?.closed_at ?? null;
+
+  if (closureNotice) closureNotice.hidden = !closed;
+
+  if (closedAtEl) {
+    const formattedClosedAt = formatClosedAt(closedAt);
+    closedAtEl.textContent =
+      closed && formattedClosedAt ? `${formattedClosedAt} 폐업 처리` : '';
+  }
+
+  if (reviewBtn) {
+    reviewBtn.disabled = closed;
+    reviewBtn.title = closed ? '폐업한 식당에는 리뷰를 작성할 수 없습니다.' : '';
+    reviewBtn.setAttribute('aria-disabled', String(closed));
+  }
+
+  if (starButton) {
+    const disableNewLike = closed && !isClicked;
+    starButton.disabled = disableNewLike;
+    starButton.title = disableNewLike
+      ? '폐업한 식당은 새로 찜할 수 없습니다.'
+      : '';
+    starButton.setAttribute('aria-disabled', String(disableNewLike));
+  }
+}
+
 function updateHeader() {
   document.querySelector('.restaurant_name').textContent =
     data?.restaurant.name ?? '';
   document.querySelector('.branch').textContent =
     data?.restaurant.branch_info ?? '';
 
-  if (data?.isLiked) {
+  isClicked = Boolean(data?.isLiked);
+
+  if (isClicked) {
     starButtonIcon.classList.remove('star_button_icon');
     starButtonIcon.classList.add('star_button_icon-check');
-    isClicked = true;
+  } else {
+    starButtonIcon.classList.remove('star_button_icon-check');
+    starButtonIcon.classList.add('star_button_icon');
   }
+
+  updateClosureState();
 }
 
 function updateStatus() {
@@ -593,6 +648,8 @@ function wireReviewLink() {
   if (reviewBtn) {
     reviewBtn.addEventListener('click', async (e) => {
       e.preventDefault();
+
+      if (isRestaurantClosed()) return;
 
       const me = await fetchMe();
 
@@ -1070,6 +1127,9 @@ async function onReviewBlindClick(event) {
 }
 
 starButton.addEventListener('click', async function () {
+  if (starButton.disabled) return;
+  if (isRestaurantClosed() && !isClicked) return;
+
   const token = window.AppAuth.getToken();
   if (!token) {
     const back = location.pathname + location.search;
@@ -1094,6 +1154,7 @@ starButton.addEventListener('click', async function () {
       starButtonIcon.classList.add('star_button_icon');
     }
     isClicked = result.isLiked;
+    updateClosureState();
 
     if (data && data.restaurant) {
       data.restaurant.like_count = result.likeCount;
