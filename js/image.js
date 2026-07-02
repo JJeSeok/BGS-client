@@ -1,5 +1,6 @@
 (function () {
   const DEFAULT_IMAGE_PATH = '/images/default-image.png';
+  const DEFAULT_PROFILE_IMAGE_PATH = '/images/default-profile.png';
   const API_BASE = window.APP_CONFIG?.API_BASE || 'http://localhost:8080';
 
   function getApiOrigin() {
@@ -42,9 +43,20 @@
     img.addEventListener('error', onError);
   }
 
+  function resolveProfileImageUrl(url) {
+    return resolveImageUrl(url, DEFAULT_PROFILE_IMAGE_PATH);
+  }
+
+  function applyProfileImageFallback(img) {
+    applyImageFallback(img, DEFAULT_PROFILE_IMAGE_PATH);
+  }
+
   window.AppImage = {
     DEFAULT_IMAGE_PATH,
+    DEFAULT_PROFILE_IMAGE_PATH,
     resolveImageUrl,
+    resolveProfileImageUrl,
     applyImageFallback,
+    applyProfileImageFallback,
   };
 })();

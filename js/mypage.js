@@ -138,8 +138,10 @@ function fillProfile(me) {
   }
 
   if (profileImageEl) {
-    profileImageEl.src = normalizeImgUrl(me.profile_image_url);
-    window.AppImage.applyImageFallback(profileImageEl);
+    profileImageEl.src = window.AppImage.resolveProfileImageUrl(
+      me.profile_image_url,
+    );
+    window.AppImage.applyProfileImageFallback(profileImageEl);
   }
 }
 
@@ -739,9 +741,11 @@ function buildReviewItem(review) {
 
   // 프로필 이미지
   if (profilImgEl) {
-    profilImgEl.src = normalizeImgUrl(review.userProfileImage);
+    profilImgEl.src = window.AppImage.resolveProfileImageUrl(
+      review.userProfileImage,
+    );
     profilImgEl.alt = 'user profile picture';
-    window.AppImage.applyImageFallback(profilImgEl);
+    window.AppImage.applyProfileImageFallback(profilImgEl);
   }
 
   // 좋아요/싫어요
@@ -1434,7 +1438,7 @@ function initProfileImageUploader() {
         return;
       }
 
-      img.src = window.AppImage.DEFAULT_IMAGE_PATH;
+      img.src = window.AppImage.DEFAULT_PROFILE_IMAGE_PATH;
       prevSrc = img.src;
       setRemoveVisible(false);
     } catch (err) {
@@ -1478,24 +1482,24 @@ function initProfileImageUploader() {
           location.href = `login.html?next=${encodeURIComponent(back)}`;
           return;
         }
-        img.src = prevSrc || window.AppImage.DEFAULT_IMAGE_PATH;
+        img.src = prevSrc || window.AppImage.DEFAULT_PROFILE_IMAGE_PATH;
         alert(result.message || '프로필 이미지 업로드에 실패했습니다.');
         return;
       }
 
       const url = result.data?.profileImageUrl;
       if (!url) {
-        img.src = prevSrc || window.AppImage.DEFAULT_IMAGE_PATH;
+        img.src = prevSrc || window.AppImage.DEFAULT_PROFILE_IMAGE_PATH;
         alert('업로드 응답이 올바르지 않습니다.');
         return;
       }
 
-      img.src = normalizeImgUrl(url);
+      img.src = window.AppImage.resolveProfileImageUrl(url);
       prevSrc = img.src;
       setRemoveVisible(true);
     } catch (err) {
       console.error(err);
-      img.src = prevSrc || window.AppImage.DEFAULT_IMAGE_PATH;
+      img.src = prevSrc || window.AppImage.DEFAULT_PROFILE_IMAGE_PATH;
       alert('서버와 통신 중 오류가 발생했습니다.');
     } finally {
       if (previewUrl) {
@@ -1567,8 +1571,8 @@ function buildBlindUserItem(user) {
   const img = document.createElement('img');
   img.className = 'blind_userPicture';
   img.alt = user.name ?? '';
-  img.src = normalizeImgUrl(user.profileImageUrl);
-  window.AppImage.applyImageFallback(img);
+  img.src = window.AppImage.resolveProfileImageUrl(user.profileImageUrl);
+  window.AppImage.applyProfileImageFallback(img);
 
   aImg.appendChild(img);
 

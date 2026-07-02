@@ -150,7 +150,7 @@ textarea.addEventListener('input', () => {
 
 // --- 별점 라디오 & 표시용 별 ---
 const starInputs = Array.from(
-  document.querySelectorAll('.StarRating input[name="score"]')
+  document.querySelectorAll('.StarRating input[name="score"]'),
 );
 const starView = document.getElementById('starView');
 const presets = document.getElementById('ratingPresets');
@@ -214,7 +214,7 @@ starView.addEventListener(
     applyHover(pointToScore(e));
     e.preventDefault();
   },
-  { passive: false }
+  { passive: false },
 );
 starView.addEventListener('touchend', (e) => {
   setScore(pointToScore(e));
@@ -240,7 +240,7 @@ presets.addEventListener('click', (e) => {
   btn.setAttribute('aria-pressed', 'true');
 });
 
-const MAX_PICTURES = 30;
+const MAX_PICTURES = 10;
 const addBtn = document.getElementById('addImages');
 const imageInput = document.getElementById('imageInput');
 const pictureList = document.getElementById('pictureList');
@@ -249,8 +249,16 @@ const counterLen = document.querySelector('.ReviewPictureCounter_Length');
 addBtn.addEventListener('click', () => imageInput.click());
 imageInput.addEventListener('change', (e) => {
   const files = Array.from(e.target.files);
-  const available = Math.max(0, MAX_PICTURES - newImages.length);
+  const available = Math.max(
+    0,
+    MAX_PICTURES - existingImages.length - newImages.length,
+  );
   const picked = files.slice(0, available);
+
+  if (files.length > available) {
+    alert(`리뷰 이미지는 최대 ${MAX_PICTURES}장까지 등록할 수 있습니다.`);
+  }
+
   picked.forEach((file) => {
     const url = URL.createObjectURL(file);
     newImages.push({ file, url });
@@ -307,7 +315,7 @@ function addPreview({ type, id, url }) {
 
   pictureList.insertBefore(
     li,
-    pictureList.querySelector('.pictureItem_button')
+    pictureList.querySelector('.pictureItem_button'),
   );
 
   extendBtn.addEventListener('click', () => {
@@ -316,9 +324,13 @@ function addPreview({ type, id, url }) {
 }
 
 function updateCounter() {
-  const imgLen = existingImages.length + newImages.length;
+  const imgLen = getPictureCount();
   counterLen.textContent = String(imgLen);
   addBtn.parentElement.style.display = imgLen >= MAX_PICTURES ? 'none' : 'flex';
+}
+
+function getPictureCount() {
+  return existingImages.length + newImages.length;
 }
 
 function onRemoveBtnClick(event) {
@@ -412,6 +424,10 @@ async function onSubmitReview(e) {
     alert('리뷰 내용을 입력해주세요.');
     return;
   }
+  if (getPictureCount() > MAX_PICTURES) {
+    alert(`리뷰 이미지는 최대 ${MAX_PICTURES}장까지 등록할 수 있습니다.`);
+    return;
+  }
 
   const formData = new FormData();
   formData.append('rating', String(currentScore * 2));
@@ -425,7 +441,7 @@ async function onSubmitReview(e) {
 
   if (isEdit && deletedImageIds.size > 0) {
     deletedImageIds.forEach((id) =>
-      formData.append('deletedImageIds', String(id))
+      formData.append('deletedImageIds', String(id)),
     );
   }
 
@@ -446,7 +462,7 @@ async function onSubmitReview(e) {
       console.error('review error', errBody);
       alert(
         errBody?.message ||
-          (isEdit ? '리뷰 수정에 실패했습니다.' : '리뷰 등록에 실패했습니다.')
+          (isEdit ? '리뷰 수정에 실패했습니다.' : '리뷰 등록에 실패했습니다.'),
       );
       return;
     }

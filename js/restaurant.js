@@ -812,9 +812,11 @@ function buildReviewItem(review) {
 
   // 프로필 이미지
   if (profilImgEl) {
-    profilImgEl.src = normalizeImgUrl(review.userProfileImage);
+    profilImgEl.src = window.AppImage.resolveProfileImageUrl(
+      review.userProfileImage,
+    );
     profilImgEl.alt = 'user profile picture';
-    window.AppImage.applyImageFallback(profilImgEl);
+    window.AppImage.applyProfileImageFallback(profilImgEl);
   }
 
   // 좋아요/싫어요
